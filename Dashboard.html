@@ -59,8 +59,9 @@
     @media (max-width:1000px){ .grid{grid-template-columns:1fr 1fr} .row{grid-template-columns:1fr .6fr .6fr} .row .hide-sm{display:none}}
     @media (max-width:700px){ .grid{grid-template-columns:1fr} .filters{flex-wrap:wrap} .spark{display:none} }
   </style>
+
+  <!-- ENKEL AUTH-GUARD (før vi viser noe) -->
   <script>
-    // --- ENKEL AUTH-GUARD (før vi viser noe) ---
     (function(){
       try{
         const authed = localStorage.getItem('bian.authed') === '1';
@@ -169,36 +170,31 @@
   </footer>
 
   <script>
-    // Utils
+    // ===== Utils =====
     const $=(s,c=document)=>c.querySelector(s);
-    const kr = n => n.toLocaleString('no-NO',{maximumFractionDigits:0});
-    const pct = n => (n).toFixed(1).replace('.',',' ) + '%';
+    const kr = n => Number(n||0).toLocaleString('no-NO',{maximumFractionDigits:0});
+    const pct = n => (Number(n||0)).toFixed(1).replace('.',',' ) + '%';
+    const toISODate = d => new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+    const rangeDates = sel => {
+      const now = new Date(); const from = new Date(now);
+      if (sel==='day') { /* samme dag */ }
+      else if (sel==='7') { from.setDate(from.getDate()-6); }
+      else { from.setDate(from.getDate()-29); }
+      return { from: toISODate(from), to: toISODate(now) };
+    };
 
-    // Header info
+    // ===== Header info =====
     $('#year').textContent = new Date().getFullYear();
-    const user = (localStorage.getItem('bian.user')||'');
-    $('#who').textContent = user || 'Innlogget';
-
-    // Subtitle med dagens dato
+    const user = (localStorage.getItem('bian.user')||''); $('#who').textContent = user || 'Innlogget';
     const d = new Date();
     $('#subtitle').textContent = d.toLocaleDateString('no-NO',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+    $('#logout').addEventListener('click',()=>{ try{ localStorage.removeItem('bian.authed'); localStorage.removeItem('bian.user'); }catch(e){} window.location.href='login.html'; });
 
-    // Logg ut
-    $('#logout').addEventListener('click',()=>{
-      try{ localStorage.removeItem('bian.authed'); localStorage.removeItem('bian.user'); }catch(e){}
-      window.location.href='login.html';
-    });
-
-    // Demo-data generator
+    // ===== Demo-serier (sparklines beholdes inntil du kobler flere API) =====
     function series(len, start=1000, vol=0.1){
-      let v=start, arr=[];
-      for(let i=0;i<len;i++){
-        v = Math.max(10, v * (1 + (Math.random()-0.5)*2*vol));
-        arr.push(Math.round(v));
-      }
+      let v=start, arr=[]; for(let i=0;i<len;i++){ v = Math.max(10, v * (1 + (Math.random()-0.5)*2*vol)); arr.push(Math.round(v)); }
       return arr;
     }
-
     function drawSparkline(svgId, data){
       const svg = document.getElementById(svgId);
       if(!svg) return;
@@ -206,59 +202,101 @@
       const min = Math.min(...data), max = Math.max(...data);
       const x = i => pad + (W-2*pad) * (i/(n-1));
       const y = v => pad + (H-2*pad) * (1 - ( (v-min) / Math.max(1,(max-min)) ));
-      let d = '';
-      data.forEach((v,i)=>{ d += (i?' L ':'M ') + x(i) + ' ' + y(v); });
-
       svg.innerHTML = `
         <polyline points="${data.map((v,i)=>x(i)+','+y(v)).join(' ')}" fill="none" stroke="currentColor" stroke-width="2" opacity="0.9"></polyline>
         <line x1="${pad}" y1="${H-1}" x2="${W-pad}" y2="${H-1}" stroke="currentColor" opacity="0.12"></line>
       `;
     }
 
-    function applyRange(){
+    // ===== API-integrasjon (samme konto-IDer som i SwiftUI) =====
+    // Konfig: Sett window.BIAN_API_BASE = 'https://din-backend.url' før denne scripten, hvis ikke localhost
+    const API_BASE = window.BIAN_API_BASE || (location.hostname === 'localhost' ? 'http://localhost:8787' : '');
+    // Konto-IDer fra SwiftUI-koden
+    const beerSaleID = 289896744;
+    const wineSaleID = 289896745;
+    const beerPurchaseID = 289896742;
+    const winePurchaseID = 289896743;
+
+    async function loadLedger(dateFrom, dateTo, accountIds){
+      if (!API_BASE) throw new Error('API_BASE ikke satt');
+      const qs = new URLSearchParams({
+        dateFrom, dateTo,
+        accountIds: accountIds.join(',')
+      });
+      const resp = await fetch(`${API_BASE}/api/tripletex/ledger?` + qs.toString());
+      if (!resp.ok) throw new Error('Ledger-kall feilet: ' + resp.status);
+      const json = await resp.json(); // { values: [...] }
+      return Array.isArray(json.values) ? json.values : [];
+    }
+
+    function sumFor(values, accountId){
+      return values
+        .filter(v => v?.account?.id === accountId)
+        .reduce((acc, v) => acc + Math.abs(Number(v?.amount || 0)), 0);
+    }
+
+    // ===== Hovedoppdatering =====
+    async function applyRange(){
       const sel = $('#range').value;
       const len = sel==='day' ? 12 : (sel==='7'? 7 : 30);
 
-      // Demo serier
-      const rev = series(len, 120000, .12);
-      const db  = series(len, 65000, .11);
-      const g   = series(len, 220, .18);
+      // Sparklines (demo)
+      const revDemo = series(len, 120000, .12);
+      const dbDemo  = series(len,  65000, .11);
+      const gDemo   = series(len,     220, .18);
+      const trend = (arr)=>{ const a=arr[arr.length-2]||arr[0], b=arr[arr.length-1]||arr[0]; const ch=((b-a)/Math.max(1,a))*100; return {last:b, ch}; };
+      const r1=trend(revDemo), r2=trend(dbDemo), r3=trend(gDemo);
+      drawSparkline('spark-rev', revDemo);
+      drawSparkline('spark-db',  dbDemo);
+      drawSparkline('spark-guests', gDemo);
 
-      // KPI verdier
-      const trend = (arr)=> {
-        const a=arr[arr.length-2]||arr[0], b=arr[arr.length-1]||arr[0];
-        const ch=((b-a)/Math.max(1,a))*100;
-        return {last:b, ch};
-      };
+      // Default: fyll med streker før vi henter ekte data
+      $('#kpi-rev').textContent = 'kr –';
+      $('#kpi-db').textContent = 'kr –';
+      $('#kpi-rev-trend').textContent = (r1.ch>=0?'+':'') + r1.ch.toFixed(1).replace('.',',') + '%';
+      $('#kpi-db-trend').textContent  = (r2.ch>=0?'+':'') + r2.ch.toFixed(1).replace('.',',') + '%';
+      $('#kpi-guests').textContent = gDemo[gDemo.length-1].toString();
+      $('#kpi-guests-trend').textContent = (r3.ch>=0?'+':'') + r3.ch.toFixed(1).replace('.',',') + '%';
+      $('#row-cogs').textContent = '–'; $('#row-cogs-delta').textContent = '–';
 
-      const r1=trend(rev), r2=trend(db), r3=trend(g);
+      // Hent ekte Tripletex-data for øl/vin (samme som SwiftUI-KPIer)
+      try{
+        const { from, to } = rangeDates(sel);
+        const ids = [beerSaleID, wineSaleID, beerPurchaseID, winePurchaseID];
+        const values = await loadLedger(from, to, ids);
 
-      $('#kpi-rev').textContent = 'kr ' + kr(r1.last);
-      $('#kpi-db').textContent  = 'kr ' + kr(r2.last);
-      $('#kpi-guests').textContent = kr(r3.last);
+        const beerSales = sumFor(values, beerSaleID);
+        const wineSales = sumFor(values, wineSaleID);
+        const beerPurch = sumFor(values, beerPurchaseID);
+        const winePurch = sumFor(values, winePurchaseID);
 
-      const fmtDelta = (ch)=> (ch>=0?'+':'') + ch.toFixed(1).replace('.',',') + '%';
-      $('#kpi-rev-trend').textContent = fmtDelta(r1.ch);
-      $('#kpi-db-trend').textContent  = fmtDelta(r2.ch);
-      $('#kpi-guests-trend').textContent = fmtDelta(r3.ch);
+        const revenue = beerSales + wineSales;        // Omsetning (kr)
+        const cogsKr  = beerPurch + winePurch;        // Varekost (kr)
+        const dbKr    = Math.max(0, revenue - cogsKr);// Dekningsbidrag (kr)
+        const cogsPct = revenue > 0 ? (cogsKr / revenue) * 100 : null;
 
-      drawSparkline('spark-rev', rev);
-      drawSparkline('spark-db',  db);
-      drawSparkline('spark-guests', g);
+        // Oppdater KPI-kort
+        $('#kpi-rev').textContent = 'kr ' + kr(revenue);
+        $('#kpi-db').textContent  = 'kr ' + kr(dbKr);
 
-      // Tabell (demo)
-      const cogs = 29 + (Math.random()*6-3);         // %
-      const labor= 28 + (Math.random()*6-3);         // %
-      const waste= 1200 + Math.random()*1200;        // kr
-      const dc   = (Math.random()*4-2);              // %-poeng endring
+        // Oppdater tabellrad for varekost
+        if (cogsPct != null) {
+          $('#row-cogs').textContent = pct(cogsPct);
+        } else {
+          $('#row-cogs').textContent = '–';
+        }
+      } catch(e){
+        console.error(e);
+        // behold demo/streker ved feil
+      }
+
+      // Demo for bemanning/svinn (til du kobler egne API)
+      const labor= 28 + (Math.random()*6-3);
+      const waste= 1200 + Math.random()*1200;
       const dl   = (Math.random()*4-2);
       const dw   = (Math.random()*200-100);
-
-      $('#row-cogs').textContent = pct(cogs);
       $('#row-labor').textContent= pct(labor);
       $('#row-waste').textContent= 'kr ' + kr(waste);
-
-      $('#row-cogs-delta').textContent  = (dc>=0?'+':'') + dc.toFixed(1).replace('.',',') + ' pp';
       $('#row-labor-delta').textContent = (dl>=0?'+':'') + dl.toFixed(1).replace('.',',') + ' pp';
       $('#row-waste-delta').textContent = (dw>=0?'+':'') + kr(dw);
     }
