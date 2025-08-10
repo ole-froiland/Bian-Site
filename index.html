@@ -60,7 +60,9 @@
 
     /* Header */
     header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter: blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
-    .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-block:14px;padding-inline-end:clamp(28px,6vw,96px)}
+    .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-block:14px;
+      padding-inline-end:clamp(28px,6vw,96px); /* ekstra høyre-padding */
+    }
     .brand{display:flex;gap:.6rem;align-items:center;font-weight:800;color:var(--ink-900);text-decoration:none}
     .brand .logo{inline-size:36px;block-size:36px;border-radius:12px;background:linear-gradient(180deg,var(--brand-600),var(--brand-700));color:#fff;display:grid;place-items:center;box-shadow:var(--shadow)}
     .brand span{font-size:18px}
@@ -88,8 +90,8 @@
     .btn.ghost{background:transparent}
     .btn.sm{padding:9px 14px;font-size:14px}
 
-    /* Small language chip */
-    .chip{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border:1px solid var(--border);border-radius:999px;font-weight:700;color:var(--ink-900);background:#fff;line-height:1}
+    /* Language chip as button */
+    .chip{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border:1px solid var(--border);border-radius:999px;font-weight:700;color:var(--ink-900);background:#fff;line-height:1;cursor:pointer}
 
     /* Hero */
     .hero{padding-block:min(8vh,72px);display:grid;grid-template-columns:1.04fr .96fr;gap:40px;align-items:center}
@@ -111,13 +113,13 @@
     section{padding-block:72px;border-top:1px solid var(--border)}
     h2{margin:0 0 10px;font-size:clamp(26px,3.8vw,38px)}
 
+    /* Cards + gallery */
     .features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:26px}
     .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow);transition:transform .12s ease, box-shadow .12s ease}
     .card:hover{transform:translateY(-2px)}
     .card h3{margin:0 0 8px}
     .card p{color:var(--ink-900)}
 
-    /* Gallery w/ captions */
     .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
     .gallery figure{margin:0}
     .gallery img{width:100%;height:220px;object-fit:cover;border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
@@ -166,52 +168,52 @@
   </style>
 </head>
 <body>
-  <a class="visually-hidden" href="#main">Hopp til innhold</a>
+  <a class="visually-hidden" href="#main" data-i18n="skiplink">Hopp til innhold</a>
 
   <!-- Header / toppmeny -->
   <header>
-    <div class="container nav" role="navigation" aria-label="Toppmeny">
-      <a class="brand" href="#top" aria-label="Bian Analytics hjem">
+    <div class="container nav" role="navigation" aria-label="Toppmeny" data-i18n-attr="aria-label:header.topnav_label">
+      <a class="brand" href="#top" aria-label="Bian Analytics hjem" data-i18n-attr="aria-label:header.brand_aria">
         <div class="logo" aria-hidden="true">B</div>
         <span>Bian Analytics</span>
       </a>
 
-      <button class="mobile-toggle" aria-expanded="false" aria-controls="mainmenu">Meny</button>
+      <button class="mobile-toggle" aria-expanded="false" aria-controls="mainmenu" data-i18n="mobile.menu_button">Meny</button>
 
-      <!-- Strippet og ryddig meny: 3 grupper -->
-      <nav aria-label="Hovedmeny">
+      <!-- Ryddig meny: 3 grupper -->
+      <nav aria-label="Hovedmeny" data-i18n-attr="aria-label:header.mainmenu_label">
         <ul id="mainmenu">
           <li class="dropdown" aria-expanded="false">
-            <button type="button" aria-haspopup="true" aria-expanded="false">Produkt</button>
-            <div class="menu" role="menu" aria-label="Produkt meny">
-              <a role="menuitem" href="#funksjoner">Oversikt</a>
-              <a role="menuitem" href="#priser">Priser</a>
-              <a role="menuitem" href="#sikkerhet">Sikkerhet</a>
+            <button type="button" aria-haspopup="true" aria-expanded="false" data-i18n="nav.product">Produkt</button>
+            <div class="menu" role="menu" aria-label="Produkt meny" data-i18n-attr="aria-label:nav.product_menu_label">
+              <a role="menuitem" href="#funksjoner" data-i18n="nav.product_overview">Oversikt</a>
+              <a role="menuitem" href="#priser" data-i18n="nav.product_pricing">Priser</a>
+              <a role="menuitem" href="#sikkerhet" data-i18n="nav.product_security">Sikkerhet</a>
             </div>
           </li>
           <li class="dropdown" aria-expanded="false">
-            <button type="button" aria-haspopup="true" aria-expanded="false">Løsninger</button>
-            <div class="menu" role="menu">
-              <a role="menuitem" href="#usecase-enhet">Enkeltrestaurant</a>
-              <a role="menuitem" href="#usecase-kjede">Kjede</a>
-              <a role="menuitem" href="#usecase-takeaway">Takeaway</a>
+            <button type="button" aria-haspopup="true" aria-expanded="false" data-i18n="nav.solutions">Løsninger</button>
+            <div class="menu" role="menu" aria-label="Løsninger meny" data-i18n-attr="aria-label:nav.solutions_menu_label">
+              <a role="menuitem" href="#usecase-enhet" data-i18n="nav.solutions_single">Enkeltrestaurant</a>
+              <a role="menuitem" href="#usecase-kjede" data-i18n="nav.solutions_chain">Kjede</a>
+              <a role="menuitem" href="#usecase-takeaway" data-i18n="nav.solutions_takeaway">Takeaway</a>
             </div>
           </li>
           <li class="dropdown" aria-expanded="false">
-            <button type="button" aria-haspopup="true" aria-expanded="false">Ressurser</button>
-            <div class="menu" role="menu">
-              <a role="menuitem" href="#blogg">Blogg</a>
-              <a role="menuitem" href="#veiledninger">Veiledninger</a>
-              <a role="menuitem" href="#kundehistorier">Kundehistorier</a>
+            <button type="button" aria-haspopup="true" aria-expanded="false" data-i18n="nav.resources">Ressurser</button>
+            <div class="menu" role="menu" aria-label="Ressurser meny" data-i18n-attr="aria-label:nav.resources_menu_label">
+              <a role="menuitem" href="#blogg" data-i18n="nav.resources_blog">Blogg</a>
+              <a role="menuitem" href="#veiledninger" data-i18n="nav.resources_guides">Veiledninger</a>
+              <a role="menuitem" href="#kundehistorier" data-i18n="nav.resources_cases">Kundehistorier</a>
             </div>
           </li>
         </ul>
       </nav>
 
       <div class="nav-right">
-        <a href="#" class="btn ghost sm">Logg inn</a>
-        <a href="#kontakt" class="btn primary sm">Bestill en demo</a>
-        <span class="chip" title="Språk">NO</span>
+        <a href="#" class="btn ghost sm" data-i18n="right.login">Logg inn</a>
+        <a href="#kontakt" class="btn primary sm" data-i18n="right.demo">Bestill en demo</a>
+        <button id="lang-toggle" class="chip" title="Språk">NO</button>
       </div>
     </div>
   </header>
@@ -220,71 +222,74 @@
     <!-- Hero -->
     <section class="hero container" id="top">
       <div>
-        <span class="eyebrow" style="letter-spacing:.12em">Restaurant-analyse</span>
-        <h1>Gjør rådata om til fulle bord og bedre marginer</h1>
-        <p class="lead">Bian gir deg daglige KPI-er for omsetning, dekningsbidrag, bemanning og svinn – alt i én enkel visning. Ta beslutninger med trygghet.</p>
+        <span class="eyebrow" style="letter-spacing:.12em" data-i18n="hero.eyebrow">Restaurant-analyse</span>
+        <h1 data-i18n="hero.h1">Gjør rådata om til fulle bord og bedre marginer</h1>
+        <p class="lead" data-i18n="hero.lead">Bian gir deg daglige KPI-er for omsetning, dekningsbidrag, bemanning og svinn – alt i én enkel visning. Ta beslutninger med trygghet.</p>
         <div style="margin-top:1.5rem; display:flex; gap:1rem; flex-wrap:wrap; align-items:center">
-          <a class="btn primary" href="#kontakt">Book en demo</a>
-          <a class="btn ghost" href="#priser">Se priser</a>
-          <span class="sub" aria-hidden="false" style="font-size:13px">Integreres med POS og Tripletex på under 10 minutter.</span>
+          <a class="btn primary" href="#kontakt" data-i18n="hero.cta_demo">Book en demo</a>
+          <a class="btn ghost" href="#priser" data-i18n="hero.cta_pricing">Se priser</a>
+          <span class="sub" aria-hidden="false" style="font-size:13px" data-i18n="hero.integrates">Integreres med POS og Tripletex på under 10 minutter.</span>
         </div>
         <div class="container" style="padding:0; margin-top:18px">
           <ul style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;color:var(--ink-900);font-size:12px">
-            <li class="badge" style="border-radius:999px;padding:6px 10px;border:1px solid var(--border)">Varsler i sanntid</li>
-            <li class="badge" style="border-radius:999px;padding:6px 10px;border:1px solid var(--border)">Daglige e-poster</li>
-            <li class="badge" style="border-radius:999px;padding:6px 10px;border:1px solid var(--border)">Ubegrensede brukere</li>
+            <li class="badge" style="border-radius:999px;padding:6px 10px;border:1px solid var(--border)" data-i18n="hero.badge1">Varsler i sanntid</li>
+            <li class="badge" style="border-radius:999px;padding:6px 10px;border:1px solid var(--border)" data-i18n="hero.badge2">Daglige e-poster</li>
+            <li class="badge" style="border-radius:999px;padding:6px 10px;border:1px solid var(--border)" data-i18n="hero.badge3">Ubegrensede brukere</li>
           </ul>
         </div>
       </div>
-      <aside class="hero-media" aria-label="Way Down South ved Akerselva (Oslo)">
-        <div class="stamp">Foto: Way Down South</div>
+      <aside class="hero-media" aria-label="Way Down South ved Akerselva (Oslo)" data-i18n-attr="aria-label:hero.image_aria">
+        <div class="stamp" data-i18n="hero.image_stamp">Foto: Way Down South</div>
       </aside>
     </section>
 
     <!-- Visual gallery -->
     <section aria-labelledby="galleri-heading">
       <div class="container">
-        <span class="eyebrow">Oslo</span>
-        <h2 id="galleri-heading">Ekte steder – Oslo-restauranter</h2>
-        <p class="sub">Bilder fra Gressholmen Kro, Way Down South og Gangnam (Munkedamsveien 59).</p>
+        <span class="eyebrow" data-i18n="oslo.eyebrow">Oslo</span>
+        <h2 id="galleri-heading" data-i18n="oslo.h2">Ekte steder – Oslo-restauranter</h2>
+        <p class="sub" data-i18n="oslo.sub">Bilder fra Gressholmen Kro, Way Down South og Gangnam (Munkedamsveien 59).</p>
 
         <div class="gallery" role="list">
           <figure role="listitem">
             <img
               loading="lazy"
               alt="Gressholmen Kro på Gressholmen i indre Oslofjord"
+              data-i18n-attr="alt:gallery.gressholmen_alt"
               src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/1280px-Gressholmen_kro.jpg"
               srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/640px-Gressholmen_kro.jpg 640w,
                       https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/1280px-Gressholmen_kro.jpg 1280w"
               sizes="(max-width: 800px) 100vw, 33vw"
             />
-            <figcaption>Gressholmen Kro</figcaption>
+            <figcaption data-i18n="gallery.gressholmen_cap">Gressholmen Kro</figcaption>
           </figure>
 
           <figure role="listitem">
             <img
               loading="lazy"
               alt="Way Down South – uteservering ved Akerselva"
+              data-i18n-attr="alt:gallery.wds_alt"
               src="https://static.wixstatic.com/media/580a76_cb72049b7fe04202b38fb3294a227aa1~mv2.jpg/v1/fill/w_980,h_654,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/580a76_cb72049b7fe04202b38fb3294a227aa1~mv2.jpg"
               sizes="(max-width: 800px) 100vw, 33vw"
             />
-            <figcaption>Way Down South</figcaption>
+            <figcaption data-i18n="gallery.wds_cap">Way Down South</figcaption>
           </figure>
 
           <figure role="listitem">
             <img
               loading="lazy"
               alt="Munkedamsveien 59 i Oslo – bygget der Gangnam Korean Restaurant holder til"
+              data-i18n-attr="alt:gallery.gangnam_alt"
               src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Munkedamsveien_59_I.jpg/1280px-Munkedamsveien_59_I.jpg"
               srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Munkedamsveien_59_I.jpg/640px-Munkedamsveien_59_I.jpg 640w,
                       https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Munkedamsveien_59_I.jpg/1280px-Munkedamsveien_59_I.jpg 1280w"
               sizes="(max-width: 800px) 100vw, 33vw"
             />
-            <figcaption>Gangnam (Munkedamsveien 59)</figcaption>
+            <figcaption data-i18n="gallery.gangnam_cap">Gangnam (Munkedamsveien 59)</figcaption>
           </figure>
         </div>
 
-        <p class="sub" style="margin-top:10px">
+        <p class="sub" style="margin-top:10px" data-i18n="gallery.credit">
           Kreditering: Gressholmen Kro © GAD, CC BY-SA 4.0 (Wikimedia Commons). Way Down South © Way Down South (offisielt nettsted). Munkedamsveien 59 © Jan-Tore Egge, CC BY-SA 4.0 (Wikimedia Commons).
         </p>
       </div>
@@ -293,29 +298,29 @@
     <!-- Features -->
     <section id="funksjoner" aria-labelledby="features-heading">
       <div class="container">
-        <span class="eyebrow">Hvorfor Bian</span>
-        <h2 id="features-heading">Alt du trenger — uten støy</h2>
-        <p class="sub">Få oversikt over hva som faktisk påvirker bunnlinjen: menybidrag, timeplan mot trafikk, og sanntidsvarsel når nøkkeltall avviker.</p>
+        <span class="eyebrow" data-i18n="features.eyebrow">Hvorfor Bian</span>
+        <h2 id="features-heading" data-i18n="features.h2">Alt du trenger — uten støy</h2>
+        <p class="sub" data-i18n="features.sub">Få oversikt over hva som faktisk påvirker bunnlinjen: menybidrag, timeplan mot trafikk, og sanntidsvarsel når nøkkeltall avviker.</p>
         <div class="features" role="list">
           <article class="card" role="listitem">
-            <h3>Menyoptimalisering</h3>
-            <p>Se hvilke retter som driver DB, hvilke som bør ut, og hva du skal prise opp.</p>
+            <h3 data-i18n="features.f1_title">Menyoptimalisering</h3>
+            <p data-i18n="features.f1_body">Se hvilke retter som driver DB, hvilke som bør ut, og hva du skal prise opp.</p>
           </article>
           <article class="card" role="listitem">
-            <h3>Bemanning vs. trafikk</h3>
-            <p>Match timelister mot faktisk etterspørsel for å kutte overtid og kø.</p>
+            <h3 data-i18n="features.f2_title">Bemanning vs. trafikk</h3>
+            <p data-i18n="features.f2_body">Match timelister mot faktisk etterspørsel for å kutte overtid og kø.</p>
           </article>
           <article class="card" role="listitem">
-            <h3>Varsler i sanntid</h3>
-            <p>Få et ping når svinn, varekost eller leverandørpriser hopper uten grunn.</p>
+            <h3 data-i18n="features.f3_title">Varsler i sanntid</h3>
+            <p data-i18n="features.f3_body">Få et ping når svinn, varekost eller leverandørpriser hopper uten grunn.</p>
           </article>
         </div>
         <div class="band" role="region" aria-label="Handlebånd">
           <div>
-            <h3 style="margin:0 0 6px">Klar på under 10 minutter</h3>
-            <p style="margin:0;opacity:.9">Koble til POS og Tripletex. Vi tar resten.</p>
+            <h3 style="margin:0 0 6px" data-i18n="band.h3">Klar på under 10 minutter</h3>
+            <p style="margin:0;opacity:.9" data-i18n="band.p">Koble til POS og Tripletex. Vi tar resten.</p>
           </div>
-          <a class="btn" href="#kontakt">Start gratis prøve</a>
+          <a class="btn" href="#kontakt" data-i18n="band.cta">Start gratis prøve</a>
         </div>
       </div>
     </section>
@@ -323,43 +328,43 @@
     <!-- Pricing -->
     <section id="priser" class="pricing" aria-labelledby="pricing-heading">
       <div class="container">
-        <span class="eyebrow">Priser</span>
-        <h2 id="pricing-heading">Én enkel plan</h2>
-        <p class="sub">Skaler fra én restaurant til kjede uten skjulte kostnader.</p>
+        <span class="eyebrow" data-i18n="pricing.eyebrow">Priser</span>
+        <h2 id="pricing-heading" data-i18n="pricing.h2">Én enkel plan</h2>
+        <p class="sub" data-i18n="pricing.sub">Skaler fra én restaurant til kjede uten skjulte kostnader.</p>
         <div class="features" style="align-items:stretch">
           <article class="card" style="background:linear-gradient(180deg,#fafafa,transparent);border-color:#e3e3e3">
             <h3>Pro</h3>
-            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px">Alt du trenger for daglig styring</p>
-            <p class="price"><strong>kr 990</strong> <small>/ mnd</small></p>
+            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.pro_sub">Alt du trenger for daglig styring</p>
+            <p class="price"><strong>kr 990</strong> <small data-i18n="pricing.per_month">/ mnd</small></p>
             <ul style="margin:10px 0 0 18px;color:var(--ink-700)">
-              <li>Ubegrensede brukere</li>
-              <li>POS + Tripletex integrasjon</li>
-              <li>Daglige e-postrapporter</li>
-              <li>Varsler i sanntid</li>
-              <li>E-postsupport</li>
+              <li data-i18n="pricing.b1">Ubegrensede brukere</li>
+              <li data-i18n="pricing.b2">POS + Tripletex integrasjon</li>
+              <li data-i18n="pricing.b3">Daglige e-postrapporter</li>
+              <li data-i18n="pricing.b4">Varsler i sanntid</li>
+              <li data-i18n="pricing.b5">E-postsupport</li>
             </ul>
-            <div class="cta"><a class="btn primary" href="#kontakt">Book demo</a></div>
+            <div class="cta"><a class="btn primary" href="#kontakt" data-i18n="pricing.cta_demo">Book demo</a></div>
           </article>
           <article class="card">
             <h3>Enterprise</h3>
-            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px">For kjeder og avanserte behov</p>
+            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.ent_sub">For kjeder og avanserte behov</p>
             <ul style="margin:10px 0 0 18px;color:var(--ink-700)">
-              <li>Fler-enhetsdashbord</li>
-              <li>Dedikert kundekontakt</li>
-              <li>Tilpassede integrasjoner</li>
+              <li data-i18n="pricing.e1">Fler-enhetsdashbord</li>
+              <li data-i18n="pricing.e2">Dedikert kundekontakt</li>
+              <li data-i18n="pricing.e3">Tilpassede integrasjoner</li>
               <li>SLA & SSO</li>
             </ul>
-            <div class="cta"><a class="btn ghost" href="#kontakt">Snakk med oss</a></div>
+            <div class="cta"><a class="btn ghost" href="#kontakt" data-i18n="pricing.cta_talk">Snakk med oss</a></div>
           </article>
           <article class="card">
-            <h3>Gratis prøve</h3>
-            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px">14 dager, ingen betalingsinfo</p>
+            <h3 data-i18n="pricing.trial_title">Gratis prøve</h3>
+            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.trial_sub">14 dager, ingen betalingsinfo</p>
             <ul style="margin:10px 0 0 18px;color:var(--ink-700)">
-              <li>Demo-data eller dine egne</li>
-              <li>Kom-i-gang-guide</li>
-              <li>Avslutt når som helst</li>
+              <li data-i18n="pricing.t1">Demo-data eller dine egne</li>
+              <li data-i18n="pricing.t2">Kom-i-gang-guide</li>
+              <li data-i18n="pricing.t3">Avslutt når som helst</li>
             </ul>
-            <div class="cta"><a class="btn ghost" href="#kontakt">Start gratis</a></div>
+            <div class="cta"><a class="btn ghost" href="#kontakt" data-i18n="pricing.cta_start">Start gratis</a></div>
           </article>
         </div>
       </div>
@@ -368,15 +373,15 @@
     <!-- Contact -->
     <section id="kontakt" aria-labelledby="contact-heading">
       <div class="container">
-        <span class="eyebrow">Kontakt</span>
-        <h2 id="contact-heading">Book en demo</h2>
-        <p class="sub">Legg igjen e-post så sender vi deg kalenderlink. Du kan også svare på e-posten hvis du har spørsmål.</p>
-        <form class="card" id="contact-form" aria-label="Kontaktskjema" style="max-width:560px">
-          <label for="email" style="display:block;margin-bottom:6px;color:var(--ink-900)">E-post</label>
-          <input id="email" name="email" type="email" required placeholder="din@restaurant.no" autocomplete="email" style="width:100%;padding:14px;border-radius:12px;border:1px solid var(--border);outline:none" />
+        <span class="eyebrow" data-i18n="contact.eyebrow">Kontakt</span>
+        <h2 id="contact-heading" data-i18n="contact.h2">Book en demo</h2>
+        <p class="sub" data-i18n="contact.p">Legg igjen e-post så sender vi deg kalenderlink. Du kan også svare på e-posten hvis du har spørsmål.</p>
+        <form class="card" id="contact-form" aria-label="Kontaktskjema" style="max-width:560px" data-i18n-attr="aria-label:contact.form_aria">
+          <label for="email" style="display:block;margin-bottom:6px;color:var(--ink-900)" data-i18n="contact.email_label">E-post</label>
+          <input id="email" name="email" type="email" required placeholder="din@restaurant.no" autocomplete="email" style="width:100%;padding:14px;border-radius:12px;border:1px solid var(--border);outline:none" data-i18n-attr="placeholder:contact.email_placeholder"/>
           <div style="display:flex;gap:10px;margin-top:14px">
-            <button class="btn primary" type="submit">Send</button>
-            <a class="btn ghost" href="#top">Til toppen</a>
+            <button class="btn primary" type="submit" data-i18n="contact.send">Send</button>
+            <a class="btn ghost" href="#top" data-i18n="contact.to_top">Til toppen</a>
           </div>
           <p id="form-feedback" class="sub" role="status" aria-live="polite" style="margin-top:10px"></p>
         </form>
@@ -386,17 +391,17 @@
 
   <footer>
     <div class="container row">
-      <p>© <span id="year"></span> Bian Analytics. Alle rettigheter forbeholdt.</p>
-      <a href="#" style="text-decoration:none;color:inherit">Personvern</a>
+      <p>© <span id="year"></span> Bian Analytics. <span data-i18n="footer.rights">Alle rettigheter forbeholdt.</span></p>
+      <a href="#" style="text-decoration:none;color:inherit" data-i18n="footer.privacy">Personvern</a>
     </div>
   </footer>
 
   <div id="toast" class="container" style="position:fixed;inset:auto 0 18px 0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:60">
-    <div style="pointer-events:auto;background:var(--ink-900);color:white;padding:12px 16px;border-radius:999px;box-shadow:var(--shadow)">Takk! Vi tar kontakt snart.</div>
+    <div id="toast-text" style="pointer-events:auto;background:var(--ink-900);color:white;padding:12px 16px;border-radius:999px;box-shadow:var(--shadow)">Takk! Vi tar kontakt snart.</div>
   </div>
 
   <noscript>
-    <div class="container" style="padding:14px 0;color:#b00020">Denne siden fungerer best med JavaScript aktivert.</div>
+    <div class="container" style="padding:14px 0;color:#b00020" data-i18n="noscript">Denne siden fungerer best med JavaScript aktivert.</div>
   </noscript>
 
   <script>
@@ -404,14 +409,212 @@
     const $ = (sel, ctx=document) => ctx.querySelector(sel);
     const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
 
+    // I18N dictionary
+    const i18n = {
+      no: {
+        "meta.title": "Bian Analytics — Innsikt for restauranter",
+        "meta.description": "Konverter rådata til fulle bord og bedre marginer. Bian gir daglige KPI-er, varsler og integrasjoner for restauranter og kjeder.",
+        "skiplink": "Hopp til innhold",
+        "header.topnav_label": "Toppmeny",
+        "header.brand_aria": "Bian Analytics hjem",
+        "header.mainmenu_label": "Hovedmeny",
+        "mobile.menu_button":"Meny",
+        "nav.product":"Produkt",
+        "nav.product_menu_label":"Produkt meny",
+        "nav.product_overview":"Oversikt",
+        "nav.product_pricing":"Priser",
+        "nav.product_security":"Sikkerhet",
+        "nav.solutions":"Løsninger",
+        "nav.solutions_menu_label":"Løsninger meny",
+        "nav.solutions_single":"Enkeltrestaurant",
+        "nav.solutions_chain":"Kjede",
+        "nav.solutions_takeaway":"Takeaway",
+        "nav.resources":"Ressurser",
+        "nav.resources_menu_label":"Ressurser meny",
+        "nav.resources_blog":"Blogg",
+        "nav.resources_guides":"Veiledninger",
+        "nav.resources_cases":"Kundehistorier",
+        "right.login":"Logg inn",
+        "right.demo":"Bestill en demo",
+        "hero.eyebrow":"Restaurant-analyse",
+        "hero.h1":"Gjør rådata om til fulle bord og bedre marginer",
+        "hero.lead":"Bian gir deg daglige KPI-er for omsetning, dekningsbidrag, bemanning og svinn – alt i én enkel visning. Ta beslutninger med trygghet.",
+        "hero.cta_demo":"Book en demo",
+        "hero.cta_pricing":"Se priser",
+        "hero.integrates":"Integreres med POS og Tripletex på under 10 minutter.",
+        "hero.badge1":"Varsler i sanntid",
+        "hero.badge2":"Daglige e-poster",
+        "hero.badge3":"Ubegrensede brukere",
+        "hero.image_stamp":"Foto: Way Down South",
+        "hero.image_aria":"Way Down South ved Akerselva (Oslo)",
+        "oslo.eyebrow":"Oslo",
+        "oslo.h2":"Ekte steder – Oslo-restauranter",
+        "oslo.sub":"Bilder fra Gressholmen Kro, Way Down South og Gangnam (Munkedamsveien 59).",
+        "gallery.gressholmen_cap":"Gressholmen Kro",
+        "gallery.gressholmen_alt":"Gressholmen Kro på Gressholmen i indre Oslofjord",
+        "gallery.wds_cap":"Way Down South",
+        "gallery.wds_alt":"Way Down South – uteservering ved Akerselva",
+        "gallery.gangnam_cap":"Gangnam (Munkedamsveien 59)",
+        "gallery.gangnam_alt":"Munkedamsveien 59 i Oslo – bygget der Gangnam Korean Restaurant holder til",
+        "gallery.credit":"Kreditering: Gressholmen Kro © GAD, CC BY-SA 4.0 (Wikimedia Commons). Way Down South © Way Down South (offisielt nettsted). Munkedamsveien 59 © Jan-Tore Egge, CC BY-SA 4.0 (Wikimedia Commons).",
+        "features.eyebrow":"Hvorfor Bian",
+        "features.h2":"Alt du trenger — uten støy",
+        "features.sub":"Få oversikt over hva som faktisk påvirker bunnlinjen: menybidrag, timeplan mot trafikk, og sanntidsvarsel når nøkkeltall avviker.",
+        "features.f1_title":"Menyoptimalisering",
+        "features.f1_body":"Se hvilke retter som driver DB, hvilke som bør ut, og hva du skal prise opp.",
+        "features.f2_title":"Bemanning vs. trafikk",
+        "features.f2_body":"Match timelister mot faktisk etterspørsel for å kutte overtid og kø.",
+        "features.f3_title":"Varsler i sanntid",
+        "features.f3_body":"Få et ping når svinn, varekost eller leverandørpriser hopper uten grunn.",
+        "band.h3":"Klar på under 10 minutter",
+        "band.p":"Koble til POS og Tripletex. Vi tar resten.",
+        "band.cta":"Start gratis prøve",
+        "pricing.eyebrow":"Priser",
+        "pricing.h2":"Én enkel plan",
+        "pricing.sub":"Skaler fra én restaurant til kjede uten skjulte kostnader.",
+        "pricing.pro_sub":"Alt du trenger for daglig styring",
+        "pricing.per_month":"/ mnd",
+        "pricing.b1":"Ubegrensede brukere",
+        "pricing.b2":"POS + Tripletex integrasjon",
+        "pricing.b3":"Daglige e-postrapporter",
+        "pricing.b4":"Varsler i sanntid",
+        "pricing.b5":"E-postsupport",
+        "pricing.cta_demo":"Book demo",
+        "pricing.ent_sub":"For kjeder og avanserte behov",
+        "pricing.e1":"Fler-enhetsdashbord",
+        "pricing.e2":"Dedikert kundekontakt",
+        "pricing.e3":"Tilpassede integrasjoner",
+        "pricing.cta_talk":"Snakk med oss",
+        "pricing.trial_title":"Gratis prøve",
+        "pricing.trial_sub":"14 dager, ingen betalingsinfo",
+        "pricing.t1":"Demo-data eller dine egne",
+        "pricing.t2":"Kom-i-gang-guide",
+        "pricing.t3":"Avslutt når som helst",
+        "pricing.cta_start":"Start gratis",
+        "contact.eyebrow":"Kontakt",
+        "contact.h2":"Book en demo",
+        "contact.p":"Legg igjen e-post så sender vi deg kalenderlink. Du kan også svare på e-posten hvis du har spørsmål.",
+        "contact.form_aria":"Kontaktskjema",
+        "contact.email_label":"E-post",
+        "contact.email_placeholder":"din@restaurant.no",
+        "contact.send":"Send",
+        "contact.to_top":"Til toppen",
+        "footer.rights":"Alle rettigheter forbeholdt.",
+        "footer.privacy":"Personvern",
+        "noscript":"Denne siden fungerer best med JavaScript aktivert.",
+        "form.invalid":"Vennligst skriv inn en gyldig e-post.",
+        "form.success":"Takk! Du hører fra oss snart.",
+        "form.error":"Noe gikk galt. Prøv igjen om litt.",
+        "toast.text":"Takk! Vi tar kontakt snart.",
+        "lang.toggle_label":"Bytt til engelsk"
+      },
+      en: {
+        "meta.title": "Bian Analytics — Insights for restaurants",
+        "meta.description": "Turn raw data into full tables and better margins. Bian delivers daily KPIs, alerts and integrations for restaurants and groups.",
+        "skiplink": "Skip to content",
+        "header.topnav_label": "Top menu",
+        "header.brand_aria": "Bian Analytics home",
+        "header.mainmenu_label": "Main menu",
+        "mobile.menu_button":"Menu",
+        "nav.product":"Product",
+        "nav.product_menu_label":"Product menu",
+        "nav.product_overview":"Overview",
+        "nav.product_pricing":"Pricing",
+        "nav.product_security":"Security",
+        "nav.solutions":"Solutions",
+        "nav.solutions_menu_label":"Solutions menu",
+        "nav.solutions_single":"Single restaurant",
+        "nav.solutions_chain":"Chain",
+        "nav.solutions_takeaway":"Takeaway",
+        "nav.resources":"Resources",
+        "nav.resources_menu_label":"Resources menu",
+        "nav.resources_blog":"Blog",
+        "nav.resources_guides":"Guides",
+        "nav.resources_cases":"Customer stories",
+        "right.login":"Log in",
+        "right.demo":"Book a demo",
+        "hero.eyebrow":"Restaurant analytics",
+        "hero.h1":"Turn raw data into full tables and better margins",
+        "hero.lead":"Bian gives you daily KPIs for revenue, margin, staffing and waste — all in one simple view. Make decisions with confidence.",
+        "hero.cta_demo":"Book a demo",
+        "hero.cta_pricing":"See pricing",
+        "hero.integrates":"Connects to POS and Tripletex in under 10 minutes.",
+        "hero.badge1":"Real-time alerts",
+        "hero.badge2":"Daily emails",
+        "hero.badge3":"Unlimited users",
+        "hero.image_stamp":"Photo: Way Down South",
+        "hero.image_aria":"Way Down South by the Akerselva (Oslo)",
+        "oslo.eyebrow":"Oslo",
+        "oslo.h2":"Real places — Oslo restaurants",
+        "oslo.sub":"Photos from Gressholmen Kro, Way Down South and Gangnam (Munkedamsveien 59).",
+        "gallery.gressholmen_cap":"Gressholmen Kro",
+        "gallery.gressholmen_alt":"Gressholmen Kro on the islet of Gressholmen in Oslofjord",
+        "gallery.wds_cap":"Way Down South",
+        "gallery.wds_alt":"Way Down South — outdoor seating by the river",
+        "gallery.gangnam_cap":"Gangnam (Munkedamsveien 59)",
+        "gallery.gangnam_alt":"Munkedamsveien 59 in Oslo — building that hosts Gangnam Korean Restaurant",
+        "gallery.credit":"Credits: Gressholmen Kro © GAD, CC BY-SA 4.0 (Wikimedia Commons). Way Down South © Way Down South (official site). Munkedamsveien 59 © Jan-Tore Egge, CC BY-SA 4.0 (Wikimedia Commons).",
+        "features.eyebrow":"Why Bian",
+        "features.h2":"Everything you need — no noise",
+        "features.sub":"Focus on what actually moves the bottom line: menu contribution, schedules vs. traffic, and real-time alerts when key metrics drift.",
+        "features.f1_title":"Menu optimization",
+        "features.f1_body":"See which dishes drive margin, what to remove, and what to re-price.",
+        "features.f2_title":"Staffing vs. traffic",
+        "features.f2_body":"Match timesheets with demand to cut overtime and queues.",
+        "features.f3_title":"Real-time alerts",
+        "features.f3_body":"Get a ping when waste, COGS or supplier prices jump for no reason.",
+        "band.h3":"Ready in under 10 minutes",
+        "band.p":"Connect to POS and Tripletex. We’ll take care of the rest.",
+        "band.cta":"Start free trial",
+        "pricing.eyebrow":"Pricing",
+        "pricing.h2":"One simple plan",
+        "pricing.sub":"Scale from a single restaurant to a chain with no hidden costs.",
+        "pricing.pro_sub":"Everything you need for daily operations",
+        "pricing.per_month":"/ mo",
+        "pricing.b1":"Unlimited users",
+        "pricing.b2":"POS + Tripletex integration",
+        "pricing.b3":"Daily email reports",
+        "pricing.b4":"Real-time alerts",
+        "pricing.b5":"Email support",
+        "pricing.cta_demo":"Book demo",
+        "pricing.ent_sub":"For chains and advanced needs",
+        "pricing.e1":"Multi-unit dashboard",
+        "pricing.e2":"Dedicated account manager",
+        "pricing.e3":"Custom integrations",
+        "pricing.cta_talk":"Talk to us",
+        "pricing.trial_title":"Free trial",
+        "pricing.trial_sub":"14 days, no payment info",
+        "pricing.t1":"Demo data or your own",
+        "pricing.t2":"Getting started guide",
+        "pricing.t3":"Cancel anytime",
+        "pricing.cta_start":"Start free",
+        "contact.eyebrow":"Contact",
+        "contact.h2":"Book a demo",
+        "contact.p":"Leave your email and we’ll send a calendar link. You can reply to the email if you have questions.",
+        "contact.form_aria":"Contact form",
+        "contact.email_label":"Email",
+        "contact.email_placeholder":"you@restaurant.com",
+        "contact.send":"Send",
+        "contact.to_top":"To the top",
+        "footer.rights":"All rights reserved.",
+        "footer.privacy":"Privacy",
+        "noscript":"This site works best with JavaScript enabled.",
+        "form.invalid":"Please enter a valid email address.",
+        "form.success":"Thanks! You’ll hear from us soon.",
+        "form.error":"Something went wrong. Please try again shortly.",
+        "toast.text":"Thanks! We’ll be in touch soon.",
+        "lang.toggle_label":"Switch to Norwegian"
+      }
+    };
+
     // Year
     $('#year')?.append(document.createTextNode(new Date().getFullYear()));
 
     // Mobile menu toggle
     const toggle = document.querySelector('.mobile-toggle');
-    const menu = document.getElementById('mainmenu');
+    const menuEl = document.getElementById('mainmenu');
     toggle?.addEventListener('click', () => {
-      const open = menu.classList.toggle('open');
+      const open = menuEl.classList.toggle('open');
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
 
@@ -437,6 +640,63 @@
       });
     });
 
+    // I18N helpers
+    const langBtn = $('#lang-toggle');
+
+    function applyLang(lang){
+      const dict = i18n[lang] || i18n.no;
+      document.documentElement.lang = (lang === 'en') ? 'en' : 'no';
+
+      // Update text nodes
+      $$('[data-i18n]').forEach(el=>{
+        const key = el.getAttribute('data-i18n');
+        if(dict[key] !== undefined){
+          el.textContent = dict[key];
+        }
+      });
+
+      // Update attributes (alt, aria-label, placeholder, etc.)
+      $$('[data-i18n-attr]').forEach(el=>{
+        const pairs = el.getAttribute('data-i18n-attr').split(',');
+        pairs.forEach(p=>{
+          const [attr, key] = p.split(':').map(s=>s.trim());
+          if(dict[key] !== undefined){
+            el.setAttribute(attr, dict[key]);
+          }
+        });
+      });
+
+      // Title + meta + OG
+      document.title = dict["meta.title"];
+      const md = document.querySelector('meta[name="description"]');
+      if(md) md.setAttribute('content', dict["meta.description"]);
+      const ogt = document.querySelector('meta[property="og:title"]');
+      if(ogt) ogt.setAttribute('content', dict["meta.title"]);
+      const ogd = document.querySelector('meta[property="og:description"]');
+      if(ogd) ogd.setAttribute('content', dict["meta.description"]);
+
+      // Button label + aria
+      langBtn.textContent = lang.toUpperCase(); // viser aktivt språk
+      langBtn.setAttribute('aria-label', dict["lang.toggle_label"] || '');
+
+      // Toast text
+      $('#toast-text').textContent = dict["toast.text"];
+    }
+
+    // Init language (saved -> browser -> no)
+    const saved = localStorage.getItem('bian.lang');
+    const browserDefault = (navigator.language || '').toLowerCase().startsWith('no') ? 'no' : 'en';
+    const initialLang = saved || browserDefault || 'no';
+    applyLang(initialLang);
+
+    // Toggle language
+    langBtn.addEventListener('click', ()=>{
+      const current = (document.documentElement.lang === 'en') ? 'en' : 'no';
+      const next = current === 'no' ? 'en' : 'no';
+      localStorage.setItem('bian.lang', next);
+      applyLang(next);
+    });
+
     // Contact form (demo)
     const form = $('#contact-form');
     const feedback = $('#form-feedback');
@@ -444,15 +704,19 @@
     form?.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const email = $('#email').value.trim();
-      if(!email){ feedback.textContent = 'Vennligst skriv inn en gyldig e-post.'; return; }
+      const lang = document.documentElement.lang === 'en' ? 'en' : 'no';
+      const dict = i18n[lang];
+
+      if(!email){ feedback.textContent = dict['form.invalid']; return; }
       try{
         await new Promise(r=>setTimeout(r, 650));
-        feedback.textContent = 'Takk! Du hører fra oss snart.';
+        feedback.textContent = dict['form.success'];
+        $('#toast-text').textContent = dict['toast.text'];
         toast.style.display = 'flex';
         setTimeout(()=> toast.style.display='none', 2400);
         form.reset();
       }catch(err){
-        feedback.textContent = 'Noe gikk galt. Prøv igjen om litt.';
+        feedback.textContent = dict['form.error'];
       }
     });
   </script>
