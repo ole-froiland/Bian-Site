@@ -12,7 +12,7 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="Bian Analytics — Innsikt for restauranter">
   <meta property="og:description" content="Daglige KPI-er, menybidrag, bemanning vs. trafikk og varsler. Integreres med POS og Tripletex på under 10 minutter.">
-  <meta property="og:image" content="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1200&q=80">
+  <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/1280px-Gressholmen_kro.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="/">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%232563eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='76' font-family='Arial,Helvetica,sans-serif' fill='white'%3EB%3C/text%3E%3C/svg%3E" />
@@ -33,17 +33,7 @@
       --ring: 0 0 0 3px rgba(31,79,204,.24);
     }
     @media (prefers-color-scheme: dark){
-      :root{
-        color-scheme: light;
-        --ink-900:#0b1220;
-        --ink-800:#111827;
-        --ink-700:#1f2937;
-        --ink-600:#374151;
-        --ink-500:#4b5563;
-        --surface:#ffffff;
-        --muted:#f5f7fb;
-        --border:#e5e7eb;
-      }
+      :root{ color-scheme: light; --ink-900:#0b1220; --ink-800:#111827; --ink-700:#1f2937; --ink-600:#374151; --ink-500:#4b5563; --surface:#ffffff; --muted:#f5f7fb; --border:#e5e7eb; }
       body{background:#ffffff;color:var(--ink-900);}  
     }
 
@@ -51,14 +41,10 @@
     *,*::before,*::after{box-sizing:border-box}
     html{scroll-behavior:smooth}
     body{
-      margin:0;
-      font-size:17px;
+      margin:0; font-size:17px;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Noto Sans", sans-serif;
-      background:#ffffff;
-      color:var(--ink-900);
-      line-height:1.7;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
+      background:#ffffff; color:var(--ink-900); line-height:1.7;
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
     }
     a{color:var(--ink-900);text-decoration:underline;text-underline-offset:3px}
     a:hover{color:var(--brand-600)}
@@ -74,19 +60,14 @@
 
     /* Header */
     header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter: blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
-    .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-block:14px;
-      /* ekstra høyre-padding for mer luft */
-      padding-inline-end:clamp(28px,6vw,96px);
-    }
+    .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-block:14px;padding-inline-end:clamp(28px,6vw,96px)}
     .brand{display:flex;gap:.6rem;align-items:center;font-weight:800;color:var(--ink-900);text-decoration:none}
     .brand .logo{inline-size:36px;block-size:36px;border-radius:12px;background:linear-gradient(180deg,var(--brand-600),var(--brand-700));color:#fff;display:grid;place-items:center;box-shadow:var(--shadow)}
     .brand span{font-size:18px}
-
     nav{justify-self:center}
     nav ul{display:flex;align-items:center;gap:24px}
     .nav a, nav .dropdown > button{font-size:clamp(14px,1.3vw,16px);font-weight:700;letter-spacing:.01em;color:var(--ink-900);padding:10px 12px;border-radius:999px;text-decoration:none}
     .nav a:hover, nav .dropdown > button:hover{background:var(--muted)}
-
     .nav-right{display:flex;align-items:center;gap:12px}
 
     /* Dropdowns */
@@ -115,7 +96,14 @@
     h1{margin:0 0 12px;font-size:clamp(36px,5.6vw,60px);line-height:1.06}
     .lead{font-size:clamp(17px,2.4vw,20px);color:var(--ink-800);max-width:65ch}
 
-    .hero-media{position:relative;border-radius:22px;overflow:hidden;min-height:428px;background:linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.05)), url('https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;box-shadow: var(--shadow)}
+    /* Oslo hero-bilde (Way Down South) */
+    .hero-media{
+      position:relative;border-radius:22px;overflow:hidden;min-height:428px;
+      background:linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.05)),
+        url('https://static.wixstatic.com/media/580a76_fb643904eef04a3bac52115b395f0981~mv2.jpg/v1/fill/w_1280,h_768,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/580a76_fb643904eef04a3bac52115b395f0981~mv2.jpg')
+        center/cover no-repeat;
+      box-shadow: var(--shadow)
+    }
     .hero-media::after{content:"";position:absolute;inset:0;background:radial-gradient(520px 200px at 8% 0%, rgba(31,79,204,.06), transparent 70%)}
     .hero-media .stamp{position:absolute;left:16px;bottom:16px;background:rgba(255,255,255,.98);backdrop-filter:saturate(140%) blur(6px);padding:10px 12px;border-radius:12px;font-size:13px;color:#111;border:1px solid var(--border)}
 
@@ -129,8 +117,11 @@
     .card h3{margin:0 0 8px}
     .card p{color:var(--ink-900)}
 
+    /* Gallery w/ captions */
     .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+    .gallery figure{margin:0}
     .gallery img{width:100%;height:220px;object-fit:cover;border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+    .gallery figcaption{font-size:12px;color:var(--ink-600);margin-top:6px}
 
     .band{background:linear-gradient(180deg,#fafcff,#eef2ff);color:var(--ink-900);border:1px solid var(--border);border-radius:20px;padding:26px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:30px}
     .band .btn{background:var(--brand-600);color:white;border-color:transparent}
@@ -157,9 +148,11 @@
       nav ul.open{display:flex}
       .menu{position:static;display:block;border:0;box-shadow:none;padding:0}
       .nav{padding-inline-end:20px}
+      .gallery{grid-template-columns:1fr}
+      .hero-media{min-height:300px}
     }
 
-    /* High contrast preference */
+    /* High contrast */
     @media (prefers-contrast: more){
       body{color:var(--ink-900)}
       .sub,.lead{color:var(--ink-900)}
@@ -243,22 +236,57 @@
           </ul>
         </div>
       </div>
-      <aside class="hero-media" aria-label="Restaurant-stemning">
-        <div class="stamp">Foto: Unsplash</div>
+      <aside class="hero-media" aria-label="Way Down South ved Akerselva (Oslo)">
+        <div class="stamp">Foto: Way Down South</div>
       </aside>
     </section>
 
     <!-- Visual gallery -->
     <section aria-labelledby="galleri-heading">
       <div class="container">
-        <span class="eyebrow">Stemning</span>
-        <h2 id="galleri-heading">Designet for ekte restaurantmiljø</h2>
-        <p class="sub">Proffe, lisensfrie bilder som matcher en ren, datadrevet stil. Bytt enkelt til egne bilder ved å endre URL-er.</p>
+        <span class="eyebrow">Oslo</span>
+        <h2 id="galleri-heading">Ekte steder – Oslo-restauranter</h2>
+        <p class="sub">Bilder fra Gressholmen Kro, Way Down South og Gangnam (Munkedamsveien 59).</p>
+
         <div class="gallery" role="list">
-          <img role="listitem" loading="lazy" alt="Restaurant interiør" src="https://images.unsplash.com/photo-1528736235302-52922df5c122?auto=format&fit=crop&w=1200&q=80" srcset="https://images.unsplash.com/photo-1528736235302-52922df5c122?auto=format&fit=crop&w=800&q=60 800w, https://images.unsplash.com/photo-1528736235302-52922df5c122?auto=format&fit=crop&w=1200&q=80 1200w" sizes="(max-width: 800px) 100vw, 33vw"/>
-          <img role="listitem" loading="lazy" alt="Anrettet rett på tallerken" src="https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=1200&q=80" srcset="https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=800&q=60 800w, https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=1200&q=80 1200w" sizes="(max-width: 800px) 100vw, 33vw"/>
-          <img role="listitem" loading="lazy" alt="Moderne restaurantbar" src="https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1200&q=80" srcset="https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=800&q=60 800w, https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1200&q=80 1200w" sizes="(max-width: 800px) 100vw, 33vw"/>
+          <figure role="listitem">
+            <img
+              loading="lazy"
+              alt="Gressholmen Kro på Gressholmen i indre Oslofjord"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/1280px-Gressholmen_kro.jpg"
+              srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/640px-Gressholmen_kro.jpg 640w,
+                      https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/1280px-Gressholmen_kro.jpg 1280w"
+              sizes="(max-width: 800px) 100vw, 33vw"
+            />
+            <figcaption>Gressholmen Kro</figcaption>
+          </figure>
+
+          <figure role="listitem">
+            <img
+              loading="lazy"
+              alt="Way Down South – uteservering ved Akerselva"
+              src="https://static.wixstatic.com/media/580a76_cb72049b7fe04202b38fb3294a227aa1~mv2.jpg/v1/fill/w_980,h_654,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/580a76_cb72049b7fe04202b38fb3294a227aa1~mv2.jpg"
+              sizes="(max-width: 800px) 100vw, 33vw"
+            />
+            <figcaption>Way Down South</figcaption>
+          </figure>
+
+          <figure role="listitem">
+            <img
+              loading="lazy"
+              alt="Munkedamsveien 59 i Oslo – bygget der Gangnam Korean Restaurant holder til"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Munkedamsveien_59_I.jpg/1280px-Munkedamsveien_59_I.jpg"
+              srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Munkedamsveien_59_I.jpg/640px-Munkedamsveien_59_I.jpg 640w,
+                      https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Munkedamsveien_59_I.jpg/1280px-Munkedamsveien_59_I.jpg 1280w"
+              sizes="(max-width: 800px) 100vw, 33vw"
+            />
+            <figcaption>Gangnam (Munkedamsveien 59)</figcaption>
+          </figure>
         </div>
+
+        <p class="sub" style="margin-top:10px">
+          Kreditering: Gressholmen Kro © GAD, CC BY-SA 4.0 (Wikimedia Commons). Way Down South © Way Down South (offisielt nettsted). Munkedamsveien 59 © Jan-Tore Egge, CC BY-SA 4.0 (Wikimedia Commons).
+        </p>
       </div>
     </section>
 
