@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light">
-  <title>Bian Analytics — Innsikt for restauranter</title>
-  <meta name="description" content="Konverter rådata til fulle bord og bedre marginer. Bian gir daglige KPI-er, varsler og integrasjoner for restauranter og kjeder." />
+  <title data-i18n="meta.title">Bian Analytics — Innsikt for restauranter</title>
+  <meta name="description" content="Konverter rådata til fulle bord og bedre marginer. Bian gir daglige KPI-er, varsler og integrasjoner for restauranter og kjeder." data-i18n-attr="content:meta.description" />
   <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Bian Analytics — Innsikt for restauranter">
-  <meta property="og:description" content="Daglige KPI-er, menybidrag, bemanning vs. trafikk og varsler. Integreres med POS og Tripletex på under 10 minutter.">
+  <meta property="og:title" content="Bian Analytics — Innsikt for restauranter" data-i18n-attr="content:meta.title">
+  <meta property="og:description" content="Daglige KPI-er, menybidrag, bemanning vs. trafikk og varsler. Integreres med POS og Tripletex på under 10 minutter." data-i18n-attr="content:meta.description">
   <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/1280px-Gressholmen_kro.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="/">
@@ -30,7 +30,6 @@
     .eyebrow{display:inline-block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand-600);font-weight:800;margin-bottom:10px}
     .sub{color:var(--ink-800);max-width:70ch}
 
-    /* Header */
     header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
     .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-block:14px;padding-inline-end:clamp(28px,6vw,96px)}
     .brand{display:flex;gap:.6rem;align-items:center;font-weight:800;color:var(--ink-900);text-decoration:none}
@@ -49,7 +48,6 @@
     .menu a:hover,.menu a:focus{background:var(--muted)}
     .dropdown[aria-expanded="true"] .menu{display:block}
 
-    /* Buttons */
     .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:10px 16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:transform .12s ease, box-shadow .12s ease;background:#fff;text-decoration:none !important;box-shadow:0 1px 2px rgba(2,6,23,.06)}
     .btn:focus-visible{outline:none;box-shadow:var(--ring)}
     .btn:hover{transform:translateY(-1px)}
@@ -59,7 +57,6 @@
     .btn.sm{padding:9px 14px;font-size:14px}
     .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff;cursor:pointer}
 
-    /* Hero / sections */
     .hero{padding-block:min(8vh,72px);display:grid;grid-template-columns:1.04fr .96fr;gap:40px;align-items:center}
     h1{margin:0 0 12px;font-size:clamp(36px,5.6vw,60px);line-height:1.06}
     .lead{font-size:clamp(17px,2.4vw,20px);color:var(--ink-800);max-width:65ch}
@@ -79,7 +76,6 @@
     footer{padding:36px 0;color:var(--ink-800)}
     footer .row{display:flex;align-items:center;justify-content:space-between}
 
-    /* Mobile */
     .mobile-toggle{display:none;background:none;border:1px solid var(--border);border-radius:999px;padding:10px 14px}
     .mobile-toggle:focus-visible{outline:none;box-shadow:var(--ring)}
     @media (max-width:1024px){.hero{grid-template-columns:1fr}.features{grid-template-columns:1fr 1fr}}
@@ -93,25 +89,16 @@
       .hero-media{min-height:300px}
     }
 
-    /* Skip-link: skjult til fokus */
     .skip-link{
-      position:absolute;
-      left:12px; top:8px;
-      padding:10px 14px;
-      border-radius:12px;
-      background:#0b1220; color:#fff;
-      text-decoration:none;
-      box-shadow:0 10px 28px rgba(2,6,23,.06);
-      transform:translateY(-160%);
-      transition:transform .12s ease;
-      z-index:1000;
+      position:absolute; left:12px; top:8px; padding:10px 14px; border-radius:12px;
+      background:#0b1220; color:#fff; text-decoration:none; box-shadow:0 10px 28px rgba(2,6,23,.06);
+      transform:translateY(-160%); transition:transform .12s ease; z-index:1000;
     }
     .skip-link:focus, .skip-link:focus-visible{ transform:translateY(0) }
     @media (prefers-reduced-motion: reduce){ .skip-link{ transition:none } }
   </style>
 </head>
 <body>
-  <!-- Skip-link: skjult til fokus -->
   <a class="skip-link" href="#main" data-i18n="skiplink">Hopp til innhold</a>
 
   <header>
@@ -152,7 +139,7 @@
       </nav>
 
       <div class="nav-right">
-       <a href="login.html" class="btn ghost sm" data-i18n="right.login">Logg inn</a>
+        <a href="login.html" class="btn ghost sm" data-i18n="right.login">Logg inn</a>
         <a href="demo.html" class="btn primary sm" data-i18n="right.demo">Bestill en demo</a>
         <button id="lang-toggle" class="chip" title="Språk">NO</button>
       </div>
@@ -179,7 +166,7 @@
     <section aria-labelledby="galleri-heading">
       <div class="container">
         <span class="eyebrow" data-i18n="oslo.eyebrow">Oslo</span>
-        <h2 id="galleri-heading" data-i18n="oslo.h2">Ekte steder – Oslo-restauranter</h2>
+        <h2 id="galleri-heading" data-i18n="oslo.h2">Ekte steder — Oslo-restauranter</h2>
         <p class="sub" data-i18n="oslo.sub">Bilder fra Gressholmen Kro, Way Down South og Gangnam (Munkedamsveien 59).</p>
         <div class="gallery" role="list">
           <img role="listitem" loading="lazy" alt="Gressholmen Kro på Gressholmen i indre Oslofjord" data-i18n-attr="alt:gallery.gressholmen_alt" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/1280px-Gressholmen_kro.jpg"/>
@@ -265,38 +252,251 @@
     const $=(s,c=document)=>c.querySelector(s);
     const $$=(s,c=document)=>Array.from(c.querySelectorAll(s));
 
-    const i18n = { /* … hele ordboka di her, uendret … */ };
+    // i18n-ordbok (NO & EN)
+    const i18n = {
+      no: {
+        "meta.title":"Bian Analytics — Innsikt for restauranter",
+        "meta.description":"Daglige KPI-er, menybidrag, bemanning vs. trafikk og varsler. Integreres med POS og Tripletex på under 10 minutter.",
+
+        "skiplink":"Hopp til innhold",
+
+        "header.topnav_label":"Toppmeny",
+        "header.brand_aria":"Bian Analytics hjem",
+        "header.mainmenu_label":"Hovedmeny",
+
+        "mobile.menu_button":"Meny",
+
+        "nav.product":"Produkt",
+        "nav.product_menu_label":"Produktmeny",
+        "nav.product_overview":"Oversikt",
+        "nav.product_pricing":"Priser",
+        "nav.product_security":"Sikkerhet",
+
+        "nav.solutions":"Løsninger",
+        "nav.solutions_menu_label":"Løsningsmeny",
+        "nav.solutions_single":"Enkeltrestaurant",
+        "nav.solutions_chain":"Kjede",
+        "nav.solutions_takeaway":"Takeaway",
+
+        "nav.resources":"Ressurser",
+        "nav.resources_menu_label":"Ressursmeny",
+        "nav.resources_blog":"Blogg",
+        "nav.resources_guides":"Veiledninger",
+        "nav.resources_cases":"Kundehistorier",
+
+        "right.login":"Logg inn",
+        "right.demo":"Bestill en demo",
+
+        "hero.eyebrow":"Restaurant-analyse",
+        "hero.h1":"Gjør rådata om til fulle bord og bedre marginer",
+        "hero.lead":"Bian gir deg daglige KPI-er for omsetning, dekningsbidrag, bemanning og svinn – alt i én enkel visning. Ta beslutninger med trygghet.",
+        "hero.cta_demo":"Book en demo",
+        "hero.cta_pricing":"Se priser",
+        "hero.integrates":"Integreres med POS og Tripletex på under 10 minutter.",
+        "hero.image_aria":"Way Down South ved Akerselva (Oslo)",
+        "hero.image_stamp":"Foto: Way Down South",
+
+        "oslo.eyebrow":"Oslo",
+        "oslo.h2":"Ekte steder — Oslo-restauranter",
+        "oslo.sub":"Bilder fra Gressholmen Kro, Way Down South og Gangnam (Munkedamsveien 59).",
+        "gallery.gressholmen_alt":"Gressholmen Kro på Gressholmen i indre Oslofjord",
+        "gallery.wds_alt":"Way Down South – uteservering ved Akerselva",
+        "gallery.gangnam_alt":"Munkedamsveien 59 i Oslo – bygget der Gangnam Korean Restaurant holder til",
+
+        "features.eyebrow":"Hvorfor Bian",
+        "features.h2":"Alt du trenger — uten støy",
+        "features.sub":"Få oversikt over hva som faktisk påvirker bunnlinjen: menybidrag, timeplan mot trafikk, og sanntidsvarsel når nøkkeltall avviker.",
+        "features.f1_title":"Menyoptimalisering",
+        "features.f1_body":"Se hvilke retter som driver DB, hvilke som bør ut, og hva du skal prise opp.",
+        "features.f2_title":"Bemanning vs. trafikk",
+        "features.f2_body":"Match timelister mot faktisk etterspørsel for å kutte overtid og kø.",
+        "features.f3_title":"Varsler i sanntid",
+        "features.f3_body":"Få et ping når svinn, varekost eller leverandørpriser hopper uten grunn.",
+
+        "band.h3":"Klar på under 10 minutter",
+        "band.p":"Koble til POS og Tripletex. Vi tar resten.",
+        "band.cta":"Start gratis prøve",
+
+        "pricing.eyebrow":"Priser",
+        "pricing.h2":"Én enkel plan",
+        "pricing.sub":"Skaler fra én restaurant til kjede uten skjulte kostnader.",
+        "pricing.per_month":"/ mnd",
+        "pricing.pro_sub":"Alt du trenger for daglig styring",
+        "pricing.b1":"Ubegrensede brukere",
+        "pricing.b2":"POS + Tripletex integrasjon",
+        "pricing.b3":"Daglige e-postrapporter",
+        "pricing.b4":"Varsler i sanntid",
+        "pricing.b5":"E-postsupport",
+        "pricing.cta_demo":"Book demo",
+        "pricing.ent_sub":"For kjeder og avanserte behov",
+        "pricing.e1":"Fler-enhetsdashbord",
+        "pricing.e2":"Dedikert kundekontakt",
+        "pricing.e3":"Tilpassede integrasjoner",
+        "pricing.cta_talk":"Snakk med oss",
+        "pricing.trial_title":"Gratis prøve",
+        "pricing.trial_sub":"14 dager, ingen betalingsinfo",
+        "pricing.t1":"Demo-data eller dine egne",
+        "pricing.t2":"Kom-i-gang-guide",
+        "pricing.t3":"Avslutt når som helst",
+        "pricing.cta_start":"Start gratis",
+
+        "footer.rights":"Alle rettigheter forbeholdt.",
+        "footer.privacy":"Personvern"
+      },
+      en: {
+        "meta.title":"Bian Analytics — Insights for restaurants",
+        "meta.description":"Daily KPIs, menu contribution, staffing vs. traffic, and alerts. Connects to POS and Tripletex in under 10 minutes.",
+
+        "skiplink":"Skip to content",
+
+        "header.topnav_label":"Top navigation",
+        "header.brand_aria":"Bian Analytics home",
+        "header.mainmenu_label":"Main navigation",
+
+        "mobile.menu_button":"Menu",
+
+        "nav.product":"Product",
+        "nav.product_menu_label":"Product menu",
+        "nav.product_overview":"Overview",
+        "nav.product_pricing":"Pricing",
+        "nav.product_security":"Security",
+
+        "nav.solutions":"Solutions",
+        "nav.solutions_menu_label":"Solutions menu",
+        "nav.solutions_single":"Single restaurant",
+        "nav.solutions_chain":"Chain",
+        "nav.solutions_takeaway":"Takeaway",
+
+        "nav.resources":"Resources",
+        "nav.resources_menu_label":"Resources menu",
+        "nav.resources_blog":"Blog",
+        "nav.resources_guides":"Guides",
+        "nav.resources_cases":"Customer stories",
+
+        "right.login":"Log in",
+        "right.demo":"Request a demo",
+
+        "hero.eyebrow":"Restaurant analytics",
+        "hero.h1":"Turn raw data into full tables and better margins",
+        "hero.lead":"Bian gives you daily KPIs for revenue, contribution margin, staffing and waste — all in one simple view. Decide with confidence.",
+        "hero.cta_demo":"Book a demo",
+        "hero.cta_pricing":"See pricing",
+        "hero.integrates":"Integrates with POS and Tripletex in under 10 minutes.",
+        "hero.image_aria":"Way Down South by the Akerselva (Oslo)",
+        "hero.image_stamp":"Photo: Way Down South",
+
+        "oslo.eyebrow":"Oslo",
+        "oslo.h2":"Real places — Oslo restaurants",
+        "oslo.sub":"Photos from Gressholmen Kro, Way Down South, and Gangnam (Munkedamsveien 59).",
+        "gallery.gressholmen_alt":"Gressholmen Kro on Gressholmen in the inner Oslofjord",
+        "gallery.wds_alt":"Way Down South — outdoor seating by the river",
+        "gallery.gangnam_alt":"Munkedamsveien 59 in Oslo — building where Gangnam Korean Restaurant is located",
+
+        "features.eyebrow":"Why Bian",
+        "features.h2":"Everything you need — no noise",
+        "features.sub":"See what actually drives your bottom line: menu contribution, schedule vs. traffic, and real-time alerts when KPIs deviate.",
+        "features.f1_title":"Menu optimization",
+        "features.f1_body":"See which dishes drive CM, which to cut, and what to re-price.",
+        "features.f2_title":"Staffing vs. traffic",
+        "features.f2_body":"Match rosters to real demand to cut overtime and queues.",
+        "features.f3_title":"Real-time alerts",
+        "features.f3_body":"Get a ping when waste, COGS or supplier prices jump without reason.",
+
+        "band.h3":"Ready in under 10 minutes",
+        "band.p":"Connect your POS and Tripletex. We handle the rest.",
+        "band.cta":"Start free trial",
+
+        "pricing.eyebrow":"Pricing",
+        "pricing.h2":"One simple plan",
+        "pricing.sub":"Scale from one venue to a chain with no hidden fees.",
+        "pricing.per_month":"/ mo",
+        "pricing.pro_sub":"Everything you need for daily operations",
+        "pricing.b1":"Unlimited users",
+        "pricing.b2":"POS + Tripletex integration",
+        "pricing.b3":"Daily email reports",
+        "pricing.b4":"Real-time alerts",
+        "pricing.b5":"Email support",
+        "pricing.cta_demo":"Book demo",
+        "pricing.ent_sub":"For chains and advanced needs",
+        "pricing.e1":"Multi-unit dashboard",
+        "pricing.e2":"Dedicated account contact",
+        "pricing.e3":"Custom integrations",
+        "pricing.cta_talk":"Talk to us",
+        "pricing.trial_title":"Free trial",
+        "pricing.trial_sub":"14 days, no payment info",
+        "pricing.t1":"Demo data or your own",
+        "pricing.t2":"Getting-started guide",
+        "pricing.t3":"Cancel anytime",
+        "pricing.cta_start":"Start free",
+
+        "footer.rights":"All rights reserved.",
+        "footer.privacy":"Privacy"
+      }
+    };
+
+    function labelForNext(lang){ return lang==='no' ? 'EN' : 'NO'; }
 
     function applyLang(lang){
-      const dict=i18n[lang]||i18n.no;
-      document.documentElement.lang = lang==='en'?'en':'no';
-      $$('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n'); if(dict[k]!==undefined) el.textContent=dict[k];});
+      const dict = i18n[lang] || i18n.no;
+      document.documentElement.lang = (lang === 'en' ? 'en' : 'no');
+
+      // Tekster
+      $$('[data-i18n]').forEach(el=>{
+        const k = el.getAttribute('data-i18n');
+        if (k in dict) el.textContent = dict[k];
+      });
+
+      // Attributter
       $$('[data-i18n-attr]').forEach(el=>{
-        el.getAttribute('data-i18n-attr').split(',').forEach(p=>{
-          const [attr,key]=p.split(':').map(s=>s.trim()); if(dict[key]!==undefined) el.setAttribute(attr, dict[key]);
+        const pairs = el.getAttribute('data-i18n-attr').split(',').map(s=>s.trim()).filter(Boolean);
+        pairs.forEach(p=>{
+          const [attr,key] = p.split(':').map(s=>s.trim());
+          if (key in dict) el.setAttribute(attr, dict[key]);
         });
       });
-      $('#lang-toggle').textContent = (lang==='en'?'EN':'NO');
+
+      // (Valgfritt) Rik HTML
+      $$('[data-i18n-html]').forEach(el=>{
+        const k = el.getAttribute('data-i18n-html');
+        if (k in dict) el.innerHTML = dict[k];
+      });
+
+      // Oppdater språkknapp til NESTE språk
+      const btn = $('#lang-toggle');
+      if (btn) btn.textContent = labelForNext(lang);
+      // Oppdater <title> manuelt (noen nettlesere caches)
+      const t = dict['meta.title']; if (t) document.title = t;
+      // Oppdater meta description (for konsistens i klient)
+      const md = document.querySelector('meta[name="description"]');
+      if (md && dict['meta.description']) md.setAttribute('content', dict['meta.description']);
     }
 
+    // Init
     $('#year')?.append(document.createTextNode(new Date().getFullYear()));
-    const saved=localStorage.getItem('bian.lang');
-    const browser=(navigator.language||'').toLowerCase().startsWith('no')?'no':'en';
-    applyLang(saved || browser || 'no');
+    const saved   = localStorage.getItem('bian.lang');
+    const browser = ((navigator.language||'').toLowerCase().startsWith('no')) ? 'no' : 'en';
+    const start   = saved || browser || 'no';
+    applyLang(start);
 
+    // Mobilmeny
     const toggle=$('.mobile-toggle'); const menuEl=$('#mainmenu');
-    toggle?.addEventListener('click',()=>{const open=menuEl.classList.toggle('open'); toggle.setAttribute('aria-expanded', open?'true':'false')});
+    toggle?.addEventListener('click',()=>{
+      const open = menuEl.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
 
+    // Dropdowns
     $$('.dropdown').forEach(dd=>{
       const btn=dd.querySelector('button');
       const close=()=>{dd.setAttribute('aria-expanded','false'); btn.setAttribute('aria-expanded','false');};
-      const open =()=>{dd.setAttribute('aria-expanded','true');  btn.setAttribute('aria-expanded','true');};
+      const open =()=>{dd.setAttribute('aria-expanded','true');  btn.setAttribute('aria-expanded','true'); };
       btn.addEventListener('click',e=>{e.stopPropagation(); dd.getAttribute('aria-expanded')==='true'?close():open();});
       document.addEventListener('click',e=>{ if(!dd.contains(e.target)) close(); });
     });
 
-    $('#lang-toggle').addEventListener('click',()=>{
-      const next = document.documentElement.lang==='en' ? 'no' : 'en';
+    // Språk-toggle
+    $('#lang-toggle')?.addEventListener('click',()=>{
+      const next = (document.documentElement.lang === 'en') ? 'no' : 'en';
       localStorage.setItem('bian.lang', next);
       applyLang(next);
     });
