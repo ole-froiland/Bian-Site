@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book demo — Bian Analytics</title>
+  <meta name="description" content="Book en demo av Bian Analytics. Velg tidspunkt og få kalenderinvitasjon på e-post." />
+  <style>
+    :root{--brand:#1f4fcc;--ink:#0b1220;--muted:#f5f7fb;--border:#e5e7eb;--shadow:0 10px 28px rgba(2,6,23,.06)}
+    *{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:#fff}
+    .container{max-width:980px;margin:0 auto;padding:clamp(20px,4vw,40px)}
+    header{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    a.brand{display:flex;gap:.6rem;align-items:center;text-decoration:none;color:var(--ink);font-weight:800}
+    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(180deg,#1f4fcc,#1e3a8a);display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)}
+    .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:10px 16px;font-weight:700;cursor:pointer;background:#fff;box-shadow:0 1px 2px rgba(2,6,23,.06);text-decoration:none;color:var(--ink)}
+    .btn.primary{background:var(--brand);border-color:transparent;color:#fff}
+    .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff;cursor:pointer}
+    h1{font-size:clamp(28px,4.6vw,44px);margin:12px 0}
+    .lead{color:#111827;max-width:70ch}
+    form.card{margin-top:18px;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+    label{display:block;margin:10px 0 6px}
+    input,select{width:100%;padding:14px;border-radius:12px;border:1px solid var(--border);outline:none}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .actions{display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap}
+    .hint{font-size:13px;color:#374151}
+    .success{display:none;margin-top:12px;padding:10px 14px;border-radius:10px;background:#eef6ff}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+    @media (max-width:760px){.row,.grid{grid-template-columns:1fr}}
+    footer{margin-top:26px;color:#4b5563}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a class="brand" href="index.html"><div class="logo">B</div><span>Bian Analytics</span></a>
+      <button id="lang" class="chip">NO</button>
+    </header>
+
+    <span class="eyebrow" style="letter-spacing:.14em;color:#1f4fcc;font-weight:800" data-i18n="eyebrow">CONTACT</span>
+    <h1 data-i18n="title">Book a demo</h1>
+    <p class="lead" data-i18n="lead">Fill in your details and pick a time. You’ll receive a calendar invitation by email.</p>
+
+    <form id="demo-form" class="card" novalidate>
+      <div class="row">
+        <div>
+          <label for="name" data-i18n="name_label">Name</label>
+          <input id="name" name="name" type="text" required placeholder="Ola Nordmann" data-i18n-attr="placeholder:name_ph">
+        </div>
+        <div>
+          <label for="org" data-i18n="org_label">Org. number</label>
+          <input id="org" name="org" type="text" required pattern="^[0-9]{9}$" placeholder="999999999" data-i18n-attr="placeholder:org_ph">
+          <div class="hint" data-i18n="org_hint">9 digits (Brønnøysund)</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="email" data-i18n="email_label">Email</label>
+          <input id="email" name="email" type="email" required placeholder="you@restaurant.com" data-i18n-attr="placeholder:email_ph">
+        </div>
+        <div>
+          <label for="phone" data-i18n="phone_label">Phone (optional)</label>
+          <input id="phone" name="phone" type="tel" placeholder="+47 400 00 000" data-i18n-attr="placeholder:phone_ph">
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="acc" data-i18n="acc_label">Accounting system</label>
+          <select id="acc" name="acc">
+            <option value="Tripletex">Tripletex</option>
+            <option value="PowerOffice">PowerOffice</option>
+            <option value="Visma">Visma eAccounting</option>
+            <option value="Other" data-i18n="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="pos" data-i18n="pos_label">POS / Cash register</label>
+          <select id="pos" name="pos">
+            <option value="Lightspeed">Lightspeed</option>
+            <option value="Square">Square</option>
+            <option value="Zettle">Zettle</option>
+            <option value="Other" data-i18n="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="time" data-i18n="time_label">Time tracking</label>
+          <select id="time" name="time">
+            <option value="Arbeidstid">Arbeidstid</option>
+            <option value="Tamigo">Tamigo</option>
+            <option value="Other" data-i18n="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="stock" data-i18n="stock_label">Stock counting</label>
+          <select id="stock" name="stock">
+            <option value="Excel">Excel</option>
+            <option value="Poster">Poster</option>
+            <option value="Other" data-i18n="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="date" data-i18n="date_label">Preferred date</label>
+          <input id="date" name="date" type="date" required min="">
+        </div>
+        <div>
+          <label for="timepick" data-i18n="timepick_label">Preferred time</label>
+          <input id="timepick" name="timepick" type="time" required step="900" value="10:00">
+          <div class="hint" data-i18n="time_hint">Office hours 09:00–16:00 CET</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" type="submit" data-i18n="submit">Send request</button>
+        <a id="gcal" class="btn" href="#" target="_blank" rel="noopener" style="display:none" data-i18n="add_gcal">Add to Google Calendar</a>
+        <a id="ics" class="btn" href="#" download="Bian-demo.ics" style="display:none" data-i18n="download_ics">Download .ics</a>
+        <span id="status" class="hint"></span>
+      </div>
+
+      <div id="ok" class="success" data-i18n="success">Thanks! Invitation sent. We also generated an .ics in case you want to add it manually.</div>
+    </form>
+
+    <footer>
+      <a href="index.html" class="btn" data-i18n="back_home">← Back to site</a>
+    </footer>
+  </div>
+
+  <script>
+    // Helpers
+    const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>Array.from(c.querySelectorAll(s));
+
+    // i18n
+    const dict={
+      no:{eyebrow:"KONTAKT",title:"Book en demo",lead:"Fyll inn info og velg tidspunkt. Du får kalenderinvitasjon på e-post.",
+          name_label:"Navn",name_ph:"Ola Nordmann",
+          org_label:"Org.nr",org_ph:"999999999",org_hint:"9 siffer (Brønnøysund)",
+          email_label:"E-post",email_ph:"din@restaurant.no",
+          phone_label:"Telefon (valgfritt)",phone_ph:"+47 400 00 000",
+          acc_label:"Regnskapssystem",pos_label:"Kassesystem",time_label:"Timeregistrering",stock_label:"Varetelling",
+          other:"Annet",date_label:"Foretrukket dato",timepick_label:"Foretrukket tidspunkt",
+          time_hint:"Kontortid 09:00–16:00 CET",
+          submit:"Send forespørsel",add_gcal:"Legg til i Google Kalender",download_ics:"Last ned .ics",
+          success:"Takk! Invitasjon sendt. Vi har også generert en .ics om du vil legge til manuelt.",
+          back_home:"← Tilbake til siden",invalid:"Vennligst fyll ut alle felter korrekt.",
+          sending:"Sender …",sent:"Invitasjon sendt!",btn_lang:"Bytt til engelsk"},
+      en:{eyebrow:"CONTACT",title:"Book a demo",lead:"Fill in your details and pick a time. You’ll receive a calendar invitation by email.",
+          name_label:"Name",name_ph:"Jane Doe",
+          org_label:"Org. number",org_ph:"999999999",org_hint:"9 digits (Brønnøysund)",
+          email_label:"Email",email_ph:"you@restaurant.com",
+          phone_label:"Phone (optional)",phone_ph:"+47 400 00 000",
+          acc_label:"Accounting system",pos_label:"POS / Cash register",time_label:"Time tracking",stock_label:"Stock counting",
+          other:"Other",date_label:"Preferred date",timepick_label:"Preferred time",
+          time_hint:"Office hours 09:00–16:00 CET",
+          submit:"Send request",add_gcal:"Add to Google Calendar",download_ics:"Download .ics",
+          success:"Thanks! Invitation sent. We also generated an .ics in case you want to add it manually.",
+          back_home:"← Back to site",invalid:"Please fill in all fields correctly.",
+          sending:"Sending …",sent:"Invitation sent!",btn_lang:"Switch to Norwegian"}
+    };
+    const langBtn=$('#lang');
+    const initial=localStorage.getItem('bian.lang') || ((navigator.language||'').toLowerCase().startsWith('no')?'no':'en');
+    function t(k){return dict[(document.documentElement.lang)||'no'][k]||k}
+    function applyLang(l){document.documentElement.lang=l;langBtn.textContent=l.toUpperCase(); $$('[data-i18n]').forEach(el=>el.textContent=t(el.getAttribute('data-i18n'))); $$('[data-i18n-attr]').forEach(el=>{el.getAttribute('data-i18n-attr').split(',').forEach(p=>{const [attr,key]=p.split(':').map(s=>s.trim());el.setAttribute(attr,t(key))})});$('#status').textContent='';}
+    applyLang(initial);
+    langBtn.addEventListener('click',()=>{const next=document.documentElement.lang==='en'?'no':'en';localStorage.setItem('bian.lang',next);applyLang(next)});
+
+    // min date = today
+    const today=new Date();today.setHours(0,0,0,0);$('#date').min=today.toISOString().slice(0,10);
+
+    // ICS helpers
+    function pad(n){return String(n).padStart(2,'0')}
+    function toUTCStamp(d){return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+pad(d.getUTCSeconds())+'Z'}
+    function makeICS({start,end,summary,description,organizer,attendee,email}){
+      const uid='bian-'+Math.random().toString(36).slice(2)+'@bian-analytics';
+      return [
+        'BEGIN:VCALENDAR','PRODID:-//Bian Analytics//Demo//NO','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:REQUEST',
+        'BEGIN:VEVENT',
+        'DTSTAMP:'+toUTCStamp(new Date()),
+        'DTSTART:'+toUTCStamp(start),
+        'DTEND:'+toUTCStamp(end),
+        'SUMMARY:'+summary,
+        'DESCRIPTION:'+description.replace(/\n/g,'\\n'),
+        'LOCATION:Online',
+        'ORGANIZER;CN='+organizer+':mailto:demo@bian-analytics.com',
+        'ATTENDEE;CN='+attendee+';ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:'+email,
+        'UID:'+uid,'SEQUENCE:0','STATUS:CONFIRMED',
+        'END:VEVENT','END:VCALENDAR'
+      ].join('\r\n');
+    }
+    function blobDownload(name,content,type='text/calendar'){
+      const a=$('#ics');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.style.display='inline-flex';
+    }
+    function googleCalendarUrl({start,end,title,details}){
+      const fmt=(d)=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+      const p=new URLSearchParams({action:'TEMPLATE',text:title,dates:`${fmt(start)}/${fmt(end)}`,details,location:'Online'});
+      return 'https://calendar.google.com/calendar/render?'+p.toString();
+    }
+
+    // Submit
+    $('#demo-form').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const l=document.documentElement.lang||'no';
+      const data={
+        name:$('#name').value.trim(),
+        org:$('#org').value.trim(),
+        email:$('#email').value.trim(),
+        phone:$('#phone').value.trim(),
+        acc:$('#acc').value, pos:$('#pos').value, time:$('#time').value, stock:$('#stock').value,
+        date:$('#date').value, clock:$('#timepick').value
+      };
+      const valid = data.name && /^[0-9]{9}$/.test(data.org) && /\S+@\S+\.\S+/.test(data.email) && data.date && data.clock;
+      if(!valid){ $('#status').textContent=t('invalid'); return; }
+
+      const [hh,mm]=data.clock.split(':').map(Number);
+      const [yyyy,MM,dd]=data.date.split('-').map(Number);
+      const start=new Date(yyyy,MM-1,dd,hh,mm,0);
+      const end=new Date(start.getTime()+45*60*1000);
+
+      const title=l==='en'?'Bian demo call':'Bian demomøte';
+      const desc=[
+        (l==='en'?'Thanks for booking a demo!':'Takk for at du booket en demo!'),
+        '', (l==='en'?'Details:':'Detaljer:'),
+        `Org.nr: ${data.org}`,
+        `Email: ${data.email}`,
+        `Phone: ${data.phone||'-'}`,
+        `Accounting: ${data.acc}`,
+        `POS: ${data.pos}`,
+        `Time: ${data.time}`,
+        `Stock: ${data.stock}`
+      ].join('\n');
+
+      const ics=makeICS({start,end,summary:title,description:desc,organizer:'Bian',attendee:data.name,email:data.email});
+      blobDownload('Bian-demo.ics',ics);
+      const gcal=googleCalendarUrl({start,end,title,details:desc});
+      const gcalLink=$('#gcal'); gcalLink.href=gcal; gcalLink.style.display='inline-flex';
+
+      $('#status').textContent=t('sending');
+
+      // Optional: Netlify function for email sending
+      try{
+        const res=await fetch('/.netlify/functions/book-demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,start:start.toISOString(),end:end.toISOString(),lang:l,ics})});
+        if(res.ok){ $('#ok').style.display='block'; $('#status').textContent=t('sent'); }
+        else { $('#status').textContent=t('sent'); }
+      }catch(err){ $('#status').textContent=t('sent'); }
+
+      $('#ics').scrollIntoView({behavior:'smooth',block:'center'});
+    });
+
+    // min date today
+    const min = new Date(); min.setHours(0,0,0,0); $('#date').min=min.toISOString().slice(0,10);
+  </script>
+</body>
+</html>
