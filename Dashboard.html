@@ -119,6 +119,55 @@
     if (logoutBtn) logoutBtn.addEventListener('click',()=>{ try{ localStorage.removeItem('bian.authed'); localStorage.removeItem('bian.user'); }catch(e){} window.location.href='login.html'; });
 
     // Periodevelger
+    
+    // === API Service (samme flyt som i SwiftUI) ===
+    const API = (() => {
+      const consumerToken = "eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ==";
+      const employeeToken = "eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ==";
+      const gastroToken  = "61db3faf84a1dd95e8685317c2c39948e6f95071"; // Ny api
+      const gastroBU     = "41258";
+      let sessionToken   = null;
+
+      async function fetchSessionToken(){
+        if (sessionToken) return sessionToken;
+        const url = new URL("https://api-test.tripletex.tech/v2/token/session/:create");
+        url.searchParams.set("consumerToken", consumerToken);
+        url.searchParams.set("employeeToken", employeeToken);
+        url.searchParams.set("expirationDate", new Date(Date.now()+86400000).toISOString());
+        const resp = await fetch(url, { method: 'PUT', headers: { 'Accept':'application/json' } });
+        if (!resp.ok) throw new Error('Token ' + resp.status);
+        const json = await resp.json();
+        const tok = json?.value?.token;
+        if (!tok) throw new Error('Ugyldig token');
+        sessionToken = tok; return tok;
+      }
+
+      async function fetchLedger(filterIDs, fromISO, toISO){
+        const tok = await fetchSessionToken();
+        const url = new URL('https://api-test.tripletex.tech/v2/ledger/posting');
+        url.searchParams.set('dateFrom', fromISO);
+        url.searchParams.set('dateTo', toISO);
+        url.searchParams.set('page','0');
+        url.searchParams.set('count','1000');
+        const basic = btoa(`0:${tok}`);
+        const resp = await fetch(url, { headers: { 'Authorization': `Basic ${basic}`, 'Accept':'application/json' } });
+        if (!resp.ok) throw new Error('Ledger ' + resp.status);
+        const data = await resp.json();
+        const vals = Array.isArray(data?.values) ? data.values : [];
+        return vals.filter(v => filterIDs.includes(v?.account?.id));
+      }
+
+      async function fetchArticles(){
+        const resp = await fetch('https://no.gastrofix.com/api/articles/v3.0/articles?limit=200', {
+          headers: { 'X-Token': gastroToken, 'X-Business-Units': gastroBU, 'Accept':'application/json' }
+        });
+        if (!resp.ok) throw new Error('Articles ' + resp.status);
+        const data = await resp.json();
+        return Array.isArray(data?.articles) ? data.articles : [];
+      }
+
+      return { fetchLedger, fetchArticles };
+    })();
     const toISODate = dt => new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
     const fromEl = document.getElementById('from');
     const toEl   = document.getElementById('to');
@@ -150,9 +199,31 @@
     fromEl.addEventListener('change', validate);
     toEl.addEventListener('change', validate);
 
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const f = fromEl.value, t = toEl.value;
       localStorage.setItem('bian.range.from', f);
+      localStorage.setItem('bian.range.to', t);
+      const qs = new URLSearchParams({ from:f, to:t });
+      history.replaceState({}, '', location.pathname + '?' + qs.toString());
+
+      // Kall ekte API-er (ingen fake tall). Lagrer i localStorage for andre sider.
+      btn.disabled = true; hint.textContent = '🌐 Henter…';
+      try{
+        const ids = [289896744, 289896745, 289896742, 289896743]; // øl/vin salg/kjøp
+        const [ledger, articles] = await Promise.all([
+          API.fetchLedger(ids, f, t),
+          API.fetchArticles()
+        ]);
+        localStorage.setItem('bian.ledger', JSON.stringify({ from:f, to:t, values: ledger }));
+        localStorage.setItem('bian.articles', JSON.stringify({ ts:new Date().toISOString(), items: articles }));
+        hint.textContent = `✅ Lagret ${ledger.length} posteringer og ${articles.length} produkter`;
+      }catch(e){
+        console.error(e);
+        hint.textContent = '❌ ' + (e?.message || 'Feil ved henting') + ' — sjekk CORS dersom dette er i nettleser.';
+      }finally{
+        btn.disabled = false;
+      }
+    });
       localStorage.setItem('bian.range.to', t);
       const qs = new URLSearchParams({ from:f, to:t });
       history.replaceState({}, '', location.pathname + '?' + qs.toString());
