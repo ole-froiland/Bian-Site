@@ -36,6 +36,11 @@
     button{appearance:none;border:1px solid var(--border);border-radius:12px;padding:10px 16px;background:#111827;color:#fff;font-weight:700;cursor:pointer}
     button:disabled{opacity:.55;cursor:not-allowed}
     small{display:block;color:#6b7280;margin-top:6px}
+      .rightwrap{display:flex;justify-content:flex-end}
+    .card{margin-left:auto;margin-right:0}
+    .presets{display:flex;gap:8px;justify-content:flex-end;margin-bottom:12px}
+    .chipbtn{appearance:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .chipbtn.active{background:var(--brand-600);color:#fff;border-color:transparent}
   </style>
 
   <!-- Enkel auth-guard (samme som tidligere). Fjern hvis du ikke vil ha innlogging. -->
@@ -74,23 +79,32 @@
 
   <main id="main">
     <div class="container">
-      <section class="card" aria-label="Velg periode">
-        <h1>Velg periode</h1>
-        <div class="row">
-          <div>
-            <label for="from">Start</label>
-            <input id="from" type="date" autocomplete="off">
+      <div class="rightwrap">
+        <section class="card" aria-label="Velg periode">
+          <h1>Velg periode</h1>
+
+          <div class="presets" role="group" aria-label="Hurtigvalg for periode">
+            <button class="chipbtn" data-preset="day">I dag</button>
+            <button class="chipbtn" data-preset="7">Siste 7</button>
+            <button class="chipbtn" data-preset="30">Siste 30</button>
           </div>
-          <div>
-            <label for="to">Slutt</label>
-            <input id="to" type="date" autocomplete="off">
+
+          <div class="row">
+            <div>
+              <label for="from">Start</label>
+              <input id="from" type="date" autocomplete="off">
+            </div>
+            <div>
+              <label for="to">Slutt</label>
+              <input id="to" type="date" autocomplete="off">
+            </div>
           </div>
-        </div>
-        <div class="actions">
-          <button id="save" disabled>Bruk</button>
-        </div>
-        <small id="hint"></small>
-      </section>
+          <div class="actions">
+            <button id="save" disabled>Bruk</button>
+          </div>
+          <small id="hint"></small>
+        </section>
+      </div>
     </div>
   </main>
 
@@ -145,7 +159,34 @@
       btn.blur();
     });
 
-    setDefaults();
+        setDefaults();
+
+    // Hurtigvalg (I dag / 7 / 30)
+    const presetBtns = Array.from(document.querySelectorAll('.chipbtn'));
+    function toISO(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+    function applyPreset(key){
+      const now = new Date();
+      let from = new Date(now);
+      if(key==='day'){ /* samme dag */ }
+      else if(key==='7'){ from.setDate(from.getDate()-6); }
+      else if(key==='30'){ from.setDate(from.getDate()-29); }
+      fromEl.value = toISO(from);
+      toEl.value   = toISO(now);
+      validate();
+      updateActivePreset();
+    }
+    function updateActivePreset(){
+      const f=new Date(fromEl.value), t=new Date(toEl.value);
+      const now = new Date(); const sameDay = f.toDateString()===t.toDateString() && t.toDateString()===now.toDateString();
+      const diffDays=Math.round((t-f)/86400000)+1; // inklusiv
+      let key=null;
+      if(sameDay) key='day'; else if(diffDays===7 && toISO(t)===toISO(now)) key='7'; else if(diffDays===30 && toISO(t)===toISO(now)) key='30';
+      presetBtns.forEach(b=>b.classList.toggle('active', b.dataset.preset===key));
+    }
+    presetBtns.forEach(btn=>btn.addEventListener('click',()=>applyPreset(btn.dataset.preset)));
+    fromEl.addEventListener('change', updateActivePreset);
+    toEl.addEventListener('change', updateActivePreset);
+    updateActivePreset();
   </script>
 </body>
 </html>
