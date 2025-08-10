@@ -4,15 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Logg inn — Bian Analytics</title>
-  <meta name="description" content="Logg inn på Bian Analytics." />
+  <meta name="description" content="Demo-innlogging for Bian Analytics." />
   <meta name="color-scheme" content="light">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%232563eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='76' font-family='Arial,Helvetica,sans-serif' fill='white'%3EB%3C/text%3E%3C/svg%3E" />
   <style>
     :root{--brand-600:#1f4fcc;--brand-700:#1e3a8a;--ink:#0b1220;--muted:#f5f7fb;--border:#e5e7eb;--shadow:0 10px 28px rgba(2,6,23,.06);--ring:0 0 0 3px rgba(31,79,204,.24)}
     *{box-sizing:border-box}
     body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;color:var(--ink);background:
-      radial-gradient(600px 240px at 10% -10%,rgba(31,79,204,.06),transparent 70%),
-      #fff;}
+      radial-gradient(600px 240px at 10% -10%,rgba(31,79,204,.06),transparent 70%), #fff}
     a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
     a:hover{color:var(--brand-600)}
     .container{max-width:420px;margin:clamp(40px,8vh,96px) auto;padding:0 20px}
@@ -23,19 +22,14 @@
     .card{border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:#fff;padding:18px}
     label{display:block;margin:10px 0 6px;font-weight:600}
     .row{position:relative}
-    input[type="email"],input[type="text"],input[type="password"]{
-      width:100%;padding:14px 44px 14px 14px;border-radius:12px;border:1px solid var(--border);outline:none;
-    }
+    input[type="email"],input[type="password"]{width:100%;padding:14px 44px 14px 14px;border-radius:12px;border:1px solid var(--border);outline:none}
     input:focus{box-shadow:var(--ring)}
     .toggle-pass{position:absolute;right:10px;top:36px;border:1px solid var(--border);border-radius:10px;background:#fff;padding:6px 10px;cursor:pointer}
     .actions{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:14px}
     .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:11px 16px;font-weight:700;background:#fff;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06);text-decoration:none;color:var(--ink)}
     .btn.primary{background:var(--brand-600);border-color:transparent;color:#fff}
-    .help{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
     .error{margin-top:10px;color:#b00020;font-size:14px;display:none}
     .success{display:none;margin-top:12px;padding:10px 14px;border-radius:10px;background:#eef6ff}
-    .topbar{display:flex;justify-content:flex-end;max-width:420px;margin:14px auto 0;padding:0 20px}
-    .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff;cursor:pointer}
     /* Skip-link (skjult til fokus) */
     .skip-link{position:absolute;left:12px;top:8px;padding:10px 14px;border-radius:12px;background:#0b1220;color:#fff;text-decoration:none;box-shadow:var(--shadow);transform:translateY(-160%);transition:transform .12s ease;z-index:1000}
     .skip-link:focus,.skip-link:focus-visible{transform:translateY(0)}
@@ -44,119 +38,65 @@
 <body>
   <a class="skip-link" href="#main">Hopp til innhold</a>
 
-  <div class="topbar">
-    <button id="lang" class="chip">NO</button>
-  </div>
-
   <main id="main" class="container" aria-labelledby="login-title">
     <a class="brand" href="index.html"><div class="logo">B</div><span>Bian Analytics</span></a>
-    <h1 id="login-title" data-i18n="title">Logg inn</h1>
-    <p class="lead" data-i18n="lead">Skriv inn e-post/brukernavn og passord for å fortsette.</p>
+    <h1 id="login-title">Logg inn</h1>
+    <p class="lead">Bruk demo-brukeren under for å logge inn.</p>
 
     <form id="login-form" class="card" novalidate>
       <div class="row">
-        <label for="email" data-i18n="email_label">E-post</label>
-        <input id="email" name="email" type="email" placeholder="din@restaurant.no" data-i18n-attr="placeholder:email_ph" autocomplete="email">
+        <label for="email">E-post</label>
+        <input id="email" name="email" type="email" placeholder="test@gressholmnen.no" autocomplete="email" required>
       </div>
 
       <div class="row">
-        <label for="user" data-i18n="user_label">Brukernavn</label>
-        <input id="user" name="user" type="text" placeholder="dittbrukernavn" data-i18n-attr="placeholder:user_ph" autocomplete="username">
-      </div>
-
-      <div class="row">
-        <label for="pass" data-i18n="pass_label">Passord</label>
-        <input id="pass" name="pass" type="password" placeholder="Minst 8 tegn" data-i18n-attr="placeholder:pass_ph" autocomplete="current-password" required>
-        <button type="button" class="toggle-pass" id="toggle-pass" aria-controls="pass" aria-pressed="false" data-i18n="show">Vis</button>
-      </div>
-
-      <div class="help">
-        <label><input type="checkbox" id="remember"> <span data-i18n="remember">Husk meg</span></label>
-        <a href="#" data-i18n="forgot">Glemt passord?</a>
+        <label for="pass">Passord</label>
+        <input id="pass" name="pass" type="password" placeholder="Test123" autocomplete="current-password" required>
+        <button type="button" class="toggle-pass" id="toggle-pass" aria-controls="pass" aria-pressed="false">Vis</button>
       </div>
 
       <div class="actions">
-        <a class="btn" href="index.html" data-i18n="back">Tilbake</a>
-        <button class="btn primary" type="submit" data-i18n="login_btn">Logg inn</button>
+        <a class="btn" href="index.html">Tilbake</a>
+        <button class="btn primary" type="submit">Logg inn</button>
       </div>
 
       <div id="error" class="error" role="alert"></div>
-      <div id="ok" class="success" data-i18n="success">Innlogging ok (demo). Her kan du kalle API/redirect.</div>
+      <div id="ok" class="success">Innlogging ok (demo). Du sendes tilbake til forsiden …</div>
     </form>
   </main>
 
   <script>
-    const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>Array.from(c.querySelectorAll(s));
+    // Tillat kun denne demo-kontoen
+    const VALID_EMAIL = "test@gressholmnen.no";
+    const VALID_PASS  = "Test123";
 
-    // Enkel NO/EN for siden
-    const dict={
-      no:{title:"Logg inn",lead:"Skriv inn e-post/brukernavn og passord for å fortsette.",
-          email_label:"E-post",email_ph:"din@restaurant.no",
-          user_label:"Brukernavn",user_ph:"dittbrukernavn",
-          pass_label:"Passord",pass_ph:"Minst 8 tegn",
-          remember:"Husk meg",forgot:"Glemt passord?",back:"Tilbake",
-          login_btn:"Logg inn",show:"Vis",hide:"Skjul",
-          err_fill:"Fyll inn e-post eller brukernavn, og et passord på minst 8 tegn.",
-          err_email:"Skriv en gyldig e-postadresse.",
-          success:"Innlogging ok (demo). Her kan du kalle API/redirect."},
-      en:{title:"Sign in",lead:"Enter email/username and password to continue.",
-          email_label:"Email",email_ph:"you@restaurant.com",
-          user_label:"Username",user_ph:"yourusername",
-          pass_label:"Password",pass_ph:"At least 8 characters",
-          remember:"Remember me",forgot:"Forgot password?",back:"Back",
-          login_btn:"Sign in",show:"Show",hide:"Hide",
-          err_fill:"Enter email or username, and a password of at least 8 characters.",
-          err_email:"Please enter a valid email address.",
-          success:"Signed in (demo). Here you can call your API/redirect."}
-    };
-    function t(k){return dict[(document.documentElement.lang)||'no'][k]||k}
-    function applyLang(l){
-      document.documentElement.lang=l;
-      $('#lang').textContent=l.toUpperCase();
-      $$('[data-i18n]').forEach(el=>el.textContent=t(el.getAttribute('data-i18n')));
-      $$('[data-i18n-attr]').forEach(el=>{
-        el.getAttribute('data-i18n-attr').split(',').forEach(p=>{
-          const [attr,key]=p.split(':').map(s=>s.trim()); el.setAttribute(attr,t(key));
-        });
-      });
-    }
-    const saved=localStorage.getItem('bian.lang') || ((navigator.language||'').toLowerCase().startsWith('no')?'no':'en');
-    applyLang(saved);
-    $('#lang').addEventListener('click',()=>{const next=document.documentElement.lang==='en'?'no':'en';localStorage.setItem('bian.lang',next);applyLang(next)});
+    const $ = (s,c=document)=>c.querySelector(s);
 
     // Vis/skjul passord
     $('#toggle-pass').addEventListener('click', (e)=>{
       const inp=$('#pass'); const isPw=inp.type==='password';
       inp.type=isPw?'text':'password';
       e.currentTarget.setAttribute('aria-pressed', String(isPw));
-      e.currentTarget.textContent = t(isPw?'hide':'show');
+      e.currentTarget.textContent = isPw ? 'Skjul' : 'Vis';
     });
 
-    // Demo-validering
+    // Sjekk kun eksakt kombinasjon
     $('#login-form').addEventListener('submit', (e)=>{
       e.preventDefault();
-      const email=$('#email').value.trim();
-      const user=$('#user').value.trim();
-      const pass=$('#pass').value;
+      const email = ($('#email').value||'').trim().toLowerCase();
+      const pwd   = $('#pass').value;
 
       const err=$('#error'); const ok=$('#ok');
       err.style.display='none'; ok.style.display='none'; err.textContent='';
 
-      if(!email && !user || pass.length<8){
-        err.textContent=t('err_fill'); err.style.display='block'; return;
+      if(email===VALID_EMAIL.toLowerCase() && pwd===VALID_PASS){
+        try { localStorage.setItem('bian.authed','1'); localStorage.setItem('bian.user', VALID_EMAIL); } catch(e){}
+        ok.style.display='block';
+        setTimeout(()=>{ window.location.href='index.html'; }, 900);
+      } else {
+        err.textContent = 'Feil e-post eller passord.';
+        err.style.display='block';
       }
-      if(email && !/^\S+@\S+\.\S+$/.test(email)){
-        err.textContent=t('err_email'); err.style.display='block'; return;
-      }
-
-      // Her kaller du faktisk innlogging (fetch til backend / Auth)
-      // fetch('/api/login', { method:'POST', body: JSON.stringify({ email, user, pass, remember: $('#remember').checked }) })
-
-      ok.textContent=t('success');
-      ok.style.display='block';
-
-      // Eksempel: redirect etter 900ms
-      setTimeout(()=>{ window.location.href='index.html'; }, 900);
     });
   </script>
 </body>
