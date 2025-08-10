@@ -188,6 +188,31 @@
     .btn.ghost{ background:transparent; color:var(--ink-900) }
     .btn.ghost:hover{ background:var(--muted) }
     .nav-right .btn{ font-size:14px }
+    /* --- Sentrer header + litt smalere side-padding --- */
+.container{
+  max-width:1200px;
+  margin-inline:auto;
+  /* mindre padding på sidene */
+  padding-inline:clamp(16px, 3.5vw, 32px);
+}
+
+/* gjør headeren til 3 kolonner: logo | midtstilt meny | høyreknapper */
+header .nav{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:12px;
+}
+
+/* selve menyen havner i midten */
+header .nav nav{ justify-self:center; }
+
+/* sørg for at elementene i menyen ligger midtstilt */
+header .nav nav ul{
+  display:flex;
+  gap:28px;
+  justify-content:center;
+}
   </style>
 </head>
 <body>
