@@ -61,7 +61,7 @@
       </div>
 
       <div id="error" class="error" role="alert"></div>
-      <div id="ok" class="success">Innlogging ok (demo). Du sendes tilbake til forsiden …</div>
+      <div id="ok" class="success">Innlogging ok (demo). Sender deg til dashboard …</div>
     </form>
   </main>
 
@@ -72,30 +72,39 @@
 
     const $ = (s,c=document)=>c.querySelector(s);
 
-    // Vis/skjul passord
-    $('#toggle-pass').addEventListener('click', (e)=>{
+    // Vis/skjul passord (hvis knappen finnes)
+    const tp = $('#toggle-pass');
+    tp && tp.addEventListener('click', (e)=>{
       const inp=$('#pass'); const isPw=inp.type==='password';
       inp.type=isPw?'text':'password';
       e.currentTarget.setAttribute('aria-pressed', String(isPw));
       e.currentTarget.textContent = isPw ? 'Skjul' : 'Vis';
     });
 
-    // Sjekk kun eksakt kombinasjon
+    // Sjekk eksakt kombinasjon og gå til dashboard
     $('#login-form').addEventListener('submit', (e)=>{
       e.preventDefault();
       const email = ($('#email').value||'').trim().toLowerCase();
       const pwd   = $('#pass').value;
 
       const err=$('#error'); const ok=$('#ok');
-      err.style.display='none'; ok.style.display='none'; err.textContent='';
+      if(err){ err.style.display='none'; err.textContent=''; }
+      if(ok){ ok.style.display='none'; }
 
       if(email===VALID_EMAIL.toLowerCase() && pwd===VALID_PASS){
-        try { localStorage.setItem('bian.authed','1'); localStorage.setItem('bian.user', VALID_EMAIL); } catch(e){}
-        ok.style.display='block';
-        setTimeout(()=>{ window.location.href='index.html'; }, 900);
+        try {
+          localStorage.setItem('bian.authed','1');
+          localStorage.setItem('bian.user', VALID_EMAIL);
+        } catch(e){}
+        // Direkte redirect til dashboard
+        window.location.href = 'dashboard.html';
       } else {
-        err.textContent = 'Feil e-post eller passord.';
-        err.style.display='block';
+        if(err){
+          err.textContent = 'Feil e-post eller passord.';
+          err.style.display='block';
+        } else {
+          alert('Feil e-post eller passord.');
+        }
       }
     });
   </script>
