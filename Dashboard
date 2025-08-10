@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light">
+  <title>Dashboard — Gressholmen Kro AS</title>
+  <meta name="description" content="Driftsdashboard for Gressholmen Kro AS.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%232563eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='76' font-family='Arial,Helvetica,sans-serif' fill='white'%3EB%3C/text%3E%3C/svg%3E" />
+  <style>
+    :root{
+      --brand-600:#1f4fcc; --brand-700:#1e3a8a;
+      --ink-900:#0b1220; --ink-700:#374151; --border:#e5e7eb;
+      --muted:#f5f7fb; --surface:#fff;
+      --radius:16px; --shadow:0 10px 28px rgba(2,6,23,.06);
+      --ring:0 0 0 3px rgba(31,79,204,.24);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;color:var(--ink-900);background:#fff}
+    a{color:inherit}
+    .container{max-width:1200px;margin-inline:auto;padding-inline:clamp(20px,6vw,100px)}
+    h1,h2,h3{letter-spacing:-.012em;margin:0}
+    /* Skip-link (skjult til fokus) */
+    .skip-link{position:absolute;left:12px;top:8px;padding:10px 14px;border-radius:12px;background:#0b1220;color:#fff;text-decoration:none;box-shadow:var(--shadow);transform:translateY(-160%);transition:transform .12s ease;z-index:1000}
+    .skip-link:focus,.skip-link:focus-visible{transform:translateY(0)}
+    /* Header */
+    header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
+    .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding-block:12px}
+    .brand{display:flex;gap:.6rem;align-items:center;text-decoration:none;font-weight:800}
+    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(180deg,var(--brand-600),var(--brand-700));color:#fff;display:grid;place-items:center;box-shadow:var(--shadow)}
+    .org{font-weight:800}
+    .nav-right{display:flex;align-items:center;gap:10px}
+    .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff}
+    .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:9px 14px;background:#fff;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06)}
+    .btn.primary{background:var(--brand-600);color:#fff;border-color:transparent}
+    main{padding-block:28px}
+    .sub{color:#374151}
+    /* Top row */
+    .toprow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:6px 0 18px}
+    .filters{display:flex;gap:10px;align-items:center}
+    select{padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    /* Cards */
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+    .kpi{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .kpi h3{font-size:15px;color:var(--ink-700);font-weight:700}
+    .kpi .val{font-size:28px;font-weight:800;margin-top:2px}
+    .trend{font-size:12px;border-radius:999px;padding:4px 8px;border:1px solid var(--border);background:#fff}
+    .spark{width:120px;height:36px}
+    /* Table */
+    .table{margin-top:18px;border:1px solid var(--border);border-radius:16px;overflow:hidden}
+    .table header{background:#f8fafc;border-bottom:1px solid var(--border);box-shadow:none;position:static}
+    .row{display:grid;grid-template-columns:1.2fr .6fr .6fr .6fr;gap:8px;padding:12px 16px}
+    .row.head{font-weight:800}
+    .row:not(.head){border-top:1px solid var(--border)}
+    /* Footer */
+    footer{padding:28px 0;color:#374151}
+    @media (max-width:1000px){ .grid{grid-template-columns:1fr 1fr} .row{grid-template-columns:1fr .6fr .6fr} .row .hide-sm{display:none}}
+    @media (max-width:700px){ .grid{grid-template-columns:1fr} .filters{flex-wrap:wrap} .spark{display:none} }
+  </style>
+  <script>
+    // --- ENKEL AUTH-GUARD (før vi viser noe) ---
+    (function(){
+      try{
+        const authed = localStorage.getItem('bian.authed') === '1';
+        const user = (localStorage.getItem('bian.user')||'').toLowerCase();
+        if(!authed || user!=='test@gressholmen.no'){
+          window.location.replace('login.html');
+        }
+      }catch(e){
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Hopp til innhold</a>
+
+  <header>
+    <div class="container nav">
+      <a class="brand" href="index.html" title="Til forsiden">
+        <div class="logo">B</div><span>Bian Analytics</span>
+      </a>
+      <div style="justify-self:center;text-align:center">
+        <div class="org">Gressholmen Kro AS</div>
+        <div class="sub" id="subtitle"></div>
+      </div>
+      <div class="nav-right">
+        <span id="who" class="chip" title="Innlogget bruker">…</span>
+        <button id="logout" class="btn">Logg ut</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="container">
+      <div class="toprow">
+        <h1>Dashboard</h1>
+        <div class="filters">
+          <label for="range" class="sub">Periode</label>
+          <select id="range">
+            <option value="day">I dag</option>
+            <option value="7">Siste 7</option>
+            <option value="30" selected>Siste 30</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- KPI-kort -->
+      <section class="grid" aria-label="Nøkkeltall">
+        <article class="card">
+          <div class="kpi">
+            <div>
+              <h3>Omsetning</h3>
+              <div class="val" id="kpi-rev">kr –</div>
+              <div class="trend" id="kpi-rev-trend">–</div>
+            </div>
+            <svg class="spark" id="spark-rev" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </article>
+        <article class="card">
+          <div class="kpi">
+            <div>
+              <h3>Dekningsbidrag</h3>
+              <div class="val" id="kpi-db">kr –</div>
+              <div class="trend" id="kpi-db-trend">–</div>
+            </div>
+            <svg class="spark" id="spark-db" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </article>
+        <article class="card">
+          <div class="kpi">
+            <div>
+              <h3>Gjester</h3>
+              <div class="val" id="kpi-guests">–</div>
+              <div class="trend" id="kpi-guests-trend">–</div>
+            </div>
+            <svg class="spark" id="spark-guests" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"></svg>
+          </div>
+        </article>
+      </section>
+
+      <!-- Enkel tabell -->
+      <section class="table" style="margin-top:18px" aria-label="Hurtigoversikt">
+        <header><div class="container" style="padding-inline:16px">
+          <div class="row head">
+            <div>Linje</div><div>Verdi</div><div>Endring</div><div class="hide-sm">Kommentar</div>
+          </div>
+        </div></header>
+        <div class="row">
+          <div>Varekost %</div><div id="row-cogs">–</div><div id="row-cogs-delta">–</div><div class="hide-sm">Normal 28–32%</div>
+        </div>
+        <div class="row">
+          <div>Bemanning %</div><div id="row-labor">–</div><div id="row-labor-delta">–</div><div class="hide-sm">Mål &lt; 30%</div>
+        </div>
+        <div class="row">
+          <div>Svinn (kr)</div><div id="row-waste">–</div><div id="row-waste-delta">–</div><div class="hide-sm">Kontroller råvarelager</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center">
+      <p>© <span id="year"></span> Gressholmen Kro AS</p>
+      <a href="index.html" style="text-decoration:none">Til forsiden</a>
+    </div>
+  </footer>
+
+  <script>
+    // Utils
+    const $=(s,c=document)=>c.querySelector(s);
+    const kr = n => n.toLocaleString('no-NO',{maximumFractionDigits:0});
+    const pct = n => (n).toFixed(1).replace('.',',' ) + '%';
+
+    // Header info
+    $('#year').textContent = new Date().getFullYear();
+    const user = (localStorage.getItem('bian.user')||'');
+    $('#who').textContent = user || 'Innlogget';
+
+    // Subtitle med dagens dato
+    const d = new Date();
+    $('#subtitle').textContent = d.toLocaleDateString('no-NO',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+
+    // Logg ut
+    $('#logout').addEventListener('click',()=>{
+      try{ localStorage.removeItem('bian.authed'); localStorage.removeItem('bian.user'); }catch(e){}
+      window.location.href='login.html';
+    });
+
+    // Demo-data generator
+    function series(len, start=1000, vol=0.1){
+      let v=start, arr=[];
+      for(let i=0;i<len;i++){
+        v = Math.max(10, v * (1 + (Math.random()-0.5)*2*vol));
+        arr.push(Math.round(v));
+      }
+      return arr;
+    }
+
+    function drawSparkline(svgId, data){
+      const svg = document.getElementById(svgId);
+      if(!svg) return;
+      const W=120, H=36, pad=2, n=data.length;
+      const min = Math.min(...data), max = Math.max(...data);
+      const x = i => pad + (W-2*pad) * (i/(n-1));
+      const y = v => pad + (H-2*pad) * (1 - ( (v-min) / Math.max(1,(max-min)) ));
+      let d = '';
+      data.forEach((v,i)=>{ d += (i?' L ':'M ') + x(i) + ' ' + y(v); });
+
+      svg.innerHTML = `
+        <polyline points="${data.map((v,i)=>x(i)+','+y(v)).join(' ')}" fill="none" stroke="currentColor" stroke-width="2" opacity="0.9"></polyline>
+        <line x1="${pad}" y1="${H-1}" x2="${W-pad}" y2="${H-1}" stroke="currentColor" opacity="0.12"></line>
+      `;
+    }
+
+    function applyRange(){
+      const sel = $('#range').value;
+      const len = sel==='day' ? 12 : (sel==='7'? 7 : 30);
+
+      // Demo serier
+      const rev = series(len, 120000, .12);
+      const db  = series(len, 65000, .11);
+      const g   = series(len, 220, .18);
+
+      // KPI verdier
+      const trend = (arr)=> {
+        const a=arr[arr.length-2]||arr[0], b=arr[arr.length-1]||arr[0];
+        const ch=((b-a)/Math.max(1,a))*100;
+        return {last:b, ch};
+      };
+
+      const r1=trend(rev), r2=trend(db), r3=trend(g);
+
+      $('#kpi-rev').textContent = 'kr ' + kr(r1.last);
+      $('#kpi-db').textContent  = 'kr ' + kr(r2.last);
+      $('#kpi-guests').textContent = kr(r3.last);
+
+      const fmtDelta = (ch)=> (ch>=0?'+':'') + ch.toFixed(1).replace('.',',') + '%';
+      $('#kpi-rev-trend').textContent = fmtDelta(r1.ch);
+      $('#kpi-db-trend').textContent  = fmtDelta(r2.ch);
+      $('#kpi-guests-trend').textContent = fmtDelta(r3.ch);
+
+      drawSparkline('spark-rev', rev);
+      drawSparkline('spark-db',  db);
+      drawSparkline('spark-guests', g);
+
+      // Tabell (demo)
+      const cogs = 29 + (Math.random()*6-3);         // %
+      const labor= 28 + (Math.random()*6-3);         // %
+      const waste= 1200 + Math.random()*1200;        // kr
+      const dc   = (Math.random()*4-2);              // %-poeng endring
+      const dl   = (Math.random()*4-2);
+      const dw   = (Math.random()*200-100);
+
+      $('#row-cogs').textContent = pct(cogs);
+      $('#row-labor').textContent= pct(labor);
+      $('#row-waste').textContent= 'kr ' + kr(waste);
+
+      $('#row-cogs-delta').textContent  = (dc>=0?'+':'') + dc.toFixed(1).replace('.',',') + ' pp';
+      $('#row-labor-delta').textContent = (dl>=0?'+':'') + dl.toFixed(1).replace('.',',') + ' pp';
+      $('#row-waste-delta').textContent = (dw>=0?'+':'') + kr(dw);
+    }
+
+    $('#range').addEventListener('change', applyRange);
+    applyRange();
+  </script>
+</body>
+</html>
