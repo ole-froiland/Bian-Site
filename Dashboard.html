@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Velg periode — Gressholmen Kro AS</title>
+  <title>Tripletex kontoposter — Bian Analytics</title>
   <style>
     :root{
       --brand-600:#1f4fcc; --brand-700:#1e3a8a;
@@ -15,7 +15,6 @@
     a{color:inherit}
     .container{max-width:1200px;margin-inline:auto;padding-inline:clamp(20px,6vw,100px)}
 
-    /* Header */
     header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
     .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding-block:12px}
     .brand{display:flex;gap:.6rem;align-items:center;text-decoration:none;font-weight:800}
@@ -25,26 +24,39 @@
     .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff}
     .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:9px 14px;background:#fff;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06)}
 
-    /* Main */
     main{padding-block:28px}
-    .card{width:min(560px,96vw);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow);margin-inline:auto}
+    .grid{display:grid;grid-template-columns:1fr;gap:20px}
+
+    .card{border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow);background:#fff}
     h1{margin:0 0 14px;font-size:20px;letter-spacing:-.01em}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     label{display:block;font-weight:600;font-size:.92rem;margin-bottom:6px}
-    input[type="date"]{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    input[type="date"], input[type="text"]{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff}
     .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
     button{appearance:none;border:1px solid var(--border);border-radius:12px;padding:10px 16px;background:#111827;color:#fff;font-weight:700;cursor:pointer}
     button:disabled{opacity:.55;cursor:not-allowed}
     small{display:block;color:#6b7280;margin-top:6px}
-      .rightwrap{display:flex;justify-content:flex-end}
-    .card{margin-left:auto;margin-right:0}
+
     .presets{display:flex;gap:8px;justify-content:flex-end;margin-bottom:12px}
     .chipbtn{appearance:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer}
     .chipbtn.active{background:var(--brand-600);color:#fff;border-color:transparent}
+
+    .status{font-weight:700}
+
+    table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+    thead th{position:sticky;top:0;background:#f8fafc;text-align:left;font-weight:700;border-bottom:1px solid var(--border);padding:10px 12px}
+    tbody td{padding:10px 12px;border-bottom:1px solid var(--border)}
+    tbody tr:last-child td{border-bottom:none}
+    .mono{font-variant-numeric:tabular-nums}
+    .right{text-align:right}
+    .muted{color:#6b7280}
+
+    .totals{display:flex;gap:12px;flex-wrap:wrap}
+    .pill{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#f8fafc;font-weight:700}
   </style>
 
-  <!-- Enkel auth-guard (samme som tidligere). Fjern hvis du ikke vil ha innlogging. -->
   <script>
+    // Enkel auth-guard — fjern hvis du ikke vil ha innlogging.
     (function(){
       try{
         const authed = localStorage.getItem('bian.authed') === '1';
@@ -52,9 +64,7 @@
         if(!authed || user!=='test@gressholmen.no'){
           window.location.replace('login.html');
         }
-      }catch(e){
-        window.location.replace('login.html');
-      }
+      }catch(e){ window.location.replace('login.html'); }
     })();
   </script>
 </head>
@@ -78,33 +88,64 @@
   </header>
 
   <main id="main">
-    <div class="container">
-      <div class="rightwrap">
-        <section class="card" aria-label="Velg periode">
-          <h1>Velg periode</h1>
+    <div class="container grid">
+      <section class="card" aria-label="Velg konto og periode">
+        <h1>Kontoposter fra Tripletex</h1>
 
-          <div class="presets" role="group" aria-label="Hurtigvalg for periode">
-            <button class="chipbtn" data-preset="day">I dag</button>
-            <button class="chipbtn" data-preset="7">Siste 7</button>
-            <button class="chipbtn" data-preset="30">Siste 30</button>
-          </div>
+        <div class="presets" role="group" aria-label="Hurtigvalg for periode">
+          <button class="chipbtn" data-preset="day">I dag</button>
+          <button class="chipbtn" data-preset="7">Siste 7</button>
+          <button class="chipbtn" data-preset="30">Siste 30</button>
+        </div>
 
-          <div class="row">
-            <div>
-              <label for="from">Start</label>
-              <input id="from" type="date" autocomplete="off">
-            </div>
-            <div>
-              <label for="to">Slutt</label>
-              <input id="to" type="date" autocomplete="off">
-            </div>
+        <div class="row" style="margin-bottom:12px">
+          <div>
+            <label for="accountNo">Konto‑nr (f.eks. 1920)</label>
+            <input id="accountNo" type="text" inputmode="numeric" autocomplete="off" placeholder="1920" value="1920" />
+            <small class="muted">Vi slår opp konto‑ID via <code>/v2/ledger/account?number=</code>.</small>
           </div>
-          <div class="actions">
-            <button id="save" disabled>Bruk</button>
+          <div></div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="from">Start</label>
+            <input id="from" type="date" autocomplete="off">
           </div>
-          <small id="hint"></small>
-        </section>
-      </div>
+          <div>
+            <label for="to">Slutt</label>
+            <input id="to" type="date" autocomplete="off">
+            <small class="muted">Merk: Tripletex sine <code>dateTo</code>-parametre er «til og <em>eksklusiv</em>», så vi legger automatisk på +1 dag i API‑kallet.</small>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="fetchBtn">Hent transaksjoner</button>
+        </div>
+        <small id="hint" class="status"></small>
+      </section>
+
+      <section class="card" aria-label="Resultater">
+        <div class="totals" id="totals" hidden>
+          <span class="pill" id="pillCount"></span>
+          <span class="pill" id="pillSum"></span>
+        </div>
+        <div style="overflow:auto">
+          <table aria-describedby="hint">
+            <thead>
+              <tr>
+                <th style="width:140px">Dato</th>
+                <th>Tekst</th>
+                <th class="right">Beløp</th>
+                <th style="width:110px">Bunt/Voucher</th>
+              </tr>
+            </thead>
+            <tbody id="rows">
+              <tr><td colspan="4" class="muted">Ingen data ennå. Velg konto og periode, og trykk «Hent transaksjoner».</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </main>
 
@@ -118,14 +159,14 @@
     const logoutBtn = document.getElementById('logout');
     if (logoutBtn) logoutBtn.addEventListener('click',()=>{ try{ localStorage.removeItem('bian.authed'); localStorage.removeItem('bian.user'); }catch(e){} window.location.href='login.html'; });
 
-    // Periodevelger
-    
-    // === API Service (samme flyt som i SwiftUI) ===
+    // === Små utils ===
+    const toISO = dt => new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+    const addDays = (iso, n) => { const t = new Date(iso+'T00:00:00'); t.setDate(t.getDate()+n); return toISO(t); };
+
+    // === API Service (kun Tripletex) ===
     const API = (() => {
       const consumerToken = "eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ==";
       const employeeToken = "eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ==";
-      const gastroToken  = "61db3faf84a1dd95e8685317c2c39948e6f95071"; // Ny api
-      const gastroBU     = "41258";
       let sessionToken   = null;
 
       async function fetchSessionToken(){
@@ -142,122 +183,161 @@
         sessionToken = tok; return tok;
       }
 
-      async function fetchLedger(filterIDs, fromISO, toISO){
+      function authHeaders(tok){ return { 'Authorization': `Basic ${btoa(`0:${tok}`)}`, 'Accept':'application/json' }; }
+
+      // Slår opp kontoen (ID) fra kontonummeret
+      async function getAccountByNumber(accountNumber){
         const tok = await fetchSessionToken();
-        const url = new URL('https://api-test.tripletex.tech/v2/ledger/posting');
-        url.searchParams.set('dateFrom', fromISO);
-        url.searchParams.set('dateTo', toISO);
-        url.searchParams.set('page','0');
-        url.searchParams.set('count','1000');
-        const basic = btoa(`0:${tok}`);
-        const resp = await fetch(url, { headers: { 'Authorization': `Basic ${basic}`, 'Accept':'application/json' } });
-        if (!resp.ok) throw new Error('Ledger ' + resp.status);
+        const url = new URL('https://api-test.tripletex.tech/v2/ledger/account');
+        url.searchParams.set('number', String(accountNumber));
+        url.searchParams.set('count', '1');
+        const resp = await fetch(url, { headers: authHeaders(tok) });
+        if (!resp.ok) throw new Error('Account ' + resp.status);
         const data = await resp.json();
-        const vals = Array.isArray(data?.values) ? data.values : [];
-        return vals.filter(v => filterIDs.includes(v?.account?.id));
+        const values = Array.isArray(data?.values) ? data.values : [];
+        if (!values.length) throw new Error('Finner ikke konto '+accountNumber);
+        return values[0];
       }
 
-      async function fetchArticles(){
-        const resp = await fetch('https://no.gastrofix.com/api/articles/v3.0/articles?limit=200', {
-          headers: { 'X-Token': gastroToken, 'X-Business-Units': gastroBU, 'Accept':'application/json' }
-        });
-        if (!resp.ok) throw new Error('Articles ' + resp.status);
-        const data = await resp.json();
-        return Array.isArray(data?.articles) ? data.articles : [];
+      // Henter ALLE posteringer for gitt konto‑ID og dato‑intervall (paginert)
+      async function fetchPostingsByAccountId(accountId, fromISO, toISOExclusive){
+        const tok = await fetchSessionToken();
+        let page = 0; const count = 1000; const all = [];
+        while(true){
+          const url = new URL('https://api-test.tripletex.tech/v2/ledger/posting');
+          url.searchParams.set('dateFrom', fromISO);
+          url.searchParams.set('dateTo', toISOExclusive); // Tripletex: to-date er eksklusiv
+          url.searchParams.set('accountId', String(accountId));
+          url.searchParams.set('page', String(page));
+          url.searchParams.set('count', String(count));
+          const resp = await fetch(url, { headers: authHeaders(tok) });
+          if (!resp.ok) throw new Error('Posting ' + resp.status);
+          const json = await resp.json();
+          const vals = Array.isArray(json?.values) ? json.values : [];
+          all.push(...vals);
+          if (vals.length < count) break;
+          page += 1;
+        }
+        return all;
       }
 
-      return { fetchLedger, fetchArticles };
+      // Convenience: konto‑nr -> posteringer
+      async function fetchPostingsByAccountNumber(accountNumber, fromISO, toISOExclusive){
+        const acc = await getAccountByNumber(accountNumber);
+        return await fetchPostingsByAccountId(acc.id, fromISO, toISOExclusive);
+      }
+
+      return { fetchPostingsByAccountNumber };
     })();
-    const toISODate = dt => new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
+
+    // === UI wiring ===
     const fromEl = document.getElementById('from');
     const toEl   = document.getElementById('to');
-    const btn    = document.getElementById('save');
+    const acctEl = document.getElementById('accountNo');
+    const btn    = document.getElementById('fetchBtn');
     const hint   = document.getElementById('hint');
+    const rowsEl = document.getElementById('rows');
+    const totalsWrap = document.getElementById('totals');
+    const pillCount = document.getElementById('pillCount');
+    const pillSum = document.getElementById('pillSum');
 
     function setDefaults(){
-      const qs = new URLSearchParams(location.search);
-      const qsFrom = qs.get('from');
-      const qsTo   = qs.get('to');
-      const lsFrom = localStorage.getItem('bian.range.from');
-      const lsTo   = localStorage.getItem('bian.range.to');
-
       // Default: siste 30 dager
       const now = new Date();
       const from = new Date(now); from.setDate(from.getDate()-29);
-      fromEl.value = (qsFrom || lsFrom || toISODate(from));
-      toEl.value   = (qsTo   || lsTo   || toISODate(now));
-      validate();
+      fromEl.value = toISO(from);
+      toEl.value   = toISO(now);
+      acctEl.focus();
+      updateSubtitle();
     }
 
-    function validate(){
-      const f = fromEl.value, t = toEl.value;
-      const ok = f && t && new Date(f) <= new Date(t);
-      btn.disabled = !ok;
-      hint.textContent = ok ? '' : 'Velg gyldige datoer (start før slutt).';
+    function updateSubtitle(){
+      // oppdater aktivt hurtigvalg (visuelt)
+      const presetBtns = Array.from(document.querySelectorAll('.chipbtn'));
+      const f = new Date(fromEl.value), t = new Date(toEl.value);
+      const now = new Date();
+      const sameDay = f.toDateString()===t.toDateString() && t.toDateString()===now.toDateString();
+      const diffDays=Math.round((t-f)/86400000)+1; // inklusiv
+      const toISO_ = d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+      let key=null;
+      if(sameDay) key='day'; else if(diffDays===7 && toISO_(t)===toISO_(now)) key='7'; else if(diffDays===30 && toISO_(t)===toISO_(now)) key='30';
+      presetBtns.forEach(b=>b.classList.toggle('active', b.dataset.preset===key));
     }
 
-    fromEl.addEventListener('change', validate);
-    toEl.addEventListener('change', validate);
+    function renderRows(list){
+      rowsEl.innerHTML = '';
+      if (!list.length){
+        rowsEl.innerHTML = '<tr><td colspan="4" class="muted">Ingen posteringer funnet for valgt periode/konto.</td></tr>';
+        totalsWrap.hidden = true; return;
+      }
+      // sortér etter dato stigende
+      list.sort((a,b)=>a.date.localeCompare(b.date));
+      let sum = 0;
+      const fmt = new Intl.NumberFormat('nb-NO', { minimumFractionDigits:2, maximumFractionDigits:2 });
+      const esc = s => String(s??'').replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+      const tr = (p)=>{
+        sum += Number(p.amount||0);
+        const text = p.text || p.description || (p.voucher && p.voucher.description) || '';
+        const voucher = p.voucher?.id || p.voucherId || '';
+        return `<tr>
+          <td class="mono">${esc(p.date||'')}</td>
+          <td>${esc(text)}</td>
+          <td class="right mono">${fmt.format(Number(p.amount||0))}</td>
+          <td class="mono">${voucher}</td>
+        </tr>`;
+      };
+      rowsEl.innerHTML = list.map(tr).join('');
+      pillCount.textContent = `${list.length} posteringer`;
+      pillSum.textContent = `Sum: ${fmt.format(sum)}`;
+      totalsWrap.hidden = false;
+    }
 
-    btn.addEventListener('click', async () => {
+    async function fetchNow(){
+      const acct = (acctEl.value||'').trim();
       const f = fromEl.value, t = toEl.value;
-      localStorage.setItem('bian.range.from', f);
-      localStorage.setItem('bian.range.to', t);
-      const qs = new URLSearchParams({ from:f, to:t });
-      history.replaceState({}, '', location.pathname + '?' + qs.toString());
-
-      // Kall ekte API-er (ingen fake tall). Lagrer i localStorage for andre sider.
-      btn.disabled = true; hint.textContent = '🌐 Henter…';
+      if (!acct || !f || !t){ hint.textContent = '❌ Fyll ut konto og datoer'; return; }
+      btn.disabled = true; hint.textContent = '🌐 Henter fra Tripletex… (kan ta litt tid ved mange posteringer)';
       try{
-        const ids = [289896744, 289896745, 289896742, 289896743]; // øl/vin salg/kjøp
-        const [ledger, articles] = await Promise.all([
-          API.fetchLedger(ids, f, t),
-          API.fetchArticles()
-        ]);
-        localStorage.setItem('bian.ledger', JSON.stringify({ from:f, to:t, values: ledger }));
-        localStorage.setItem('bian.articles', JSON.stringify({ ts:new Date().toISOString(), items: articles }));
-        hint.textContent = `✅ Lagret ${ledger.length} posteringer og ${articles.length} produkter`;
+        // dateTo er eksklusiv i Tripletex, så vi plusser på én dag for å inkludere valgt dato i UI‑et
+        const toExclusive = addDays(t, 1);
+        const postings = await API.fetchPostingsByAccountNumber(acct, f, toExclusive);
+        // lagre lokalt om du vil bruke på andre sider
+        try{
+          localStorage.setItem('bian.ledger', JSON.stringify({ from:f, to:t, account:acct, values: postings }));
+        }catch(e){}
+        hint.textContent = `✅ Fant ${postings.length} posteringer på konto ${acct}`;
+        renderRows(postings);
       }catch(e){
         console.error(e);
-        hint.textContent = '❌ ' + (e?.message || 'Feil ved henting') + ' — sjekk CORS dersom dette er i nettleser.';
+        hint.textContent = '❌ ' + (e?.message || 'Feil ved henting') + ' — sjekk CORS hvis dette kjøres direkte i nettleser.';
+        rowsEl.innerHTML = '<tr><td colspan="4" class="muted">Ingen data</td></tr>';
+        totalsWrap.hidden = true;
       }finally{
         btn.disabled = false;
       }
-    });
-      localStorage.setItem('bian.range.to', t);
-      const qs = new URLSearchParams({ from:f, to:t });
-      history.replaceState({}, '', location.pathname + '?' + qs.toString());
-      btn.blur();
-    });
-
-        setDefaults();
+    }
 
     // Hurtigvalg (I dag / 7 / 30)
     const presetBtns = Array.from(document.querySelectorAll('.chipbtn'));
-    function toISO(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+    function toISOdate(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
     function applyPreset(key){
       const now = new Date();
       let from = new Date(now);
       if(key==='day'){ /* samme dag */ }
       else if(key==='7'){ from.setDate(from.getDate()-6); }
       else if(key==='30'){ from.setDate(from.getDate()-29); }
-      fromEl.value = toISO(from);
-      toEl.value   = toISO(now);
-      validate();
-      updateActivePreset();
+      fromEl.value = toISOdate(from);
+      toEl.value   = toISOdate(now);
+      updateSubtitle();
     }
-    function updateActivePreset(){
-      const f=new Date(fromEl.value), t=new Date(toEl.value);
-      const now = new Date(); const sameDay = f.toDateString()===t.toDateString() && t.toDateString()===now.toDateString();
-      const diffDays=Math.round((t-f)/86400000)+1; // inklusiv
-      let key=null;
-      if(sameDay) key='day'; else if(diffDays===7 && toISO(t)===toISO(now)) key='7'; else if(diffDays===30 && toISO(t)===toISO(now)) key='30';
-      presetBtns.forEach(b=>b.classList.toggle('active', b.dataset.preset===key));
-    }
-    presetBtns.forEach(btn=>btn.addEventListener('click',()=>applyPreset(btn.dataset.preset)));
-    fromEl.addEventListener('change', updateActivePreset);
-    toEl.addEventListener('change', updateActivePreset);
-    updateActivePreset();
+    presetBtns.forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.preset)));
+
+    // Init
+    document.getElementById('fetchBtn').addEventListener('click', fetchNow);
+    document.getElementById('accountNo').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); fetchNow(); }});
+    fromEl.addEventListener('change', updateSubtitle);
+    toEl.addEventListener('change', updateSubtitle);
+    setDefaults();
   </script>
 </body>
 </html>
