@@ -165,52 +165,31 @@
 
     // === API Service (kun Tripletex) ===
     const API = (() => {
-      const consumerToken = "eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ==";
-      const employeeToken = "eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ==";
-      let sessionToken   = null;
-
-      async function fetchSessionToken(){
-        if (sessionToken) return sessionToken;
-        const url = new URL("https://api-test.tripletex.tech/v2/token/session/:create");
-        url.searchParams.set("consumerToken", consumerToken);
-        url.searchParams.set("employeeToken", employeeToken);
-        url.searchParams.set("expirationDate", new Date(Date.now()+86400000).toISOString());
-        const resp = await fetch(url, { method: 'PUT', headers: { 'Accept':'application/json' } });
-        if (!resp.ok) throw new Error('Token ' + resp.status);
-        const json = await resp.json();
-        const tok = json?.value?.token;
-        if (!tok) throw new Error('Ugyldig token');
-        sessionToken = tok; return tok;
-      }
-
-      function authHeaders(tok){ return { 'Authorization': `Basic ${btoa(`0:${tok}`)}`, 'Accept':'application/json' }; }
-
-      // Slår opp kontoen (ID) fra kontonummeret
-      async function getAccountByNumber(accountNumber){
-        const tok = await fetchSessionToken();
-        const url = new URL('https://api-test.tripletex.tech/v2/ledger/account');
-        url.searchParams.set('number', String(accountNumber));
+      // KUN via proxy på samme origin (f.eks. Cloudflare Worker / Vercel Function)
+      // Ingen hemmeligheter i nettleseren.
+      async function getAccountIdByNumber(number){
+        const url = new URL('/api/ledger/account', location.origin);
+        url.searchParams.set('number', String(number));
         url.searchParams.set('count', '1');
-        const resp = await fetch(url, { headers: authHeaders(tok) });
+        const resp = await fetch(url, { headers: { 'Accept':'application/json' } });
         if (!resp.ok) throw new Error('Account ' + resp.status);
         const data = await resp.json();
         const values = Array.isArray(data?.values) ? data.values : [];
-        if (!values.length) throw new Error('Finner ikke konto '+accountNumber);
-        return values[0];
+        if (!values.length) throw new Error('Finner ikke konto '+number);
+        return values[0].id;
       }
 
-      // Henter ALLE posteringer for gitt konto‑ID og dato‑intervall (paginert)
-      async function fetchPostingsByAccountId(accountId, fromISO, toISOExclusive){
-        const tok = await fetchSessionToken();
+      async function fetchPostingsByAccountNumber(accountNumber, fromISO, toISOExclusive){
+        const accountId = await getAccountIdByNumber(accountNumber);
         let page = 0; const count = 1000; const all = [];
         while(true){
-          const url = new URL('https://api-test.tripletex.tech/v2/ledger/posting');
+          const url = new URL('/api/ledger/posting', location.origin);
           url.searchParams.set('dateFrom', fromISO);
-          url.searchParams.set('dateTo', toISOExclusive); // Tripletex: to-date er eksklusiv
+          url.searchParams.set('dateTo', toISOExclusive); // Tripletex: eksklusiv
           url.searchParams.set('accountId', String(accountId));
           url.searchParams.set('page', String(page));
           url.searchParams.set('count', String(count));
-          const resp = await fetch(url, { headers: authHeaders(tok) });
+          const resp = await fetch(url, { headers: { 'Accept':'application/json' } });
           if (!resp.ok) throw new Error('Posting ' + resp.status);
           const json = await resp.json();
           const vals = Array.isArray(json?.values) ? json.values : [];
@@ -219,12 +198,6 @@
           page += 1;
         }
         return all;
-      }
-
-      // Convenience: konto‑nr -> posteringer
-      async function fetchPostingsByAccountNumber(accountNumber, fromISO, toISOExclusive){
-        const acc = await getAccountByNumber(accountNumber);
-        return await fetchPostingsByAccountId(acc.id, fromISO, toISOExclusive);
       }
 
       return { fetchPostingsByAccountNumber };
@@ -339,5 +312,63 @@
     toEl.addEventListener('change', updateSubtitle);
     setDefaults();
   </script>
+
+  <!--
+  =============================================================
+  BACKEND-PROXY (Cloudflare Worker) — legg i egen fil (f.eks. worker.mjs)
+  Deploy: 1) npm i -g wrangler  2) wrangler init  3) wrangler secret put CONSUMER_TOKEN
+          4) wrangler secret put EMPLOYEE_TOKEN  5) wrangler deploy
+  Deretter servér denne HTML-filen fra samme domenet som Workeren.
+  =============================================================
+
+  let CACHED_TOKEN = null; let TOKEN_EXP = 0;
+  async function getSessionToken(env){
+    const now = Date.now();
+    if (CACHED_TOKEN && now < TOKEN_EXP) return CACHED_TOKEN;
+    const u = new URL('https://api-test.tripletex.tech/v2/token/session/:create');
+    u.searchParams.set('consumerToken', env.CONSUMER_TOKEN);
+    u.searchParams.set('employeeToken', env.EMPLOYEE_TOKEN);
+    u.searchParams.set('expirationDate', new Date(now + 3600_000).toISOString());
+    const r = await fetch(u, { method:'PUT', headers:{ 'Accept':'application/json' } });
+    if(!r.ok) throw new Error('Token '+r.status);
+    const j = await r.json();
+    const t = j?.value?.token; if(!t) throw new Error('Ugyldig token');
+    CACHED_TOKEN = t; TOKEN_EXP = now + 55*60*1000; // 55 min cache
+    return t;
+  }
+
+  function cors(request){
+    const origin = request.headers.get('Origin') || '*';
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Vary': 'Origin',
+      'Access-Control-Allow-Methods': 'GET,OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+      'Access-Control-Max-Age': '86400'
+    };
+  }
+
+  async function forward(request, env, path){
+    const incoming = new URL(request.url);
+    const target = new URL('https://api-test.tripletex.tech'+path);
+    incoming.searchParams.forEach((v,k)=>target.searchParams.set(k,v));
+    const tok = await getSessionToken(env);
+    const auth = 'Basic ' + btoa('0:'+tok);
+    const resp = await fetch(target.toString(), { headers: { 'Authorization': auth, 'Accept':'application/json' } });
+    const body = await resp.text();
+    return new Response(body, { status: resp.status, headers: { 'Content-Type':'application/json', ...cors(request) } });
+  }
+
+  export default {
+    async fetch(request, env){
+      const url = new URL(request.url);
+      if (request.method === 'OPTIONS') return new Response(null, { headers: cors(request) });
+      if (url.pathname === '/api/ledger/account') return forward(request, env, '/v2/ledger/account');
+      if (url.pathname === '/api/ledger/posting') return forward(request, env, '/v2/ledger/posting');
+      return new Response('Not found', { status:404, headers: cors(request) });
+    }
+  };
+  -->
+
 </body>
 </html>
