@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Logg inn — Bian Analytics</title>
-  <meta name="description" content="Demo-innlogging for Bian Analytics." />
+  <title>Logg inn — Scope</title>
+  <meta name="description" content="Demo-innlogging for Scope." />
   <meta name="color-scheme" content="light">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%232563eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='76' font-family='Arial,Helvetica,sans-serif' fill='white'%3EB%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%23ff8a00'/%3E%3Ccircle cx='64' cy='64' r='30' fill='none' stroke='white' stroke-width='8'/%3E%3Ccircle cx='64' cy='64' r='16' fill='none' stroke='white' stroke-width='8'/%3E%3Ccircle cx='64' cy='64' r='4' fill='white'/%3E%3C/svg%3E" />
   <style>
-    :root{--brand-600:#1f4fcc;--brand-700:#1e3a8a;--ink:#0b1220;--muted:#f5f7fb;--border:#e5e7eb;--shadow:0 10px 28px rgba(2,6,23,.06);--ring:0 0 0 3px rgba(31,79,204,.24)}
+    :root{--brand-600:#ff8a00;--brand-700:#e67300;--ink:#0b1220;--muted:#f9fafb;--border:#e5e7eb;--shadow:0 10px 28px rgba(2,6,23,.06);--ring:0 0 0 3px rgba(255,138,0,.24)}
     *{box-sizing:border-box}
     body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;color:var(--ink);background:
-      radial-gradient(600px 240px at 10% -10%,rgba(31,79,204,.06),transparent 70%), #fff}
+      radial-gradient(600px 240px at 10% -10%,rgba(255,138,0,.06),transparent 70%), #fff}
     a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
     a:hover{color:var(--brand-600)}
     .container{max-width:420px;margin:clamp(40px,8vh,96px) auto;padding:0 20px}
     .brand{display:flex;gap:.6rem;align-items:center;justify-content:center;margin-bottom:18px;text-decoration:none;color:var(--ink);font-weight:800}
-    .logo{width:40px;height:40px;border-radius:14px;background:linear-gradient(180deg,var(--brand-600),var(--brand-700));display:grid;place-items:center;color:#fff;box-shadow:var(--shadow)}
+    .logo{width:40px;height:40px;border-radius:14px;background:#fff;border:2px solid var(--brand-600);display:grid;place-items:center;color:var(--brand-600);box-shadow:var(--shadow)}
     h1{margin:8px 0 4px;font-size:28px;letter-spacing:-.01em}
     p.lead{margin:0 0 16px;color:#374151}
     .card{border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:#fff;padding:18px}
@@ -29,7 +29,7 @@
     .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:11px 16px;font-weight:700;background:#fff;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06);text-decoration:none;color:var(--ink)}
     .btn.primary{background:var(--brand-600);border-color:transparent;color:#fff}
     .error{margin-top:10px;color:#b00020;font-size:14px;display:none}
-    .success{display:none;margin-top:12px;padding:10px 14px;border-radius:10px;background:#eef6ff}
+    .success{display:none;margin-top:12px;padding:10px 14px;border-radius:10px;background:#fff4e6}
     /* Skip-link (skjult til fokus) */
     .skip-link{position:absolute;left:12px;top:8px;padding:10px 14px;border-radius:12px;background:#0b1220;color:#fff;text-decoration:none;box-shadow:var(--shadow);transform:translateY(-160%);transition:transform .12s ease;z-index:1000}
     .skip-link:focus,.skip-link:focus-visible{transform:translateY(0)}
@@ -39,7 +39,16 @@
   <a class="skip-link" href="#main">Hopp til innhold</a>
 
   <main id="main" class="container" aria-labelledby="login-title">
-    <a class="brand" href="index.html"><div class="logo">B</div><span>Bian Analytics</span></a>
+    <a class="brand" href="index.html">
+      <div class="logo" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+          <circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="3"/>
+          <circle cx="20" cy="20" r="9" fill="none" stroke="currentColor" stroke-width="3"/>
+          <circle cx="20" cy="20" r="3" fill="currentColor"/>
+        </svg>
+      </div>
+      <span>Scope</span>
+    </a>
     <h1 id="login-title">Logg inn</h1>
     <p class="lead">Bruk demo-brukeren under for å logge inn.</p>
 
@@ -93,8 +102,8 @@
 
       if(email===VALID_EMAIL.toLowerCase() && pwd===VALID_PASS){
         try {
-          localStorage.setItem('bian.authed','1');
-          localStorage.setItem('bian.user', VALID_EMAIL);
+          localStorage.setItem('scope.authed','1');
+          localStorage.setItem('scope.user', VALID_EMAIL);
         } catch(e){}
         // Direkte redirect til dashboard
         window.location.href = 'dashboard.html';
