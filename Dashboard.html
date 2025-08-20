@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Tripletex kontoposter — Bian Analytics</title>
+  <title>Tripletex kontoposter — Scope</title>
   <style>
     :root{
-      --brand-600:#1f4fcc; --brand-700:#1e3a8a;
+      --brand-600:#ff8a00; --brand-700:#e67300;
       --ink-900:#0b1220; --ink-700:#374151; --border:#e5e7eb;
       --surface:#fff; --shadow:0 10px 28px rgba(2,6,23,.06);
     }
@@ -18,7 +18,7 @@
     header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
     .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding-block:12px}
     .brand{display:flex;gap:.6rem;align-items:center;text-decoration:none;font-weight:800}
-    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(180deg,var(--brand-600),var(--brand-700));color:#fff;display:grid;place-items:center;box-shadow:var(--shadow)}
+    .logo{width:36px;height:36px;border-radius:12px;background:#fff;border:2px solid var(--brand-600);color:var(--brand-600);display:grid;place-items:center;box-shadow:var(--shadow)}
     .org{font-weight:800}
     .nav-right{display:flex;align-items:center;gap:10px}
     .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff}
@@ -52,15 +52,15 @@
     .muted{color:#6b7280}
 
     .totals{display:flex;gap:12px;flex-wrap:wrap}
-    .pill{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#f8fafc;font-weight:700}
+    .pill{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#fff8ef;font-weight:700}
   </style>
 
   <script>
     // Enkel auth-guard — fjern hvis du ikke vil ha innlogging.
     (function(){
       try{
-        const authed = localStorage.getItem('bian.authed') === '1';
-        const user = (localStorage.getItem('bian.user')||'').toLowerCase();
+        const authed = localStorage.getItem('scope.authed') === '1';
+        const user = (localStorage.getItem('scope.user')||'').toLowerCase();
         if(!authed || user!=='test@gressholmen.no'){
           window.location.replace('login.html');
         }
@@ -74,7 +74,14 @@
   <header>
     <div class="container nav">
       <a class="brand" href="index.html" title="Til forsiden">
-        <div class="logo">B</div><span>Bian Analytics</span>
+        <div class="logo" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+            <circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="3"/>
+            <circle cx="20" cy="20" r="9" fill="none" stroke="currentColor" stroke-width="3"/>
+            <circle cx="20" cy="20" r="3" fill="currentColor"/>
+          </svg>
+        </div>
+        <span>Scope</span>
       </a>
       <div style="justify-self:center;text-align:center">
         <div class="org">Gressholmen Kro AS</div>
@@ -151,13 +158,13 @@
 
   <script>
     // Header-info
-    const user = (localStorage.getItem('bian.user')||'');
+    const user = (localStorage.getItem('scope.user')||'');
     const who = document.getElementById('who'); if (who) who.textContent = user || 'Innlogget';
     const d = new Date();
     const subtitle = document.getElementById('subtitle');
     if (subtitle) subtitle.textContent = d.toLocaleDateString('no-NO',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
     const logoutBtn = document.getElementById('logout');
-    if (logoutBtn) logoutBtn.addEventListener('click',()=>{ try{ localStorage.removeItem('bian.authed'); localStorage.removeItem('bian.user'); }catch(e){} window.location.href='login.html'; });
+    if (logoutBtn) logoutBtn.addEventListener('click',()=>{ try{ localStorage.removeItem('scope.authed'); localStorage.removeItem('scope.user'); }catch(e){} window.location.href='login.html'; });
 
     // === Små utils ===
     const toISO = dt => new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
@@ -276,7 +283,7 @@
         const postings = await API.fetchPostingsByAccountNumber(acct, f, toExclusive);
         // lagre lokalt om du vil bruke på andre sider
         try{
-          localStorage.setItem('bian.ledger', JSON.stringify({ from:f, to:t, account:acct, values: postings }));
+          localStorage.setItem('scope.ledger', JSON.stringify({ from:f, to:t, account:acct, values: postings }));
         }catch(e){}
         hint.textContent = `✅ Fant ${postings.length} posteringer på konto ${acct}`;
         renderRows(postings);
