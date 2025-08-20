@@ -23,18 +23,17 @@
     .org{font-weight:800}
     .nav-right{display:flex;align-items:center;gap:10px}
 
-    /* Buttons & chips – synlig tekst + hover/fokus */
+    /* Piller/knapper */
     .btn,.chip,.chipbtn,.tab{color:var(--ink-900)}
     .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff}
     .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:9px 14px;background:#fff;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06)}
     .btn:hover,.chip:hover,.chipbtn:hover,.tab:hover{background:var(--muted)}
     .btn:focus-visible,.chip:focus-visible,.chipbtn:focus-visible,.tab:focus-visible{outline:none;box-shadow:var(--ring)}
-    .btn:empty,.chip:empty,.tab:empty{display:none} /* skjul tomme piller */
 
     /* Tabbar */
     .tabbar-wrap{position:sticky;top:64px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);z-index:40}
     .tabbar{display:flex;gap:8px;padding:10px 0}
-    .tab{display:inline-flex;align-items:center;gap:6px;text-decoration:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer;line-height:1.1}
+    .tab{display:inline-flex;align-items:center;gap:6px;text-decoration:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer;line-height:1.1;white-space:nowrap}
     .tab[aria-selected="true"]{background:var(--brand-600);color:#fff;border-color:transparent}
 
     main{padding-block:22px}
@@ -79,13 +78,14 @@
     .tips{display:grid;gap:10px}
     .tip{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}
 
-    /* Fallback for hash-navigasjon (viser panel når det er :target) */
+    /* Panelvisning + offset så sticky header ikke dekker */
     [role="tabpanel"]{display:none}
     [role="tabpanel"].active,[role="tabpanel"]:target{display:block}
+    :where(#oversikt,#kpi,#ai){scroll-margin-top:140px}
   </style>
 
   <script>
-    // Enkel auth-guard
+    /* Enkel auth-guard */
     (function(){
       try{
         const authed = localStorage.getItem('scope.authed') === '1';
@@ -121,11 +121,13 @@
         <button id="logout" class="btn">Logg ut</button>
       </div>
     </div>
+
+    <!-- Faner -->
     <div class="container tabbar-wrap">
       <div class="tabbar" role="tablist" aria-label="Visning">
-        <a class="tab" id="tab-oversikt" role="tab" aria-selected="true" aria-controls="oversikt" href="#oversikt">Oversikt</a>
-        <a class="tab" id="tab-kpi" role="tab" aria-selected="false" aria-controls="kpi" href="#kpi">KPI-er</a>
-        <a class="tab" id="tab-ai" role="tab" aria-selected="false" aria-controls="ai" href="#ai">AI-tips</a>
+        <a class="tab" id="tab-oversikt" role="tab" aria-selected="true"  aria-controls="oversikt" href="#oversikt">Oversikt</a>
+        <a class="tab" id="tab-kpi"      role="tab" aria-selected="false" aria-controls="kpi"      href="#kpi">KPI-er</a>
+        <a class="tab" id="tab-ai"       role="tab" aria-selected="false" aria-controls="ai"       href="#ai">AI-tips</a>
       </div>
     </div>
   </header>
@@ -227,7 +229,7 @@
   </main>
 
   <script>
-    // Header-info
+    /* Header-info */
     const user = (localStorage.getItem('scope.user')||'');
     const who = document.getElementById('who'); if (who) who.textContent = user || 'Innlogget';
     const d = new Date();
@@ -235,11 +237,11 @@
     if (subtitle) subtitle.textContent = d.toLocaleDateString('no-NO',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
     document.getElementById('logout')?.addEventListener('click',()=>{ try{ localStorage.removeItem('scope.authed'); localStorage.removeItem('scope.user'); }catch(e){} window.location.href='login.html'; });
 
-    // === Små utils ===
+    /* Små utils */
     const toISO = dt => new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
     const addDays = (iso, n) => { const t = new Date(iso+'T00:00:00'); t.setDate(t.getDate()+n); return toISO(t); };
 
-    // === API Service (Tripletex via proxy) ===
+    /* Tripletex proxy-kall */
     const API = (() => {
       async function getAccountIdByNumber(number){
         const url = new URL('/api/ledger/account', location.origin);
@@ -275,7 +277,7 @@
       return { fetchPostingsByAccountNumber };
     })();
 
-    // === Tabs (JS forbedrer bare; lenker funker uansett) ===
+    /* Tabs – virker også uten JS via hash, men dette synker aria + .active */
     const tabs = Array.from(document.querySelectorAll('.tab'));
     const panels = { oversikt:document.getElementById('oversikt'),
                      kpi:document.getElementById('kpi'),
@@ -300,12 +302,12 @@
       }
     });
 
-    // === UI wiring ===
+    /* UI-wiring */
     const fromEl = document.getElementById('from');
     const toEl   = document.getElementById('to');
     const acctEl = document.getElementById('accountNo');
     const btn    = document.getElementById('fetchBtn');
-    const hint   = document.getElementById('hint');  /* <- FIX: var navnet var feil før */
+    const hint   = document.getElementById('hint');   /* <- fikset navn */
     const rowsEl = document.getElementById('rows');
     const totalsWrap = document.getElementById('totals');
     const pillCount = document.getElementById('pillCount');
@@ -423,7 +425,7 @@
       }finally{ btn.disabled = false; }
     }
 
-    // Hurtigvalg (I dag / 7 / 30)
+    /* Hurtigvalg (I dag / 7 / 30) */
     const presetBtns = Array.from(document.querySelectorAll('.chipbtn'));
     function toISOdate(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
     function applyPreset(key){
@@ -438,14 +440,14 @@
     }
     presetBtns.forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.preset)));
 
-    // Init
+    /* Init */
     document.getElementById('fetchBtn').addEventListener('click', fetchNow);
     document.getElementById('accountNo').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); fetchNow(); }});
     document.getElementById('regen').addEventListener('click',()=>{ const k=computeKPIs(CURRENT||[]); renderTips(k); });
     fromEl.addEventListener('change', updateSubtitle);
     toEl.addEventListener('change', updateSubtitle);
 
-    // Prefill
+    /* Prefill fra lagring */
     try{
       const saved = JSON.parse(localStorage.getItem('scope.ledger')||'null');
       if(saved && saved.values){
