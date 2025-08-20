@@ -4,20 +4,30 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light">
-  <title data-i18n="meta.title">Bian Analytics — Innsikt for restauranter</title>
-  <meta name="description" content="Konverter rådata til fulle bord og bedre marginer. Bian gir daglige KPI-er, varsler og integrasjoner for restauranter og kjeder." data-i18n-attr="content:meta.description" />
-  <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+  <title data-i18n="meta.title">Scope — Innsikt for restauranter</title>
+  <meta name="description" content="Konverter rådata til fulle bord og bedre marginer. Scope gir daglige KPI-er, varsler og integrasjoner for restauranter og kjeder." data-i18n-attr="content:meta.description" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: dark)">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Bian Analytics — Innsikt for restauranter" data-i18n-attr="content:meta.title">
+  <meta property="og:title" content="Scope — Innsikt for restauranter" data-i18n-attr="content:meta.title">
   <meta property="og:description" content="Daglige KPI-er, menybidrag, bemanning vs. trafikk og varsler. Integreres med POS og Tripletex på under 10 minutter." data-i18n-attr="content:meta.description">
   <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/1280px-Gressholmen_kro.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="/">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%232563eb'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='76' font-family='Arial,Helvetica,sans-serif' fill='white'%3EB%3C/text%3E%3C/svg%3E" />
+  <!-- Favicon with Scope orange -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%23ff8a00'/%3E%3Ccircle cx='64' cy='64' r='30' fill='none' stroke='white' stroke-width='8'/%3E%3Ccircle cx='64' cy='64' r='16' fill='none' stroke='white' stroke-width='8'/%3E%3Ccircle cx='64' cy='64' r='4' fill='white'/%3E%3C/svg%3E" />
+
   <style>
-    :root{--brand-600:#1f4fcc;--brand-700:#1e3a8a;--ink-900:#0b1220;--ink-800:#111827;--ink-700:#1f2937;--ink-600:#374151;--ink-500:#4b5563;--surface:#ffffff;--muted:#f5f7fb;--border:#e5e7eb;--radius:16px;--shadow:0 10px 28px rgba(2,6,23,.06);--ring:0 0 0 3px rgba(31,79,204,.24)}
+    /* === Scope brand === */
+    :root{
+      --brand-600:#ff8a00;   /* Scope orange */
+      --brand-700:#e67300;
+      --ink-900:#0b1220; --ink-800:#111827; --ink-700:#1f2937; --ink-600:#374151; --ink-500:#4b5563;
+      --surface:#ffffff; --muted:#f9fafb; --border:#e5e7eb;
+      --radius:16px; --shadow:0 10px 28px rgba(2,6,23,.06); --ring:0 0 0 3px rgba(255,138,0,.24)
+    }
     @media (prefers-color-scheme: dark){:root{color-scheme:light;--ink-900:#0b1220;--ink-800:#111827;--ink-700:#1f2937;--ink-600:#374151;--ink-500:#4b5563;--surface:#fff;--muted:#f5f7fb;--border:#e5e7eb}body{background:#fff;color:var(--ink-900)}}
+
     *,*::before,*::after{box-sizing:border-box}
     html{scroll-behavior:smooth}
     body{margin:0;font-size:17px;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,"Noto Sans",sans-serif;background:#fff;color:var(--ink-900);line-height:1.7;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -33,7 +43,7 @@
     header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
     .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-block:14px;padding-inline-end:clamp(28px,6vw,96px)}
     .brand{display:flex;gap:.6rem;align-items:center;font-weight:800;color:var(--ink-900);text-decoration:none}
-    .brand .logo{inline-size:36px;block-size:36px;border-radius:12px;background:linear-gradient(180deg,var(--brand-600),var(--brand-700));color:#fff;display:grid;place-items:center;box-shadow:var(--shadow)}
+    .brand .logo{inline-size:40px;block-size:40px;border-radius:12px;background:#fff;border:2px solid var(--brand-600);display:grid;place-items:center;box-shadow:var(--shadow)}
     .brand span{font-size:18px}
     nav{justify-self:center}
     nav ul{display:flex;align-items:center;gap:24px}
@@ -51,8 +61,8 @@
     .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:10px 16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:transform .12s ease, box-shadow .12s ease;background:#fff;text-decoration:none !important;box-shadow:0 1px 2px rgba(2,6,23,.06)}
     .btn:focus-visible{outline:none;box-shadow:var(--ring)}
     .btn:hover{transform:translateY(-1px)}
-    .btn.primary{background:var(--brand-600);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(31,79,204,.25)}
-    .btn.primary:hover{background:#1c46b8}
+    .btn.primary{background:var(--brand-600);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(255,138,0,.25)}
+    .btn.primary:hover{background:#f27f00}
     .btn.ghost{background:transparent}
     .btn.sm{padding:9px 14px;font-size:14px}
     .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff;cursor:pointer}
@@ -61,7 +71,7 @@
     h1{margin:0 0 12px;font-size:clamp(36px,5.6vw,60px);line-height:1.06}
     .lead{font-size:clamp(17px,2.4vw,20px);color:var(--ink-800);max-width:65ch}
     .hero-media{position:relative;border-radius:22px;overflow:hidden;min-height:428px;background:linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.05)), url('https://static.wixstatic.com/media/580a76_fb643904eef04a3bac52115b395f0981~mv2.jpg/v1/fill/w_1280,h_768,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/580a76_fb643904eef04a3bac52115b395f0981~mv2.jpg') center/cover no-repeat;box-shadow:var(--shadow)}
-    .hero-media::after{content:"";position:absolute;inset:0;background:radial-gradient(520px 200px at 8% 0%, rgba(31,79,204,.06), transparent 70%)}
+    .hero-media::after{content:"";position:absolute;inset:0;background:radial-gradient(520px 200px at 8% 0%, rgba(255,138,0,.08), transparent 70%)}
     .hero-media .stamp{position:absolute;left:16px;bottom:16px;background:rgba(255,255,255,.98);backdrop-filter:saturate(140%) blur(6px);padding:10px 12px;border-radius:12px;font-size:13px;color:#111;border:1px solid var(--border)}
     section{padding-block:72px;border-top:1px solid var(--border)}
     h2{margin:0 0 10px;font-size:clamp(26px,3.8vw,38px)}
@@ -70,7 +80,7 @@
     .card:hover{transform:translateY(-2px)}
     .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
     .gallery img{width:100%;height:220px;object-fit:cover;border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
-    .band{background:linear-gradient(180deg,#fafcff,#eef2ff);color:var(--ink-900);border:1px solid var(--border);border-radius:20px;padding:26px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:30px}
+    .band{background:linear-gradient(180deg,#fffaf3,#fff2e6);color:var(--ink-900);border:1px solid var(--border);border-radius:20px;padding:26px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:30px}
     .pricing .price{font-size:44px;margin:10px 0 4px;color:var(--ink-900)}
     .pricing .price small{font-size:14px;color:var(--ink-700)}
     footer{padding:36px 0;color:var(--ink-800)}
@@ -97,14 +107,41 @@
     .skip-link:focus, .skip-link:focus-visible{ transform:translateY(0) }
     @media (prefers-reduced-motion: reduce){ .skip-link{ transition:none } }
   </style>
+
+  <!-- Inline SVGs for Scope logo -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <!-- Bullseye icon used in the header square -->
+      <symbol id="icon-scope" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="3"/>
+        <circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="3"/>
+        <circle cx="20" cy="20" r="6" fill="none" stroke="currentColor" stroke-width="3"/>
+        <circle cx="20" cy="20" r="2.2" fill="currentColor"/>
+      </symbol>
+      <!-- Full logotype for places where you want the wordmark + rings (optional) -->
+      <symbol id="logotype-scope" viewBox="0 0 200 40">
+        <g fill="none" stroke="#ff8a00" stroke-width="3">
+          <circle cx="176" cy="20" r="18"/>
+          <circle cx="176" cy="20" r="12"/>
+          <circle cx="176" cy="20" r="6"/>
+        </g>
+        <circle cx="176" cy="20" r="2.4" fill="#ff8a00"/>
+        <text x="0" y="28" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="28" font-weight="800" fill="#ff8a00">Scope</text>
+      </symbol>
+    </defs>
+  </svg>
 </head>
+
 <body>
   <a class="skip-link" href="#main" data-i18n="skiplink">Hopp til innhold</a>
 
   <header>
     <div class="container nav" role="navigation" aria-label="Toppmeny" data-i18n-attr="aria-label:header.topnav_label">
-      <a class="brand" href="#top" aria-label="Bian Analytics hjem" data-i18n-attr="aria-label:header.brand_aria">
-        <div class="logo" aria-hidden="true">B</div><span>Bian Analytics</span>
+      <a class="brand" href="#top" aria-label="Scope hjem" data-i18n-attr="aria-label:header.brand_aria">
+        <div class="logo" aria-hidden="true" style="color:var(--brand-600)">
+          <svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true"><use href="#icon-scope"/></svg>
+        </div>
+        <span>Scope</span>
       </a>
 
       <button class="mobile-toggle" aria-expanded="false" aria-controls="mainmenu" data-i18n="mobile.menu_button">Meny</button>
@@ -151,7 +188,7 @@
       <div>
         <span class="eyebrow" style="letter-spacing:.12em" data-i18n="hero.eyebrow">Restaurant-analyse</span>
         <h1 data-i18n="hero.h1">Gjør rådata om til fulle bord og bedre marginer</h1>
-        <p class="lead" data-i18n="hero.lead">Bian gir deg daglige KPI-er for omsetning, dekningsbidrag, bemanning og svinn – alt i én enkel visning. Ta beslutninger med trygghet.</p>
+        <p class="lead" data-i18n="hero.lead">Scope gir deg daglige KPI-er for omsetning, dekningsbidrag, bemanning og svinn – alt i én enkel visning. Ta beslutninger med trygghet.</p>
         <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
           <a class="btn primary" href="demo.html" data-i18n="hero.cta_demo">Book en demo</a>
           <a class="btn ghost" href="#priser" data-i18n="hero.cta_pricing">Se priser</a>
@@ -178,7 +215,7 @@
 
     <section id="funksjoner">
       <div class="container">
-        <span class="eyebrow" data-i18n="features.eyebrow">Hvorfor Bian</span>
+        <span class="eyebrow" data-i18n="features.eyebrow">Hvorfor Scope</span>
         <h2 data-i18n="features.h2">Alt du trenger — uten støy</h2>
         <p class="sub" data-i18n="features.sub">Få oversikt over hva som faktisk påvirker bunnlinjen: menybidrag, timeplan mot trafikk, og sanntidsvarsel når nøkkeltall avviker.</p>
         <div class="features">
@@ -202,7 +239,7 @@
         <h2 id="pricing-heading" data-i18n="pricing.h2">Én enkel plan</h2>
         <p class="sub" data-i18n="pricing.sub">Skaler fra én restaurant til kjede uten skjulte kostnader.</p>
         <div class="features" style="align-items:stretch">
-          <article class="card" style="background:linear-gradient(180deg,#fafafa,transparent);border-color:#e3e3e3">
+          <article class="card" style="background:linear-gradient(180deg,#fff8ef,transparent);border-color:#f5d5b0">
             <h3>Pro</h3>
             <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.pro_sub">Alt du trenger for daglig styring</p>
             <p class="price"><strong>kr 990</strong> <small data-i18n="pricing.per_month">/ mnd</small></p>
@@ -222,7 +259,7 @@
               <li data-i18n="pricing.e1">Fler-enhetsdashbord</li>
               <li data-i18n="pricing.e2">Dedikert kundekontakt</li>
               <li data-i18n="pricing.e3">Tilpassede integrasjoner</li>
-              <li>SLA & SSO</li>
+              <li>SLA &amp; SSO</li>
             </ul>
             <div class="cta"><a class="btn ghost" href="demo.html" data-i18n="pricing.cta_talk">Snakk med oss</a></div>
           </article>
@@ -243,7 +280,7 @@
 
   <footer>
     <div class="container row">
-      <p>© <span id="year"></span> Bian Analytics. <span data-i18n="footer.rights">Alle rettigheter forbeholdt.</span></p>
+      <p>© <span id="year"></span> Scope. <span data-i18n="footer.rights">Alle rettigheter forbeholdt.</span></p>
       <a href="#" style="text-decoration:none;color:inherit" data-i18n="footer.privacy">Personvern</a>
     </div>
   </footer>
@@ -255,13 +292,13 @@
     // i18n-ordbok (NO & EN)
     const i18n = {
       no: {
-        "meta.title":"Bian Analytics — Innsikt for restauranter",
+        "meta.title":"Scope — Innsikt for restauranter",
         "meta.description":"Daglige KPI-er, menybidrag, bemanning vs. trafikk og varsler. Integreres med POS og Tripletex på under 10 minutter.",
 
         "skiplink":"Hopp til innhold",
 
         "header.topnav_label":"Toppmeny",
-        "header.brand_aria":"Bian Analytics hjem",
+        "header.brand_aria":"Scope hjem",
         "header.mainmenu_label":"Hovedmeny",
 
         "mobile.menu_button":"Meny",
@@ -289,7 +326,7 @@
 
         "hero.eyebrow":"Restaurant-analyse",
         "hero.h1":"Gjør rådata om til fulle bord og bedre marginer",
-        "hero.lead":"Bian gir deg daglige KPI-er for omsetning, dekningsbidrag, bemanning og svinn – alt i én enkel visning. Ta beslutninger med trygghet.",
+        "hero.lead":"Scope gir deg daglige KPI-er for omsetning, dekningsbidrag, bemanning og svinn – alt i én enkel visning. Ta beslutninger med trygghet.",
         "hero.cta_demo":"Book en demo",
         "hero.cta_pricing":"Se priser",
         "hero.integrates":"Integreres med POS og Tripletex på under 10 minutter.",
@@ -303,7 +340,7 @@
         "gallery.wds_alt":"Way Down South – uteservering ved Akerselva",
         "gallery.gangnam_alt":"Munkedamsveien 59 i Oslo – bygget der Gangnam Korean Restaurant holder til",
 
-        "features.eyebrow":"Hvorfor Bian",
+        "features.eyebrow":"Hvorfor Scope",
         "features.h2":"Alt du trenger — uten støy",
         "features.sub":"Få oversikt over hva som faktisk påvirker bunnlinjen: menybidrag, timeplan mot trafikk, og sanntidsvarsel når nøkkeltall avviker.",
         "features.f1_title":"Menyoptimalisering",
@@ -344,13 +381,13 @@
         "footer.privacy":"Personvern"
       },
       en: {
-        "meta.title":"Bian Analytics — Insights for restaurants",
+        "meta.title":"Scope — Insights for restaurants",
         "meta.description":"Daily KPIs, menu contribution, staffing vs. traffic, and alerts. Connects to POS and Tripletex in under 10 minutes.",
 
         "skiplink":"Skip to content",
 
         "header.topnav_label":"Top navigation",
-        "header.brand_aria":"Bian Analytics home",
+        "header.brand_aria":"Scope home",
         "header.mainmenu_label":"Main navigation",
 
         "mobile.menu_button":"Menu",
@@ -378,7 +415,7 @@
 
         "hero.eyebrow":"Restaurant analytics",
         "hero.h1":"Turn raw data into full tables and better margins",
-        "hero.lead":"Bian gives you daily KPIs for revenue, contribution margin, staffing and waste — all in one simple view. Decide with confidence.",
+        "hero.lead":"Scope gives you daily KPIs for revenue, contribution margin, staffing and waste — all in one simple view. Decide with confidence.",
         "hero.cta_demo":"Book a demo",
         "hero.cta_pricing":"See pricing",
         "hero.integrates":"Integrates with POS and Tripletex in under 10 minutes.",
@@ -392,7 +429,7 @@
         "gallery.wds_alt":"Way Down South — outdoor seating by the river",
         "gallery.gangnam_alt":"Munkedamsveien 59 in Oslo — building where Gangnam Korean Restaurant is located",
 
-        "features.eyebrow":"Why Bian",
+        "features.eyebrow":"Why Scope",
         "features.h2":"Everything you need — no noise",
         "features.sub":"See what actually drives your bottom line: menu contribution, schedule vs. traffic, and real-time alerts when KPIs deviate.",
         "features.f1_title":"Menu optimization",
@@ -455,7 +492,7 @@
         });
       });
 
-      // (Valgfritt) Rik HTML
+      // Rik HTML (valgfritt)
       $$('[data-i18n-html]').forEach(el=>{
         const k = el.getAttribute('data-i18n-html');
         if (k in dict) el.innerHTML = dict[k];
@@ -464,16 +501,16 @@
       // Oppdater språkknapp til NESTE språk
       const btn = $('#lang-toggle');
       if (btn) btn.textContent = labelForNext(lang);
-      // Oppdater <title> manuelt (noen nettlesere caches)
+      // Oppdater <title>
       const t = dict['meta.title']; if (t) document.title = t;
-      // Oppdater meta description (for konsistens i klient)
+      // Oppdater meta description
       const md = document.querySelector('meta[name="description"]');
       if (md && dict['meta.description']) md.setAttribute('content', dict['meta.description']);
     }
 
     // Init
     $('#year')?.append(document.createTextNode(new Date().getFullYear()));
-    const saved   = localStorage.getItem('bian.lang');
+    const saved   = localStorage.getItem('scope.lang');
     const browser = ((navigator.language||'').toLowerCase().startsWith('no')) ? 'no' : 'en';
     const start   = saved || browser || 'no';
     applyLang(start);
@@ -497,7 +534,7 @@
     // Språk-toggle
     $('#lang-toggle')?.addEventListener('click',()=>{
       const next = (document.documentElement.lang === 'en') ? 'no' : 'en';
-      localStorage.setItem('bian.lang', next);
+      localStorage.setItem('scope.lang', next);
       applyLang(next);
     });
   </script>
