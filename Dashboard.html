@@ -8,7 +8,7 @@
     :root{
       --brand-600:#ff8a00; --brand-700:#e67300;
       --ink-900:#0b1220; --ink-700:#374151; --border:#e5e7eb;
-      --surface:#fff; --shadow:0 10px 28px rgba(2,6,23,.06);
+      --surface:#fff; --muted:#f8fafc; --shadow:0 10px 28px rgba(2,6,23,.06);
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;color:var(--ink-900);background:#fff}
@@ -24,7 +24,13 @@
     .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff}
     .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:9px 14px;background:#fff;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06)}
 
-    main{padding-block:28px}
+    /* Tabbar */
+    .tabbar-wrap{position:sticky;top:64px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);z-index:40}
+    .tabbar{display:flex;gap:8px;padding:10px 0}
+    .tab{appearance:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer}
+    .tab[aria-selected="true"]{background:var(--brand-600);color:#fff;border-color:transparent}
+
+    main{padding-block:22px}
     .grid{display:grid;grid-template-columns:1fr;gap:20px}
 
     .card{border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow);background:#fff}
@@ -44,7 +50,7 @@
     .status{font-weight:700}
 
     table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
-    thead th{position:sticky;top:0;background:#f8fafc;text-align:left;font-weight:700;border-bottom:1px solid var(--border);padding:10px 12px}
+    thead th{position:sticky;top:0;background:var(--muted);text-align:left;font-weight:700;border-bottom:1px solid var(--border);padding:10px 12px}
     tbody td{padding:10px 12px;border-bottom:1px solid var(--border)}
     tbody tr:last-child td{border-bottom:none}
     .mono{font-variant-numeric:tabular-nums}
@@ -53,10 +59,22 @@
 
     .totals{display:flex;gap:12px;flex-wrap:wrap}
     .pill{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#fff8ef;font-weight:700}
+
+    /* KPI cards */
+    .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .kpi .small{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff}
+    .kpi .small h3{margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em}
+    .kpi .small .val{font-weight:800;font-size:22px}
+    @media (max-width:900px){.kpi{grid-template-columns:1fr 1fr}}
+    @media (max-width:560px){.kpi{grid-template-columns:1fr}}
+
+    /* Tips */
+    .tips{display:grid;gap:10px}
+    .tip{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}
   </style>
 
   <script>
-    // Enkel auth-guard — fjern hvis du ikke vil ha innlogging.
+    // Enkel auth-guard
     (function(){
       try{
         const authed = localStorage.getItem('scope.authed') === '1';
@@ -92,65 +110,108 @@
         <button id="logout" class="btn">Logg ut</button>
       </div>
     </div>
+    <div class="container tabbar-wrap">
+      <div class="tabbar" role="tablist" aria-label="Visning">
+        <button class="tab" id="tab-oversikt" role="tab" aria-selected="true" aria-controls="panel-oversikt">Oversikt</button>
+        <button class="tab" id="tab-kpi" role="tab" aria-selected="false" aria-controls="panel-kpi">KPI‑er</button>
+        <button class="tab" id="tab-ai" role="tab" aria-selected="false" aria-controls="panel-ai">AI‑tips</button>
+      </div>
+    </div>
   </header>
 
   <main id="main">
     <div class="container grid">
-      <section class="card" aria-label="Velg konto og periode">
-        <h1>Kontoposter fra Tripletex</h1>
+      <!-- Oversikt -->
+      <section id="panel-oversikt" role="tabpanel" aria-labelledby="tab-oversikt">
+        <div class="card" aria-label="Velg konto og periode">
+          <h1>Kontoposter fra Tripletex</h1>
 
-        <div class="presets" role="group" aria-label="Hurtigvalg for periode">
-          <button class="chipbtn" data-preset="day">I dag</button>
-          <button class="chipbtn" data-preset="7">Siste 7</button>
-          <button class="chipbtn" data-preset="30">Siste 30</button>
-        </div>
-
-        <div class="row" style="margin-bottom:12px">
-          <div>
-            <label for="accountNo">Konto‑nr (f.eks. 1920)</label>
-            <input id="accountNo" type="text" inputmode="numeric" autocomplete="off" placeholder="1920" value="1920" />
-            <small class="muted">Vi slår opp konto‑ID via <code>/v2/ledger/account?number=</code>.</small>
+          <div class="presets" role="group" aria-label="Hurtigvalg for periode">
+            <button class="chipbtn" data-preset="day">I dag</button>
+            <button class="chipbtn" data-preset="7">Siste 7</button>
+            <button class="chipbtn" data-preset="30">Siste 30</button>
           </div>
-          <div></div>
+
+          <div class="row" style="margin-bottom:12px">
+            <div>
+              <label for="accountNo">Konto‑nr (f.eks. 1920)</label>
+              <input id="accountNo" type="text" inputmode="numeric" autocomplete="off" placeholder="1920" value="1920" />
+              <small class="muted">Vi slår opp konto‑ID via <code>/v2/ledger/account?number=</code>.</small>
+            </div>
+            <div></div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="from">Start</label>
+              <input id="from" type="date" autocomplete="off">
+            </div>
+            <div>
+              <label for="to">Slutt</label>
+              <input id="to" type="date" autocomplete="off">
+              <small class="muted">Merk: Tripletex sine <code>dateTo</code>-parametre er «til og <em>eksklusiv</em>», så vi legger automatisk på +1 dag i API‑kallet.</small>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="fetchBtn">Hent transaksjoner</button>
+          </div>
+          <small id="hint" class="status"></small>
         </div>
 
-        <div class="row">
-          <div>
-            <label for="from">Start</label>
-            <input id="from" type="date" autocomplete="off">
+        <div class="card" aria-label="Resultater">
+          <div class="totals" id="totals" hidden>
+            <span class="pill" id="pillCount"></span>
+            <span class="pill" id="pillSum"></span>
           </div>
-          <div>
-            <label for="to">Slutt</label>
-            <input id="to" type="date" autocomplete="off">
-            <small class="muted">Merk: Tripletex sine <code>dateTo</code>-parametre er «til og <em>eksklusiv</em>», så vi legger automatisk på +1 dag i API‑kallet.</small>
+          <div style="overflow:auto">
+            <table aria-describedby="hint">
+              <thead>
+                <tr>
+                  <th style="width:140px">Dato</th>
+                  <th>Tekst</th>
+                  <th class="right">Beløp</th>
+                  <th style="width:110px">Bunt/Voucher</th>
+                </tr>
+              </thead>
+              <tbody id="rows">
+                <tr><td colspan="4" class="muted">Ingen data ennå. Velg konto og periode, og trykk «Hent transaksjoner».</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <div class="actions">
-          <button id="fetchBtn">Hent transaksjoner</button>
-        </div>
-        <small id="hint" class="status"></small>
       </section>
 
-      <section class="card" aria-label="Resultater">
-        <div class="totals" id="totals" hidden>
-          <span class="pill" id="pillCount"></span>
-          <span class="pill" id="pillSum"></span>
+      <!-- KPIer -->
+      <section id="panel-kpi" role="tabpanel" aria-labelledby="tab-kpi" hidden>
+        <div class="card">
+          <h1>Nøkkeltall</h1>
+          <div id="kpi-cards" class="kpi">
+            <!-- fylles av JS -->
+          </div>
         </div>
-        <div style="overflow:auto">
-          <table aria-describedby="hint">
-            <thead>
-              <tr>
-                <th style="width:140px">Dato</th>
-                <th>Tekst</th>
-                <th class="right">Beløp</th>
-                <th style="width:110px">Bunt/Voucher</th>
-              </tr>
-            </thead>
-            <tbody id="rows">
-              <tr><td colspan="4" class="muted">Ingen data ennå. Velg konto og periode, og trykk «Hent transaksjoner».</td></tr>
-            </tbody>
-          </table>
+        <div class="card">
+          <h2 style="margin:0 0 10px;font-size:18px">Største posteringer</h2>
+          <div style="overflow:auto">
+            <table>
+              <thead>
+                <tr><th>Dato</th><th>Tekst</th><th class="right">Beløp</th><th>Bunt</th></tr>
+              </thead>
+              <tbody id="top-rows"><tr><td colspan="4" class="muted">Hent transaksjoner først.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI tips -->
+      <section id="panel-ai" role="tabpanel" aria-labelledby="tab-ai" hidden>
+        <div class="card">
+          <h1>AI‑tips</h1>
+          <p class="muted" id="tips-info">Tipsene baseres på transaksjonene i valgt periode.</p>
+          <div id="tips" class="tips">
+            <div class="tip muted">Hent transaksjoner først for å se innsikt.</div>
+          </div>
+          <div class="actions" style="justify-content:flex-start;margin-top:18px"><button id="regen">Regenerer tips</button></div>
         </div>
       </section>
     </div>
@@ -172,8 +233,6 @@
 
     // === API Service (kun Tripletex) ===
     const API = (() => {
-      // KUN via proxy på samme origin (f.eks. Cloudflare Worker / Vercel Function)
-      // Ingen hemmeligheter i nettleseren.
       async function getAccountIdByNumber(number){
         const url = new URL('/api/ledger/account', location.origin);
         url.searchParams.set('number', String(number));
@@ -210,6 +269,32 @@
       return { fetchPostingsByAccountNumber };
     })();
 
+    // === Tabs ===
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const panels = {
+      oversikt: document.getElementById('panel-oversikt'),
+      kpi: document.getElementById('panel-kpi'),
+      ai: document.getElementById('panel-ai')
+    };
+    function setTab(key){
+      tabs.forEach(t=>t.setAttribute('aria-selected','false'));
+      document.getElementById('tab-'+key).setAttribute('aria-selected','true');
+      Object.entries(panels).forEach(([k,el])=>{ el.hidden = (k!==key); });
+      history.replaceState(null,'','#'+key);
+    }
+    // hash route
+    const hash = (location.hash||'').replace('#','');
+    if(['oversikt','kpi','ai'].includes(hash)) setTab(hash); else setTab('oversikt');
+    tabs.forEach(b=>b.addEventListener('click',()=>setTab(b.id.replace('tab-',''))));
+    // basic arrow key support
+    document.querySelector('.tabbar').addEventListener('keydown',(e)=>{
+      const idx = tabs.findIndex(t=>t.getAttribute('aria-selected')==='true');
+      if(e.key==='ArrowRight' || e.key==='ArrowLeft'){
+        e.preventDefault();
+        const dir = e.key==='ArrowRight'?1:-1; const next = (idx+dir+tabs.length)%tabs.length; tabs[next].focus(); tabs[next].click();
+      }
+    });
+
     // === UI wiring ===
     const fromEl = document.getElementById('from');
     const toEl   = document.getElementById('to');
@@ -221,8 +306,9 @@
     const pillCount = document.getElementById('pillCount');
     const pillSum = document.getElementById('pillSum');
 
+    let CURRENT = []; // siste hentede posteringer
+
     function setDefaults(){
-      // Default: siste 30 dager
       const now = new Date();
       const from = new Date(now); from.setDate(from.getDate()-29);
       fromEl.value = toISO(from);
@@ -232,7 +318,6 @@
     }
 
     function updateSubtitle(){
-      // oppdater aktivt hurtigvalg (visuelt)
       const presetBtns = Array.from(document.querySelectorAll('.chipbtn'));
       const f = new Date(fromEl.value), t = new Date(toEl.value);
       const now = new Date();
@@ -250,7 +335,6 @@
         rowsEl.innerHTML = '<tr><td colspan="4" class="muted">Ingen posteringer funnet for valgt periode/konto.</td></tr>';
         totalsWrap.hidden = true; return;
       }
-      // sortér etter dato stigende
       list.sort((a,b)=>a.date.localeCompare(b.date));
       let sum = 0;
       const fmt = new Intl.NumberFormat('nb-NO', { minimumFractionDigits:2, maximumFractionDigits:2 });
@@ -272,29 +356,68 @@
       totalsWrap.hidden = false;
     }
 
+    function computeKPIs(list){
+      const sum = list.reduce((a,b)=>a+Number(b.amount||0),0);
+      const pos = list.filter(p=>Number(p.amount||0)>0).reduce((a,b)=>a+Number(b.amount||0),0);
+      const neg = list.filter(p=>Number(p.amount||0)<0).reduce((a,b)=>a+Number(b.amount||0),0);
+      const avg = list.length? sum/list.length : 0;
+      const perDay = {};
+      for(const p of list){ perDay[p.date] = (perDay[p.date]||0) + Number(p.amount||0); }
+      const top = [...list].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,10);
+      const dates = list.map(p=>p.date).sort();
+      return {count:list.length,sum,pos,neg,avg,perDay,top,first:dates[0],last:dates[dates.length-1]};
+    }
+
+    function renderKPIs(k){
+      const fmt = new Intl.NumberFormat('nb-NO', { minimumFractionDigits:2, maximumFractionDigits:2 });
+      const el = document.getElementById('kpi-cards');
+      if(!k || !k.count){ el.innerHTML = '<div class="small"><h3>Info</h3><div class="val">Hent transaksjoner</div></div>'; return; }
+      el.innerHTML = `
+        <div class="small"><h3>Antall</h3><div class="val">${k.count}</div><div class="muted">${k.first||''} – ${k.last||''}</div></div>
+        <div class="small"><h3>Nettobeløp</h3><div class="val">${fmt.format(k.sum)}</div></div>
+        <div class="small"><h3>Inn / Ut</h3><div class="val">${fmt.format(k.pos)} / ${fmt.format(k.neg)}</div></div>
+        <div class="small"><h3>Snitt per post</h3><div class="val">${fmt.format(k.avg)}</div></div>`;
+      // top table
+      const fmt2 = new Intl.NumberFormat('nb-NO',{minimumFractionDigits:2,maximumFractionDigits:2});
+      const esc = s => String(s??'').replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+      const tbody = document.getElementById('top-rows');
+      if(!k.top.length){ tbody.innerHTML='<tr><td colspan="4" class="muted">Ingen data</td></tr>'; return; }
+      tbody.innerHTML = k.top.map(p=>`<tr><td class="mono">${esc(p.date)}</td><td>${esc(p.text||p.description||'')}</td><td class="right mono">${fmt2.format(Number(p.amount||0))}</td><td>${esc(p.voucher?.id||p.voucherId||'')}</td></tr>`).join('');
+    }
+
+    function renderTips(k){
+      const tipsEl = document.getElementById('tips');
+      const acct = (document.getElementById('accountNo').value||'').trim();
+      if(!k || !k.count){ tipsEl.innerHTML = '<div class="tip muted">Hent transaksjoner først for å se innsikt.</div>'; return; }
+      const items = [];
+      const absMax = k.top[0]? Math.abs(Number(k.top[0].amount||0)) : 0;
+      if (absMax > 50000) items.push(`Stor enkeltpost oppdaget (≈ ${absMax.toLocaleString('nb-NO',{maximumFractionDigits:0})}). Vurder å legge på notat/bilag.`);
+      if (k.neg < 0 && Math.abs(k.neg) > k.pos*1.2) items.push('Mye utgående mot inngående i perioden. Dobbeltsjekk leverandørutbetalinger.');
+      if (acct === '1920') items.push('Dette er bankkontoen (1920). Avstem mot kontoutskrift for valgt periode.');
+      const days = Object.keys(k.perDay).length; if(days>=5 && k.count/days>20) items.push('Høy volum per dag – vurder å samle småposteringer eller automatisere import.');
+      if (!items.length) items.push('Ingen avvik funnet. Alt ser normalt ut for valgt periode.');
+      tipsEl.innerHTML = items.map(t=>`<div class="tip">${t}</div>`).join('');
+    }
+
     async function fetchNow(){
       const acct = (acctEl.value||'').trim();
       const f = fromEl.value, t = toEl.value;
       if (!acct || !f || !t){ hint.textContent = '❌ Fyll ut konto og datoer'; return; }
       btn.disabled = true; hint.textContent = '🌐 Henter fra Tripletex… (kan ta litt tid ved mange posteringer)';
       try{
-        // dateTo er eksklusiv i Tripletex, så vi plusser på én dag for å inkludere valgt dato i UI‑et
         const toExclusive = addDays(t, 1);
         const postings = await API.fetchPostingsByAccountNumber(acct, f, toExclusive);
-        // lagre lokalt om du vil bruke på andre sider
-        try{
-          localStorage.setItem('scope.ledger', JSON.stringify({ from:f, to:t, account:acct, values: postings }));
-        }catch(e){}
+        CURRENT = postings;
+        try{ localStorage.setItem('scope.ledger', JSON.stringify({ from:f, to:t, account:acct, values: postings })); }catch(e){}
         hint.textContent = `✅ Fant ${postings.length} posteringer på konto ${acct}`;
         renderRows(postings);
+        const k=computeKPIs(postings); renderKPIs(k); renderTips(k);
       }catch(e){
         console.error(e);
         hint.textContent = '❌ ' + (e?.message || 'Feil ved henting') + ' — sjekk CORS hvis dette kjøres direkte i nettleser.';
         rowsEl.innerHTML = '<tr><td colspan="4" class="muted">Ingen data</td></tr>';
         totalsWrap.hidden = true;
-      }finally{
-        btn.disabled = false;
-      }
+      }finally{ btn.disabled = false; }
     }
 
     // Hurtigvalg (I dag / 7 / 30)
@@ -315,67 +438,27 @@
     // Init
     document.getElementById('fetchBtn').addEventListener('click', fetchNow);
     document.getElementById('accountNo').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); fetchNow(); }});
+    document.getElementById('regen').addEventListener('click',()=>{ const k=computeKPIs(CURRENT||[]); renderTips(k); });
     fromEl.addEventListener('change', updateSubtitle);
     toEl.addEventListener('change', updateSubtitle);
-    setDefaults();
+
+    // Prefill from stored (if any)
+    try{
+      const saved = JSON.parse(localStorage.getItem('scope.ledger')||'null');
+      if(saved && saved.values){
+        fromEl.value = saved.from || fromEl.value;
+        toEl.value   = saved.to   || toEl.value;
+        acctEl.value = saved.account || acctEl.value;
+        CURRENT = saved.values;
+        renderRows(CURRENT);
+        renderKPIs(computeKPIs(CURRENT));
+        renderTips(computeKPIs(CURRENT));
+        hint.textContent = `ℹ️ Viser lagrede data for konto ${acctEl.value}`;
+        totalsWrap.hidden = false;
+      } else { setDefaults(); }
+    }catch(e){ setDefaults(); }
   </script>
 
-  <!--
-  =============================================================
-  BACKEND-PROXY (Cloudflare Worker) — legg i egen fil (f.eks. worker.mjs)
-  Deploy: 1) npm i -g wrangler  2) wrangler init  3) wrangler secret put CONSUMER_TOKEN
-          4) wrangler secret put EMPLOYEE_TOKEN  5) wrangler deploy
-  Deretter servér denne HTML-filen fra samme domenet som Workeren.
-  =============================================================
-
-  let CACHED_TOKEN = null; let TOKEN_EXP = 0;
-  async function getSessionToken(env){
-    const now = Date.now();
-    if (CACHED_TOKEN && now < TOKEN_EXP) return CACHED_TOKEN;
-    const u = new URL('https://api-test.tripletex.tech/v2/token/session/:create');
-    u.searchParams.set('consumerToken', env.CONSUMER_TOKEN);
-    u.searchParams.set('employeeToken', env.EMPLOYEE_TOKEN);
-    u.searchParams.set('expirationDate', new Date(now + 3600_000).toISOString());
-    const r = await fetch(u, { method:'PUT', headers:{ 'Accept':'application/json' } });
-    if(!r.ok) throw new Error('Token '+r.status);
-    const j = await r.json();
-    const t = j?.value?.token; if(!t) throw new Error('Ugyldig token');
-    CACHED_TOKEN = t; TOKEN_EXP = now + 55*60*1000; // 55 min cache
-    return t;
-  }
-
-  function cors(request){
-    const origin = request.headers.get('Origin') || '*';
-    return {
-      'Access-Control-Allow-Origin': origin,
-      'Vary': 'Origin',
-      'Access-Control-Allow-Methods': 'GET,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-      'Access-Control-Max-Age': '86400'
-    };
-  }
-
-  async function forward(request, env, path){
-    const incoming = new URL(request.url);
-    const target = new URL('https://api-test.tripletex.tech'+path);
-    incoming.searchParams.forEach((v,k)=>target.searchParams.set(k,v));
-    const tok = await getSessionToken(env);
-    const auth = 'Basic ' + btoa('0:'+tok);
-    const resp = await fetch(target.toString(), { headers: { 'Authorization': auth, 'Accept':'application/json' } });
-    const body = await resp.text();
-    return new Response(body, { status: resp.status, headers: { 'Content-Type':'application/json', ...cors(request) } });
-  }
-
-  export default {
-    async fetch(request, env){
-      const url = new URL(request.url);
-      if (request.method === 'OPTIONS') return new Response(null, { headers: cors(request) });
-      if (url.pathname === '/api/ledger/account') return forward(request, env, '/v2/ledger/account');
-      if (url.pathname === '/api/ledger/posting') return forward(request, env, '/v2/ledger/posting');
-      return new Response('Not found', { status:404, headers: cors(request) });
-    }
-  };
-  -->
-
+  <!-- Backend-proxy eksempel (samme som før) ligger i kommentar i den forrige filen. -->
 </body>
 </html>
