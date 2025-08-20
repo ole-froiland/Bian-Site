@@ -37,6 +37,12 @@
     .tab[aria-selected="true"]{background:var(--brand-600);color:#fff;border-color:transparent}
 
     main{padding-block:22px}
+
+    /* NY: Seksjonstittel/beskrivelse for hver fane */
+    .pagehead{padding-block:10px 4px}
+    .pagehead h1{margin:0;font-size:clamp(22px,3.2vw,28px);letter-spacing:-.01em}
+    .pagehead p{margin:6px 0 0;color:#6b7280}
+
     .grid{display:grid;grid-template-columns:1fr;gap:20px}
 
     .card{border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow);background:#fff}
@@ -82,6 +88,9 @@
     [role="tabpanel"]{display:none}
     [role="tabpanel"].active,[role="tabpanel"]:target{display:block}
     :where(#oversikt,#kpi,#ai){scroll-margin-top:140px}
+
+    /* Skjul visuelt men behold for skjermlesere */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   </style>
 
   <script>
@@ -133,11 +142,20 @@
   </header>
 
   <main id="main">
+    <div class="container">
+      <!-- NY: Felles seksjonstittel som endres per fane -->
+      <div class="pagehead" aria-live="polite">
+        <h1 id="page-title">Oversikt</h1>
+        <p id="page-sub">Kontoposter fra Tripletex</p>
+      </div>
+    </div>
+
     <div class="container grid">
       <!-- Oversikt -->
       <section id="oversikt" class="active" role="tabpanel" aria-labelledby="tab-oversikt">
+        <h1 class="sr-only">Oversikt</h1>
         <div class="card" aria-label="Velg konto og periode">
-          <h1>Kontoposter fra Tripletex</h1>
+          <h2 style="margin:0 0 10px;font-size:18px">Filtrering</h2>
 
           <div class="presets" role="group" aria-label="Hurtigvalg for periode">
             <button class="chipbtn" data-preset="day">I dag</button>
@@ -197,8 +215,9 @@
 
       <!-- KPIer -->
       <section id="kpi" role="tabpanel" aria-labelledby="tab-kpi">
+        <h1 class="sr-only">KPI-er</h1>
         <div class="card">
-          <h1>Nøkkeltall</h1>
+          <h2 style="margin:0 0 10px;font-size:18px">Nøkkeltall</h2>
           <div id="kpi-cards" class="kpi"></div>
         </div>
         <div class="card">
@@ -216,8 +235,9 @@
 
       <!-- AI tips -->
       <section id="ai" role="tabpanel" aria-labelledby="tab-ai">
+        <h1 class="sr-only">AI-tips</h1>
         <div class="card">
-          <h1>AI-tips</h1>
+          <h2 style="margin:0 0 10px;font-size:18px">Forslag</h2>
           <p class="muted" id="tips-info">Tipsene baseres på transaksjonene i valgt periode.</p>
           <div id="tips" class="tips">
             <div class="tip muted">Hent transaksjoner først for å se innsikt.</div>
@@ -277,15 +297,30 @@
       return { fetchPostingsByAccountNumber };
     })();
 
-    /* Tabs – virker også uten JS via hash, men dette synker aria + .active */
+    /* Tabs + sideheader-tekst */
     const tabs = Array.from(document.querySelectorAll('.tab'));
     const panels = { oversikt:document.getElementById('oversikt'),
                      kpi:document.getElementById('kpi'),
                      ai:document.getElementById('ai') };
+    const pageMeta = {
+      oversikt:{title:'Oversikt', sub:'Kontoposter fra Tripletex'},
+      kpi:{title:'KPI-er', sub:'Nøkkeltall og største posteringer'},
+      ai:{title:'AI-tips', sub:'Automatiske forslag basert på posteringene'}
+    };
+    const titleEl = document.getElementById('page-title');
+    const subEl   = document.getElementById('page-sub');
+
+    function applyPageMeta(key){
+      const m = pageMeta[key] || pageMeta.oversikt;
+      if (titleEl) titleEl.textContent = m.title;
+      if (subEl)   subEl.textContent   = m.sub;
+      document.title = `Scope — ${m.title}`;
+    }
     function setTab(key){
       tabs.forEach(t=>t.setAttribute('aria-selected','false'));
       document.getElementById('tab-'+key)?.setAttribute('aria-selected','true');
       Object.entries(panels).forEach(([k,el])=>{ el.classList.toggle('active', k===key); });
+      applyPageMeta(key);
     }
     function syncFromHash(){
       const key = ['oversikt','kpi','ai'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'oversikt';
@@ -307,7 +342,7 @@
     const toEl   = document.getElementById('to');
     const acctEl = document.getElementById('accountNo');
     const btn    = document.getElementById('fetchBtn');
-    const hint   = document.getElementById('hint');   /* <- fikset navn */
+    const hint   = document.getElementById('hint');
     const rowsEl = document.getElementById('rows');
     const totalsWrap = document.getElementById('totals');
     const pillCount = document.getElementById('pillCount');
@@ -408,7 +443,8 @@
       const acct = (acctEl.value||'').trim();
       const f = fromEl.value, t = toEl.value;
       if (!acct || !f || !t){ hint.textContent = '❌ Fyll ut konto og datoer'; return; }
-      btn.disabled = true; hint.textContent = '🌐 Henter fra Tripletex… (kan ta litt tid ved mange posteringer)';
+      document.getElementById('fetchBtn').disabled = true;
+      hint.textContent = '🌐 Henter fra Tripletex… (kan ta litt tid ved mange posteringer)';
       try{
         const toExclusive = addDays(t, 1);
         const postings = await API.fetchPostingsByAccountNumber(acct, f, toExclusive);
@@ -422,10 +458,10 @@
         hint.textContent = '❌ ' + (e?.message || 'Feil ved henting') + ' — sjekk CORS hvis dette kjøres direkte i nettleser.';
         rowsEl.innerHTML = '<tr><td colspan="4" class="muted">Ingen data</td></tr>';
         totalsWrap.hidden = true;
-      }finally{ btn.disabled = false; }
+      }finally{ document.getElementById('fetchBtn').disabled = false; }
     }
 
-    /* Hurtigvalg (I dag / 7 / 30) */
+    /* Hurtigvalg */
     const presetBtns = Array.from(document.querySelectorAll('.chipbtn'));
     function toISOdate(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
     function applyPreset(key){
@@ -444,8 +480,8 @@
     document.getElementById('fetchBtn').addEventListener('click', fetchNow);
     document.getElementById('accountNo').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); fetchNow(); }});
     document.getElementById('regen').addEventListener('click',()=>{ const k=computeKPIs(CURRENT||[]); renderTips(k); });
-    fromEl.addEventListener('change', updateSubtitle);
-    toEl.addEventListener('change', updateSubtitle);
+    fromEl?.addEventListener('change', updateSubtitle);
+    toEl?.addEventListener('change', updateSubtitle);
 
     /* Prefill fra lagring */
     try{
@@ -458,8 +494,8 @@
         renderRows(CURRENT);
         const k=computeKPIs(CURRENT);
         renderKPIs(k); renderTips(k);
-        hint.textContent = `ℹ️ Viser lagrede data for konto ${acctEl.value}`;
-        totalsWrap.hidden = false;
+        document.getElementById('totals').hidden = false;
+        document.getElementById('hint').textContent = `ℹ️ Viser lagrede data for konto ${acctEl.value}`;
       } else { setDefaults(); }
     }catch(e){ setDefaults(); }
   </script>
