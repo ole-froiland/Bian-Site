@@ -9,6 +9,7 @@
       --brand-600:#ff8a00; --brand-700:#e67300;
       --ink-900:#0b1220; --ink-700:#374151; --border:#e5e7eb;
       --surface:#fff; --muted:#f8fafc; --shadow:0 10px 28px rgba(2,6,23,.06);
+      --ring:0 0 0 3px rgba(255,138,0,.25);
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;color:var(--ink-900);background:#fff}
@@ -21,13 +22,20 @@
     .logo{width:36px;height:36px;border-radius:12px;background:#fff;border:2px solid var(--brand-600);color:var(--brand-600);display:grid;place-items:center;box-shadow:var(--shadow)}
     .org{font-weight:800}
     .nav-right{display:flex;align-items:center;gap:10px}
+
+    /* Buttons & chips – tydelig tekst + hover/fokus */
+    .btn,.chip,.chipbtn,.tab{color:var(--ink-900)}
     .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff}
     .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:9px 14px;background:#fff;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06)}
+    .btn:hover,.chip:hover,.chipbtn:hover,.tab:hover{background:var(--muted)}
+    .btn:focus-visible,.chip:focus-visible,.chipbtn:focus-visible,.tab:focus-visible{outline:none;box-shadow:var(--ring)}
+    /* Skjul helt tomme piller (fjerner “hvite bobler” uten innhold) */
+    .btn:empty,.chip:empty,.tab:empty{display:none}
 
     /* Tabbar */
     .tabbar-wrap{position:sticky;top:64px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);z-index:40}
     .tabbar{display:flex;gap:8px;padding:10px 0}
-    .tab{appearance:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer}
+    .tab{appearance:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer;line-height:1.1}
     .tab[aria-selected="true"]{background:var(--brand-600);color:#fff;border-color:transparent}
 
     main{padding-block:22px}
@@ -113,8 +121,8 @@
     <div class="container tabbar-wrap">
       <div class="tabbar" role="tablist" aria-label="Visning">
         <button class="tab" id="tab-oversikt" role="tab" aria-selected="true" aria-controls="panel-oversikt">Oversikt</button>
-        <button class="tab" id="tab-kpi" role="tab" aria-selected="false" aria-controls="panel-kpi">KPI‑er</button>
-        <button class="tab" id="tab-ai" role="tab" aria-selected="false" aria-controls="panel-ai">AI‑tips</button>
+        <button class="tab" id="tab-kpi" role="tab" aria-selected="false" aria-controls="panel-kpi">KPI-er</button>
+        <button class="tab" id="tab-ai" role="tab" aria-selected="false" aria-controls="panel-ai">AI-tips</button>
       </div>
     </div>
   </header>
@@ -134,9 +142,9 @@
 
           <div class="row" style="margin-bottom:12px">
             <div>
-              <label for="accountNo">Konto‑nr (f.eks. 1920)</label>
+              <label for="accountNo">Konto-nr (f.eks. 1920)</label>
               <input id="accountNo" type="text" inputmode="numeric" autocomplete="off" placeholder="1920" value="1920" />
-              <small class="muted">Vi slår opp konto‑ID via <code>/v2/ledger/account?number=</code>.</small>
+              <small class="muted">Vi slår opp konto-ID via <code>/v2/ledger/account?number=</code>.</small>
             </div>
             <div></div>
           </div>
@@ -149,7 +157,7 @@
             <div>
               <label for="to">Slutt</label>
               <input id="to" type="date" autocomplete="off">
-              <small class="muted">Merk: Tripletex sine <code>dateTo</code>-parametre er «til og <em>eksklusiv</em>», så vi legger automatisk på +1 dag i API‑kallet.</small>
+              <small class="muted">Merk: Tripletex sine <code>dateTo</code>-parametre er «til og <em>eksklusiv</em>», så vi legger automatisk på +1 dag i API-kallet.</small>
             </div>
           </div>
 
@@ -206,7 +214,7 @@
       <!-- AI tips -->
       <section id="panel-ai" role="tabpanel" aria-labelledby="tab-ai" hidden>
         <div class="card">
-          <h1>AI‑tips</h1>
+          <h1>AI-tips</h1>
           <p class="muted" id="tips-info">Tipsene baseres på transaksjonene i valgt periode.</p>
           <div id="tips" class="tips">
             <div class="tip muted">Hent transaksjoner først for å se innsikt.</div>
@@ -300,7 +308,7 @@
     const toEl   = document.getElementById('to');
     const acctEl = document.getElementById('accountNo');
     const btn    = document.getElementById('fetchBtn');
-    const hint   = document.getElementById('hint');
+    the hint   = document.getElementById('hint');
     const rowsEl = document.getElementById('rows');
     const totalsWrap = document.getElementById('totals');
     const pillCount = document.getElementById('pillCount');
