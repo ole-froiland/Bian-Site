@@ -23,19 +23,18 @@
     .org{font-weight:800}
     .nav-right{display:flex;align-items:center;gap:10px}
 
-    /* Buttons & chips – tydelig tekst + hover/fokus */
+    /* Buttons & chips – synlig tekst + hover/fokus */
     .btn,.chip,.chipbtn,.tab{color:var(--ink-900)}
     .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff}
     .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:9px 14px;background:#fff;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06)}
     .btn:hover,.chip:hover,.chipbtn:hover,.tab:hover{background:var(--muted)}
     .btn:focus-visible,.chip:focus-visible,.chipbtn:focus-visible,.tab:focus-visible{outline:none;box-shadow:var(--ring)}
-    /* Skjul helt tomme piller (fjerner “hvite bobler” uten innhold) */
-    .btn:empty,.chip:empty,.tab:empty{display:none}
+    .btn:empty,.chip:empty,.tab:empty{display:none} /* skjul tomme piller */
 
     /* Tabbar */
     .tabbar-wrap{position:sticky;top:64px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);z-index:40}
     .tabbar{display:flex;gap:8px;padding:10px 0}
-    .tab{appearance:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer;line-height:1.1}
+    .tab{display:inline-flex;align-items:center;gap:6px;text-decoration:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer;line-height:1.1}
     .tab[aria-selected="true"]{background:var(--brand-600);color:#fff;border-color:transparent}
 
     main{padding-block:22px}
@@ -79,6 +78,10 @@
     /* Tips */
     .tips{display:grid;gap:10px}
     .tip{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}
+
+    /* Fallback for hash-navigasjon (viser panel når det er :target) */
+    [role="tabpanel"]{display:none}
+    [role="tabpanel"].active,[role="tabpanel"]:target{display:block}
   </style>
 
   <script>
@@ -120,9 +123,9 @@
     </div>
     <div class="container tabbar-wrap">
       <div class="tabbar" role="tablist" aria-label="Visning">
-        <button class="tab" id="tab-oversikt" role="tab" aria-selected="true" aria-controls="panel-oversikt">Oversikt</button>
-        <button class="tab" id="tab-kpi" role="tab" aria-selected="false" aria-controls="panel-kpi">KPI-er</button>
-        <button class="tab" id="tab-ai" role="tab" aria-selected="false" aria-controls="panel-ai">AI-tips</button>
+        <a class="tab" id="tab-oversikt" role="tab" aria-selected="true" aria-controls="oversikt" href="#oversikt">Oversikt</a>
+        <a class="tab" id="tab-kpi" role="tab" aria-selected="false" aria-controls="kpi" href="#kpi">KPI-er</a>
+        <a class="tab" id="tab-ai" role="tab" aria-selected="false" aria-controls="ai" href="#ai">AI-tips</a>
       </div>
     </div>
   </header>
@@ -130,7 +133,7 @@
   <main id="main">
     <div class="container grid">
       <!-- Oversikt -->
-      <section id="panel-oversikt" role="tabpanel" aria-labelledby="tab-oversikt">
+      <section id="oversikt" class="active" role="tabpanel" aria-labelledby="tab-oversikt">
         <div class="card" aria-label="Velg konto og periode">
           <h1>Kontoposter fra Tripletex</h1>
 
@@ -191,12 +194,10 @@
       </section>
 
       <!-- KPIer -->
-      <section id="panel-kpi" role="tabpanel" aria-labelledby="tab-kpi" hidden>
+      <section id="kpi" role="tabpanel" aria-labelledby="tab-kpi">
         <div class="card">
           <h1>Nøkkeltall</h1>
-          <div id="kpi-cards" class="kpi">
-            <!-- fylles av JS -->
-          </div>
+          <div id="kpi-cards" class="kpi"></div>
         </div>
         <div class="card">
           <h2 style="margin:0 0 10px;font-size:18px">Største posteringer</h2>
@@ -212,7 +213,7 @@
       </section>
 
       <!-- AI tips -->
-      <section id="panel-ai" role="tabpanel" aria-labelledby="tab-ai" hidden>
+      <section id="ai" role="tabpanel" aria-labelledby="tab-ai">
         <div class="card">
           <h1>AI-tips</h1>
           <p class="muted" id="tips-info">Tipsene baseres på transaksjonene i valgt periode.</p>
@@ -232,14 +233,13 @@
     const d = new Date();
     const subtitle = document.getElementById('subtitle');
     if (subtitle) subtitle.textContent = d.toLocaleDateString('no-NO',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
-    const logoutBtn = document.getElementById('logout');
-    if (logoutBtn) logoutBtn.addEventListener('click',()=>{ try{ localStorage.removeItem('scope.authed'); localStorage.removeItem('scope.user'); }catch(e){} window.location.href='login.html'; });
+    document.getElementById('logout')?.addEventListener('click',()=>{ try{ localStorage.removeItem('scope.authed'); localStorage.removeItem('scope.user'); }catch(e){} window.location.href='login.html'; });
 
     // === Små utils ===
     const toISO = dt => new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
     const addDays = (iso, n) => { const t = new Date(iso+'T00:00:00'); t.setDate(t.getDate()+n); return toISO(t); };
 
-    // === API Service (kun Tripletex) ===
+    // === API Service (Tripletex via proxy) ===
     const API = (() => {
       async function getAccountIdByNumber(number){
         const url = new URL('/api/ledger/account', location.origin);
@@ -252,14 +252,13 @@
         if (!values.length) throw new Error('Finner ikke konto '+number);
         return values[0].id;
       }
-
       async function fetchPostingsByAccountNumber(accountNumber, fromISO, toISOExclusive){
         const accountId = await getAccountIdByNumber(accountNumber);
         let page = 0; const count = 1000; const all = [];
         while(true){
           const url = new URL('/api/ledger/posting', location.origin);
           url.searchParams.set('dateFrom', fromISO);
-          url.searchParams.set('dateTo', toISOExclusive); // Tripletex: eksklusiv
+          url.searchParams.set('dateTo', toISOExclusive);
           url.searchParams.set('accountId', String(accountId));
           url.searchParams.set('page', String(page));
           url.searchParams.set('count', String(count));
@@ -273,33 +272,31 @@
         }
         return all;
       }
-
       return { fetchPostingsByAccountNumber };
     })();
 
-    // === Tabs ===
+    // === Tabs (JS forbedrer bare; lenker funker uansett) ===
     const tabs = Array.from(document.querySelectorAll('.tab'));
-    const panels = {
-      oversikt: document.getElementById('panel-oversikt'),
-      kpi: document.getElementById('panel-kpi'),
-      ai: document.getElementById('panel-ai')
-    };
+    const panels = { oversikt:document.getElementById('oversikt'),
+                     kpi:document.getElementById('kpi'),
+                     ai:document.getElementById('ai') };
     function setTab(key){
       tabs.forEach(t=>t.setAttribute('aria-selected','false'));
-      document.getElementById('tab-'+key).setAttribute('aria-selected','true');
-      Object.entries(panels).forEach(([k,el])=>{ el.hidden = (k!==key); });
-      history.replaceState(null,'','#'+key);
+      document.getElementById('tab-'+key)?.setAttribute('aria-selected','true');
+      Object.entries(panels).forEach(([k,el])=>{ el.classList.toggle('active', k===key); });
     }
-    // hash route
-    const hash = (location.hash||'').replace('#','');
-    if(['oversikt','kpi','ai'].includes(hash)) setTab(hash); else setTab('oversikt');
-    tabs.forEach(b=>b.addEventListener('click',()=>setTab(b.id.replace('tab-',''))));
-    // basic arrow key support
-    document.querySelector('.tabbar').addEventListener('keydown',(e)=>{
+    function syncFromHash(){
+      const key = ['oversikt','kpi','ai'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'oversikt';
+      setTab(key);
+    }
+    window.addEventListener('hashchange', syncFromHash);
+    syncFromHash();
+    document.querySelector('.tabbar')?.addEventListener('keydown',(e)=>{
       const idx = tabs.findIndex(t=>t.getAttribute('aria-selected')==='true');
       if(e.key==='ArrowRight' || e.key==='ArrowLeft'){
         e.preventDefault();
-        const dir = e.key==='ArrowRight'?1:-1; const next = (idx+dir+tabs.length)%tabs.length; tabs[next].focus(); tabs[next].click();
+        const dir = e.key==='ArrowRight'?1:-1; const next = (idx+dir+tabs.length)%tabs.length;
+        tabs[next].focus(); tabs[next].click();
       }
     });
 
@@ -308,13 +305,13 @@
     const toEl   = document.getElementById('to');
     const acctEl = document.getElementById('accountNo');
     const btn    = document.getElementById('fetchBtn');
-    the hint   = document.getElementById('hint');
+    const hint   = document.getElementById('hint');  /* <- FIX: var navnet var feil før */
     const rowsEl = document.getElementById('rows');
     const totalsWrap = document.getElementById('totals');
     const pillCount = document.getElementById('pillCount');
     const pillSum = document.getElementById('pillSum');
 
-    let CURRENT = []; // siste hentede posteringer
+    let CURRENT = [];
 
     function setDefaults(){
       const now = new Date();
@@ -324,13 +321,12 @@
       acctEl.focus();
       updateSubtitle();
     }
-
     function updateSubtitle(){
       const presetBtns = Array.from(document.querySelectorAll('.chipbtn'));
       const f = new Date(fromEl.value), t = new Date(toEl.value);
       const now = new Date();
       const sameDay = f.toDateString()===t.toDateString() && t.toDateString()===now.toDateString();
-      const diffDays=Math.round((t-f)/86400000)+1; // inklusiv
+      const diffDays=Math.round((t-f)/86400000)+1;
       const toISO_ = d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
       let key=null;
       if(sameDay) key='day'; else if(diffDays===7 && toISO_(t)===toISO_(now)) key='7'; else if(diffDays===30 && toISO_(t)===toISO_(now)) key='30';
@@ -385,7 +381,6 @@
         <div class="small"><h3>Nettobeløp</h3><div class="val">${fmt.format(k.sum)}</div></div>
         <div class="small"><h3>Inn / Ut</h3><div class="val">${fmt.format(k.pos)} / ${fmt.format(k.neg)}</div></div>
         <div class="small"><h3>Snitt per post</h3><div class="val">${fmt.format(k.avg)}</div></div>`;
-      // top table
       const fmt2 = new Intl.NumberFormat('nb-NO',{minimumFractionDigits:2,maximumFractionDigits:2});
       const esc = s => String(s??'').replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
       const tbody = document.getElementById('top-rows');
@@ -450,7 +445,7 @@
     fromEl.addEventListener('change', updateSubtitle);
     toEl.addEventListener('change', updateSubtitle);
 
-    // Prefill from stored (if any)
+    // Prefill
     try{
       const saved = JSON.parse(localStorage.getItem('scope.ledger')||'null');
       if(saved && saved.values){
@@ -459,14 +454,12 @@
         acctEl.value = saved.account || acctEl.value;
         CURRENT = saved.values;
         renderRows(CURRENT);
-        renderKPIs(computeKPIs(CURRENT));
-        renderTips(computeKPIs(CURRENT));
+        const k=computeKPIs(CURRENT);
+        renderKPIs(k); renderTips(k);
         hint.textContent = `ℹ️ Viser lagrede data for konto ${acctEl.value}`;
         totalsWrap.hidden = false;
       } else { setDefaults(); }
     }catch(e){ setDefaults(); }
   </script>
-
-  <!-- Backend-proxy eksempel (samme som før) ligger i kommentar i den forrige filen. -->
 </body>
 </html>
