@@ -3,63 +3,95 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: dark)">
   <title>Book demo — Scope</title>
   <meta name="description" content="Book en demo av Scope. Velg tidspunkt og få kalenderinvitasjon på e‑post." />
   <style>
     :root{
-      --brand:linear-gradient(90deg,#7d79f9,#c864aa);          /* Scope gradient */
-      --brand-solid:#7d79f9;
+      --brand-600:#7d79f9;
       --brand-700:#6c63d9;
-      --ink:#0b1220;            /* text */
-      --muted:#f5f7fb;          /* page subtle */
-      --muted-2:#f9fafb;        /* input bg */
-      --border:#e5e7eb;
-      --shadow:0 10px 28px rgba(2,6,23,.06);
-      --ring:0 0 0 4px rgba(125,121,249,.18);
-      --radius-lg:20px;
-      --radius-sm:12px;
+      --brand-gradient:linear-gradient(90deg,#7d79f9,#c864aa);
+      --brand-outline:color-mix(in srgb,var(--brand-600),#fff 40%);
+      --ink-900:#0b1220;--ink-800:#111827;--ink-700:#1f2937;--ink-600:#374151;--ink-500:#4b5563;
+      --surface:#ffffff;--muted:#f9fafb;--border:#e5e7eb;
+      --radius-lg:20px;--radius-sm:12px;
+      --shadow:0 10px 28px rgba(2,6,23,.06);--ring:0 0 0 3px rgba(125,121,249,0.6);
+      --track-light:#e5e7eb;--track-dark:#374151;
     }
-    *{box-sizing:border-box}
+    @media (prefers-color-scheme: dark){
+      :root{color-scheme:light;--ink-900:#0b1220;--ink-800:#111827;--ink-700:#1f2937;--ink-600:#374151;--ink-500:#4b5563;--surface:#fff;--muted:#f5f7fb;--border:#e5e7eb}
+      body{background:#fff;color:var(--ink-900)}
+    }
+
+    *,*::before,*::after{box-sizing:border-box}
     html{scroll-behavior:smooth}
-    body{margin:0;font-family:ui-sans-serif,Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:#fff}
+    body{margin:0;font-family:ui-sans-serif,Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink-900);background:#fff}
 
     .container{max-width:980px;margin:0 auto;padding:clamp(20px,4vw,40px)}
 
     header{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
-    a.brand{display:flex;gap:.6rem;align-items:center;text-decoration:none;color:var(--ink);font-weight:800}
-    .logo{width:40px;height:40px;border-radius:14px;background:#fff;border:2px solid var(--brand-solid);display:grid;place-items:center;color:var(--brand-solid);box-shadow:var(--shadow)}
-    #lang{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff;cursor:pointer}
+    a.brand{display:flex;gap:.6rem;align-items:center;text-decoration:none;color:var(--ink-900);font-weight:800}
+    .logo{width:40px;height:40px;border-radius:14px;background:#fff;border:2px solid var(--brand-600);display:grid;place-items:center;color:var(--brand-600);box-shadow:var(--shadow)}
+    .nav-right{display:flex;align-items:center;gap:12px}
 
-    .eyebrow{display:inline-block;letter-spacing:.14em;color:var(--brand-solid);font-weight:800;margin-top:8px}
+    .btn{appearance:none;border:1px solid var(--brand-outline);border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer;background:var(--surface);box-shadow:0 1px 2px rgba(2,6,23,.06);text-decoration:none;color:var(--ink-900);display:inline-flex;align-items:center}
+    .btn:focus-visible{outline:none;box-shadow:var(--ring)}
+    .btn.primary{background:var(--brand-gradient);border-color:transparent;color:#fff;box-shadow:0 6px 16px rgba(125,121,249,.25)}
+    .btn.primary[disabled]{opacity:.7;cursor:not-allowed}
+
+    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:8px 12px;font-weight:700;background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;box-shadow:0 1px 2px rgba(2,6,23,.06)}
+    .chip:focus-visible{outline:none;box-shadow:var(--ring)}
+
+    .theme-switch{position:relative;display:inline-flex;width:56px;height:32px}
+    .theme-switch input{opacity:0;width:0;height:0}
+    .theme-switch .slider{position:relative;cursor:pointer;display:block;width:100%;height:100%;background:var(--track-light);transition:background .3s ease;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,.15);border:1px solid var(--brand-outline);padding:3px}
+    .theme-switch input:focus-visible + .slider{box-shadow:var(--ring)}
+    body[data-theme="dark"] .theme-switch .slider{background:var(--track-dark);box-shadow:0 1px 2px rgba(255,255,255,.3)}
+    .theme-switch .thumb{position:absolute;top:50%;left:3px;width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:left .3s ease, transform .3s ease;border:1px solid var(--brand-outline);box-shadow:0 2px 4px rgba(0,0,0,.2);transform:translateY(-50%)}
+    .theme-switch input:checked + .slider{background:var(--brand-600)}
+    .theme-switch input:checked + .slider .thumb{left:calc(100% - 3px);transform:translate(-100%,-50%)}
+    .theme-switch .icon{width:16px;height:16px;stroke-width:2}
+    .theme-switch .icon.sun{stroke:#FDB813;fill:none}
+    .theme-switch .icon.moon{fill:#20354a;stroke:none;display:none}
+    .theme-switch input:checked + .slider .icon.sun{display:none}
+    .theme-switch input:checked + .slider .icon.moon{display:block}
+
+    body[data-theme="dark"]{--ink-900:#f9fafb;--ink-800:#e5e7eb;--ink-700:#d1d5db;--ink-600:#9ca3af;--ink-500:#6b7280;--surface:#111827;--muted:#1f2937;--border:#374151;background:#0b1220;color:var(--ink-900)}
+    body[data-theme="dark"] header{background:rgba(17,24,39,.96)}
+    body[data-theme="dark"] .btn,body[data-theme="dark"] .chip{background:var(--surface);color:var(--ink-900);border-color:var(--brand-outline)}
+    body[data-theme="dark"] .btn.primary{background:var(--brand-gradient);color:#fff;border-color:transparent}
+    body[data-theme="dark"] form.card{background:var(--surface)}
+    body[data-theme="dark"] input,body[data-theme="dark"] select{background:var(--muted);border-color:var(--border);color:var(--ink-900)}
+    body[data-theme="dark"] .back{background:var(--surface);color:var(--ink-900);border-color:var(--brand-outline)}
+
+    .eyebrow{display:inline-block;letter-spacing:.14em;color:var(--brand-600);font-weight:800;margin-top:8px}
     h1{font-size:clamp(32px,4.6vw,48px);margin:10px 0}
-    .lead{color:#111827;max-width:70ch;margin:0 0 18px}
+    .lead{color:var(--ink-800);max-width:70ch;margin:0 0 18px}
 
-    form.card{margin-top:18px;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:18px;background:#fff}
+    form.card{margin-top:18px;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:18px;background:var(--surface)}
 
     /* fields */
     label{display:block;margin:12px 0 8px;font-weight:700}
-    .hint{font-size:13px;color:#6b7280;margin-top:6px}
+    .hint{font-size:13px;color:var(--ink-600);margin-top:6px}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
     @media (max-width:760px){.row,.grid{grid-template-columns:1fr}}
 
-    input,select{width:100%;padding:14px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--muted-2);outline:none;font-size:16px}
-    input::placeholder{color:#9ca3af}
+    input,select{width:100%;padding:14px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--muted);outline:none;font-size:16px;color:var(--ink-900)}
+    input::placeholder{color:var(--ink-500)}
     select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='20' height='20' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:40px}
-    input:focus,select:focus{box-shadow:var(--ring);background:#fff;border-color:#b0a4f9}
-    input[aria-invalid="true"],select[aria-invalid="true"]{border-color:#dc2626;background:#fff}
+    input:focus,select:focus{box-shadow:var(--ring);background:var(--surface);border-color:var(--brand-600)}
+    input[aria-invalid="true"],select[aria-invalid="true"]{border-color:#dc2626;background:var(--surface)}
 
     .actions{display:flex;gap:12px;margin-top:16px;align-items:center;flex-wrap:wrap}
-    .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer;background:#fff;box-shadow:0 1px 2px rgba(2,6,23,.06);text-decoration:none;color:var(--ink)}
-    .btn.primary{background:var(--brand);border-color:transparent;color:#fff;box-shadow:0 6px 16px rgba(125,121,249,.25)}
-    .btn.primary[disabled]{opacity:.7;cursor:not-allowed}
-
     .success{display:none;margin-top:14px;padding:14px;border-radius:14px;background:#f6f5ff;border:1px solid #d1c3f8}
 
     footer{margin-top:26px}
 
     /* back-cta chip */
-    .back{display:inline-flex;align-items:center;gap:10px;border-radius:999px;border:1px solid var(--border);padding:10px 14px;background:#fff;text-decoration:none;color:inherit;box-shadow:var(--shadow)}
+    .back{display:inline-flex;align-items:center;gap:10px;border-radius:999px;border:1px solid var(--border);padding:10px 14px;background:var(--surface);text-decoration:none;color:inherit;box-shadow:var(--shadow)}
     .back svg{flex:none}
   </style>
 </head>
@@ -76,7 +108,23 @@
         </div>
         <span>Scope</span>
       </a>
-      <button id="lang" class="chip" aria-label="Bytt språk">NO</button>
+      <div class="nav-right">
+        <button id="lang" class="chip" aria-label="Bytt språk">NO</button>
+        <label class="theme-switch">
+          <input type="checkbox" id="theme-toggle" aria-label="Tema">
+          <span class="slider">
+            <span class="thumb">
+              <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+              </svg>
+            </span>
+          </span>
+        </label>
+      </div>
     </header>
 
     <span class="eyebrow" data-i18n="eyebrow">KONTAKT</span>
@@ -190,6 +238,21 @@
   <script>
     // Helpers
     const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>Array.from(c.querySelectorAll(s));
+
+    function applyTheme(theme){
+      document.body.setAttribute('data-theme', theme);
+      const cs=document.querySelector('meta[name="color-scheme"]');
+      if(cs) cs.setAttribute('content', theme==='dark' ? 'dark light' : 'light dark');
+      const toggle=$('#theme-toggle');
+      if(toggle) toggle.checked = (theme==='dark');
+    }
+    const savedTheme=localStorage.getItem('scope.theme')||'light';
+    applyTheme(savedTheme);
+    $('#theme-toggle')?.addEventListener('change',e=>{
+      const t=e.target.checked?'dark':'light';
+      localStorage.setItem('scope.theme',t);
+      applyTheme(t);
+    });
 
     // i18n
     const dict={
