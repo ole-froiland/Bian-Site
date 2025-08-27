@@ -8,8 +8,11 @@
   <style>
     /* Track colors for light/dark modes */
     :root {
-      --light-track: #fff8c6;
-      --dark-track: #0d1b2a;
+      --light-bg: #fff8c6;
+      --dark-bg: #0d1b2a;
+      /* Slightly different colors for the slider track so it's visible */
+      --light-track: #ffe199;
+      --dark-track: #20354a;
       --knob-size: 26px;
     }
 
@@ -20,13 +23,13 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: var(--light-track);
+      background: var(--light-bg);
       transition: background 0.3s;
     }
 
     /* Dark mode background */
     body.dark {
-      background: var(--dark-track);
+      background: var(--dark-bg);
     }
 
     /* Toggle wrapper */
@@ -42,16 +45,18 @@
     }
 
     /* Track (pill) */
-    .track {
-      position: absolute;
-      inset: 0;
-      background: var(--light-track);
-      border-radius: 9999px;
-      transition: background 0.3s;
-    }
-    body.dark .track {
-      background: var(--dark-track);
-    }
+      .track {
+        position: absolute;
+        inset: 0;
+        background: var(--light-track);
+        border-radius: 9999px;
+        transition: background 0.3s;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+      }
+      body.dark .track {
+        background: var(--dark-track);
+        box-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+      }
 
     /* Knob */
     .knob {
