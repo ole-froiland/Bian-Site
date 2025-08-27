@@ -85,6 +85,8 @@
     input:focus,select:focus{box-shadow:var(--ring);background:var(--surface);border-color:var(--brand-600)}
     input[aria-invalid="true"],select[aria-invalid="true"]{border-color:#dc2626;background:var(--surface)}
 
+    .wizard .step{display:none}
+    .progress{font-weight:700;margin-bottom:12px}
     .actions{display:flex;gap:12px;margin-top:16px;align-items:center;flex-wrap:wrap}
     .success{display:none;margin-top:14px;padding:14px;border-radius:14px;background:#f6f5ff;border:1px solid #d1c3f8}
 
@@ -131,85 +133,87 @@
     <h1 data-i18n="title">Book en demo</h1>
     <p class="lead" data-i18n="lead">Fyll inn info og velg tidspunkt. Du får kalenderinvitasjon på e‑post.</p>
 
-    <form id="demo-form" class="card" novalidate>
-      <div class="row">
-        <div>
-          <label for="name" data-i18n="name_label">Navn</label>
-          <input id="name" name="name" type="text" required placeholder="Ola Nordmann" autocomplete="name" data-i18n-attr="placeholder:name_ph" autofocus>
-          <small class="hint err" id="err-name" hidden></small>
-        </div>
-        <div>
-          <label for="org" data-i18n="org_label">Org.nr</label>
-          <input id="org" name="org" type="text" required pattern="^[0-9]{9}$" placeholder="999999999" inputmode="numeric" data-i18n-attr="placeholder:org_ph">
-          <div class="hint" data-i18n="org_hint">9 siffer (Brønnøysund)</div>
-          <small class="hint err" id="err-org" hidden></small>
-        </div>
+    <form id="demo-form" class="card wizard" novalidate>
+      <div id="progress" class="progress"></div>
+
+      <div class="step">
+        <label for="name" data-i18n="name_label">Navn</label>
+        <input id="name" name="name" type="text" required placeholder="Ola Nordmann" autocomplete="name" data-i18n-attr="placeholder:name_ph" autofocus>
+        <small class="hint err" id="err-name" hidden></small>
       </div>
 
-      <div class="row">
-        <div>
-          <label for="email" data-i18n="email_label">E‑post</label>
-          <input id="email" name="email" type="email" required placeholder="din@restaurant.no" autocomplete="email" data-i18n-attr="placeholder:email_ph">
-          <small class="hint err" id="err-email" hidden></small>
-        </div>
-        <div>
-          <label for="phone" data-i18n="phone_label">Telefon (valgfritt)</label>
-          <input id="phone" name="phone" type="tel" placeholder="+47 400 00 000" autocomplete="tel" data-i18n-attr="placeholder:phone_ph">
-        </div>
+      <div class="step">
+        <label for="org" data-i18n="org_label">Org.nr</label>
+        <input id="org" name="org" type="text" required pattern="^[0-9]{9}$" placeholder="999999999" inputmode="numeric" data-i18n-attr="placeholder:org_ph">
+        <div class="hint" data-i18n="org_hint">9 siffer (Brønnøysund)</div>
+        <small class="hint err" id="err-org" hidden></small>
       </div>
 
-      <div class="grid">
-        <div>
-          <label for="acc" data-i18n="acc_label">Regnskapssystem</label>
-          <select id="acc" name="acc">
-            <option value="Tripletex">Tripletex</option>
-            <option value="PowerOffice">PowerOffice</option>
-            <option value="Visma">Visma eAccounting</option>
-            <option value="Other" data-i18n="other">Annet</option>
-          </select>
-        </div>
-        <div>
-          <label for="pos" data-i18n="pos_label">Kassesystem</label>
-          <select id="pos" name="pos">
-            <option value="Lightspeed">Lightspeed</option>
-            <option value="Square">Square</option>
-            <option value="Zettle">Zettle</option>
-            <option value="Other" data-i18n="other">Annet</option>
-          </select>
-        </div>
-        <div>
-          <label for="time" data-i18n="time_label">Timeregistrering</label>
-          <select id="time" name="time">
-            <option value="Arbeidstid">Arbeidstid</option>
-            <option value="Tamigo">Tamigo</option>
-            <option value="Other" data-i18n="other">Annet</option>
-          </select>
-        </div>
-        <div>
-          <label for="stock" data-i18n="stock_label">Varetelling</label>
-          <select id="stock" name="stock">
-            <option value="Excel">Excel</option>
-            <option value="Poster">Poster</option>
-            <option value="Other" data-i18n="other">Annet</option>
-          </select>
-        </div>
+      <div class="step">
+        <label for="email" data-i18n="email_label">E‑post</label>
+        <input id="email" name="email" type="email" required placeholder="din@restaurant.no" autocomplete="email" data-i18n-attr="placeholder:email_ph">
+        <small class="hint err" id="err-email" hidden></small>
       </div>
 
-      <div class="grid">
-        <div>
-          <label for="date" data-i18n="date_label">Foretrukket dato</label>
-          <input id="date" name="date" type="date" required min="">
-          <small class="hint err" id="err-date" hidden></small>
-        </div>
-        <div>
-          <label for="timepick" data-i18n="timepick_label">Foretrukket tidspunkt</label>
-          <input id="timepick" name="timepick" type="time" required step="900" min="09:00" max="16:00" value="10:00">
-          <div class="hint" data-i18n="time_hint">Kontortid 09:00–16:00 CET</div>
-          <small class="hint err" id="err-time" hidden></small>
-        </div>
+      <div class="step">
+        <label for="phone" data-i18n="phone_label">Telefon (valgfritt)</label>
+        <input id="phone" name="phone" type="tel" placeholder="+47 400 00 000" autocomplete="tel" data-i18n-attr="placeholder:phone_ph">
+      </div>
+
+      <div class="step">
+        <label for="acc" data-i18n="acc_label">Regnskapssystem</label>
+        <select id="acc" name="acc">
+          <option value="Tripletex">Tripletex</option>
+          <option value="PowerOffice">PowerOffice</option>
+          <option value="Visma">Visma eAccounting</option>
+          <option value="Other" data-i18n="other">Annet</option>
+        </select>
+      </div>
+
+      <div class="step">
+        <label for="pos" data-i18n="pos_label">Kassesystem</label>
+        <select id="pos" name="pos">
+          <option value="Lightspeed">Lightspeed</option>
+          <option value="Square">Square</option>
+          <option value="Zettle">Zettle</option>
+          <option value="Other" data-i18n="other">Annet</option>
+        </select>
+      </div>
+
+      <div class="step">
+        <label for="time" data-i18n="time_label">Timeregistrering</label>
+        <select id="time" name="time">
+          <option value="Arbeidstid">Arbeidstid</option>
+          <option value="Tamigo">Tamigo</option>
+          <option value="Other" data-i18n="other">Annet</option>
+        </select>
+      </div>
+
+      <div class="step">
+        <label for="stock" data-i18n="stock_label">Varetelling</label>
+        <select id="stock" name="stock">
+          <option value="Excel">Excel</option>
+          <option value="Poster">Poster</option>
+          <option value="Other" data-i18n="other">Annet</option>
+        </select>
+      </div>
+
+      <div class="step">
+        <label for="date" data-i18n="date_label">Foretrukket dato</label>
+        <input id="date" name="date" type="date" required min="">
+        <small class="hint err" id="err-date" hidden></small>
+      </div>
+
+      <div class="step">
+        <label for="timepick" data-i18n="timepick_label">Foretrukket tidspunkt</label>
+        <input id="timepick" name="timepick" type="time" required step="900" min="09:00" max="16:00" value="10:00">
+        <div class="hint" data-i18n="time_hint">Kontortid 09:00–16:00 CET</div>
+        <small class="hint err" id="err-time" hidden></small>
       </div>
 
       <div class="actions">
+        <button type="button" class="btn" id="back" data-i18n="back">Tilbake</button>
+        <button type="button" class="btn primary" id="next" data-i18n="next">Neste</button>
         <button class="btn primary" id="submit" type="submit" data-i18n="submit">Send forespørsel</button>
         <span id="status" class="hint" role="status" aria-live="polite"></span>
       </div>
@@ -268,6 +272,7 @@
           success:"Takk! Invitasjon sendt. Vi har også generert en .ics om du vil legge til manuelt.",
           back_home:"← Tilbake til siden",invalid:"Vennligst fyll ut alle felter korrekt.",
           sending:"Sender …",sent:"Invitasjon sendt!",btn_lang:"Bytt til engelsk",
+          next:"Neste",back:"Tilbake",step:"Steg",of:"av",
           err_name:"Skriv inn navn", err_org:"Ugyldig org.nr (9 siffer)", err_email:"Ugyldig e‑post", err_date:"Velg en dato", err_time:"Velg et tidspunkt 09–16"},
       en:{eyebrow:"CONTACT",title:"Book a demo",lead:"Fill in your details and pick a time. You’ll receive a calendar invitation by email.",
           name_label:"Name",name_ph:"Jane Doe",
@@ -281,6 +286,7 @@
           success:"Thanks! Invitation sent. We also generated an .ics in case you want to add it manually.",
           back_home:"← Back to site",invalid:"Please fill in all fields correctly.",
           sending:"Sending …",sent:"Invitation sent!",btn_lang:"Switch to Norwegian",
+          next:"Next",back:"Back",step:"Step",of:"of",
           err_name:"Please enter your name", err_org:"Invalid org. number (9 digits)", err_email:"Invalid email", err_date:"Pick a date", err_time:"Pick a time 09–16"}
     };
     const langBtn=$('#lang');
@@ -291,9 +297,41 @@
       $$('[data-i18n]').forEach(el=>el.textContent=t(el.getAttribute('data-i18n')));
       $$('[data-i18n-attr]').forEach(el=>{el.getAttribute('data-i18n-attr').split(',').forEach(p=>{const [attr,key]=p.split(':').map(s=>s.trim());el.setAttribute(attr,t(key))})});
       $('#status').textContent='';
+      updateProgress();
     }
+
+    const steps=$$('.step');
+    let current=0;
+    const backBtn=$('#back');
+    const nextBtn=$('#next');
+    const submitBtn=$('#submit');
+
+    function updateProgress(){
+      $('#progress').textContent=`${t('step')} ${current+1} ${t('of')} ${steps.length}`;
+    }
+    function showStep(i){
+      steps.forEach((s,idx)=>{ s.style.display=idx===i?'block':'none'; });
+      backBtn.style.display=i>0?'inline-flex':'none';
+      nextBtn.style.display=i<steps.length-1?'inline-flex':'none';
+      submitBtn.style.display=i===steps.length-1?'inline-flex':'none';
+      updateProgress();
+    }
+    function validateStep(i){
+      switch(i){
+        case 0:{const v=$('#name').value.trim(); if(!v){ setErr('name',t('err_name')); return false;} setErr('name'); return true;}
+        case 1:{const v=$('#org').value.trim(); if(!/^\d{9}$/.test(v)){ setErr('org',t('err_org')); return false;} setErr('org'); return true;}
+        case 2:{const v=$('#email').value.trim(); if(!/^\S+@\S+\.\S+$/.test(v)){ setErr('email',t('err_email')); return false;} setErr('email'); return true;}
+        case 8:{const v=$('#date').value; if(!v){ setErr('date',t('err_date')); return false;} setErr('date'); return true;}
+        case 9:{const v=$('#timepick').value; if(!v || v<'09:00' || v>'16:00'){ setErr('time',t('err_time')); return false;} setErr('time'); return true;}
+        default:return true;
+      }
+    }
+    backBtn.addEventListener('click',()=>{ if(current>0){ current--; showStep(current);} });
+    nextBtn.addEventListener('click',()=>{ if(validateStep(current)){ current++; showStep(current);} });
+
+    showStep(current);
     applyLang(initial);
-    langBtn.addEventListener('click',()=>{const next=document.documentElement.lang==='en'?'no':'en';localStorage.setItem('scope.lang',next);applyLang(next)});
+    langBtn.addEventListener('click',()=>{const next=document.documentElement.lang==='en'?'no':'en';localStorage.setItem('scope.lang',next);applyLang(next);});
 
     // Prefill from query params (nice UX)
     (function(){const u=new URL(location.href); const qp=(k)=>u.searchParams.get(k)||''; if(qp('email')) $('#email').value=qp('email'); if(qp('name')) $('#name').value=qp('name');})();
@@ -380,7 +418,7 @@
         `Stock: ${data.stock}`
       ].join('\n');
 
-      const submitBtn=$('#submit'); submitBtn.disabled=true; submitBtn.textContent=t('sending');
+      submitBtn.disabled=true; submitBtn.textContent=t('sending');
 
       const ics=makeICS({start,end,summary:title,description:desc,organizer:'Scope',attendee:data.name,email:data.email});
       blobDownload('Scope-demo.ics',ics);
