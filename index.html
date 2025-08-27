@@ -138,8 +138,40 @@
       color: #4b0082;
       box-shadow: inset 0 0 10px rgba(0,0,0,.12);
     }
-    .pricing .price{font-size:44px;margin:10px 0 4px;color:var(--ink-900)}
-    .pricing .price small{font-size:14px;color:var(--ink-700)}
+    .pricing .card h3{font-size:24px;font-weight:700;margin:0 0 8px}
+    .pricing .card{
+      --card-bg-light:#fbf7ff;
+      --card-bg-dark:#0f172a;
+      --card-border:#c4b5fd; /* subtle purple */
+      --card-text-light:#0b1220;
+      --card-text-dark:#f9fafb;
+      --card-muted-light:#4b5563;
+      --card-muted-dark:#d1d5db;
+      position:relative;
+      display:flex;flex-direction:column;align-items:center;text-align:center;
+      background:var(--card-bg);
+      color:var(--card-text);
+      border:1px solid var(--card-border);
+      border-radius:20px;
+      overflow:hidden;
+      transition:box-shadow .25s ease,transform .25s ease,background .25s ease
+    }
+    .pricing .card:hover{background:#eadcff}
+    .pricing .card .desc{font-size:14px;margin-top:-4px;color:var(--card-muted)}
+    .pricing .price{font-size:44px;margin:10px 0 4px;color:var(--card-text)}
+    .pricing .price small{font-size:14px;color:var(--card-muted)}
+    body:not([data-theme="dark"]) .pricing .card{--card-bg:var(--card-bg-light);--card-text:var(--card-text-light);--card-muted:var(--card-muted-light)}
+    body[data-theme="dark"] .pricing .card{--card-bg:var(--card-bg-dark);--card-text:var(--card-text-dark);--card-muted:var(--card-muted-dark)}
+    body[data-theme="dark"] .pricing .card:hover{--card-text:var(--card-text-light);--card-muted:var(--card-muted-light)}
+    @media (prefers-reduced-motion: reduce){
+      .pricing .card{transition:none}
+    }
+    .pricing .card .cta{margin-top:auto;display:flex;justify-content:center}
+    .pricing .card .btn{align-self:center}
+    .pricing .card .btn:hover{
+      box-shadow:0 10px 28px rgba(255,170,220,.35);
+      transform:translateY(-1px)
+    }
     footer{padding:36px 0;color:var(--ink-800)}
     footer .row{display:flex;align-items:center;justify-content:space-between}
 
@@ -319,18 +351,18 @@
         <div class="features" style="align-items:stretch">
           <article class="card">
             <h3 data-i18n="pricing.free_title">Prøv gratis</h3>
-            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.free_desc">Vi dekker oppstart og oppstartsmøte. Du får prøve det gratis i 30 dager og er du ikke fornøyd kan du si opp.</p>
+            <p class="desc" data-i18n="pricing.free_desc">Vi dekker oppstart og oppstartsmøte. Du får prøve det gratis i 30 dager og er du ikke fornøyd kan du si opp.</p>
             <div class="cta"><a class="btn primary" href="demo.html" data-i18n="pricing.free_cta">Prøv gratis</a></div>
           </article>
-          <article class="card" style="background:linear-gradient(180deg,#f6f5ff,transparent);border-color:#d1c3f8">
+          <article class="card">
             <h3 data-i18n="pricing.standard_title">Standard</h3>
-            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.standard_desc">Få alle systemene knyttet sammen, ingen binding, og en enkel mobil app.</p>
+            <p class="desc" data-i18n="pricing.standard_desc">Få alle systemene knyttet sammen, ingen binding, og en enkel mobil app.</p>
             <p class="price"><strong>kr 499</strong> <small data-i18n="pricing.per_month">/ mnd</small></p>
             <div class="cta"><a class="btn primary" href="demo.html" data-i18n="pricing.standard_cta">Start standard</a></div>
           </article>
           <article class="card">
             <h3 data-i18n="pricing.pro_title">Pro</h3>
-            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.pro_desc">Har du en kompleks restaurant eller flere kjeder, og ønsker enda mer skreddersydd dashbord og råd?</p>
+            <p class="desc" data-i18n="pricing.pro_desc">Har du en kompleks restaurant eller flere kjeder, og ønsker enda mer skreddersydd dashbord og råd?</p>
             <div class="cta"><a class="btn primary" href="demo.html" data-i18n="pricing.pro_cta">Snakk med oss</a></div>
           </article>
         </div>
@@ -597,6 +629,7 @@
       localStorage.setItem('scope.lang', next);
       applyLang(next);
     });
+
   </script>
 </body>
 </html>
