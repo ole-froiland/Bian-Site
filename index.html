@@ -70,6 +70,7 @@
     .btn.primary{background:var(--brand-gradient);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(125,121,249,.25)}
     .btn.primary:hover{filter:brightness(.95)}
     .btn.ghost{background:transparent}
+    .btn.cta{padding:0 24px;height:48px;font-size:18px}
     .btn.sm{padding:0 10px;font-size:14px;height:32px}
     .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 10px;height:32px;font-weight:700;background:#fff;cursor:pointer;display:inline-flex;align-items:center;font-size:14px;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background .3s ease, box-shadow .3s ease}
     .chip:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -91,6 +92,8 @@
     body[data-theme="dark"]{--ink-900:#f9fafb;--ink-800:#e5e7eb;--ink-700:#d1d5db;--ink-600:#9ca3af;--ink-500:#6b7280;--surface:#111827;--muted:#1f2937;--border:#374151;background:#0b1220;color:var(--ink-900)}
     body[data-theme="dark"] header{background:rgba(17,24,39,.96);border-bottom-color:var(--border)}
     body[data-theme="dark"] .btn, body[data-theme="dark"] .chip{background:var(--surface);color:var(--ink-900);border-color:var(--brand-outline)}
+    body[data-theme="dark"] .btn.primary{background:var(--brand-gradient);color:#fff;border-color:transparent}
+    body[data-theme="dark"] .btn.ghost{background:transparent}
     body[data-theme="dark"] .menu{background:var(--surface)}
     body[data-theme="dark"] .card{background:var(--surface)}
 
@@ -232,8 +235,8 @@
         <h1 data-i18n="hero.h1">Gjør rådata om til fulle bord og bedre marginer</h1>
         <p class="lead" data-i18n="hero.lead">Scope gir deg daglige KPI-er for omsetning, dekningsbidrag, bemanning og svinn – alt i én enkel visning. Ta beslutninger med trygghet.</p>
         <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
-          <a class="btn primary" href="demo.html" data-i18n="hero.cta_demo">Book en demo</a>
-          <a class="btn ghost" href="#priser" data-i18n="hero.cta_pricing">Se priser</a>
+          <a class="btn primary cta" href="demo.html" data-i18n="hero.cta_demo">Book en demo</a>
+          <a class="btn ghost cta" href="#priser" data-i18n="hero.cta_pricing">Se priser</a>
             <span class="sub" style="font-size:13px" data-i18n="hero.integrates">Integreres med regnskap, kassesystem og bemanningssystem på 15 minutter.</span>
         </div>
       </div>
