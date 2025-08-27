@@ -5,34 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Logg inn — Scope</title>
   <meta name="description" content="Demo-innlogging for Scope." />
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%237d79f9'/%3E%3Ccircle cx='64' cy='64' r='30' fill='none' stroke='white' stroke-width='8'/%3E%3Ccircle cx='64' cy='64' r='16' fill='none' stroke='white' stroke-width='8'/%3E%3Ccircle cx='64' cy='64' r='4' fill='white'/%3E%3C/svg%3E" />
   <style>
-    :root{--brand-600:#7d79f9;--brand-700:#6c63d9;--brand-gradient:linear-gradient(90deg,#7d79f9,#c864aa);--ink:#0b1220;--muted:#f9fafb;--border:#e5e7eb;--shadow:0 10px 28px rgba(2,6,23,.06);--ring:0 0 0 3px rgba(125,121,249,.24)}
+    :root{--brand-600:#7d79f9;--brand-700:#6c63d9;--brand-gradient:linear-gradient(90deg,#7d79f9,#c864aa);--ink:#0b1220;--surface:#fff;--muted:#f9fafb;--border:#e5e7eb;--shadow:0 10px 28px rgba(2,6,23,.06);--ring:0 0 0 3px rgba(125,121,249,.24)}
     *{box-sizing:border-box}
     body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;color:var(--ink);background:
-      radial-gradient(600px 240px at 10% -10%,rgba(125,121,249,.06),transparent 70%), #fff}
+      radial-gradient(600px 240px at 10% -10%,rgba(125,121,249,.06),transparent 70%), var(--surface)}
     a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
     a:hover{color:var(--brand-600)}
     .container{max-width:420px;margin:clamp(40px,8vh,96px) auto;padding:0 20px}
     .brand{display:flex;gap:.6rem;align-items:center;justify-content:center;margin-bottom:18px;text-decoration:none;color:var(--ink);font-weight:800}
-    .logo{width:40px;height:40px;border-radius:14px;background:#fff;border:2px solid var(--brand-600);display:grid;place-items:center;color:var(--brand-600);box-shadow:var(--shadow)}
+    .logo{width:40px;height:40px;border-radius:14px;background:var(--surface);border:2px solid var(--brand-600);display:grid;place-items:center;color:var(--brand-600);box-shadow:var(--shadow)}
     h1{margin:8px 0 4px;font-size:28px;letter-spacing:-.01em}
     p.lead{margin:0 0 16px;color:#374151}
-    .card{border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:#fff;padding:18px}
+    .card{border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:var(--surface);padding:18px}
     label{display:block;margin:10px 0 6px;font-weight:600}
     .row{position:relative}
     input[type="email"],input[type="password"]{width:100%;padding:14px 44px 14px 14px;border-radius:12px;border:1px solid var(--border);outline:none}
     input:focus{box-shadow:var(--ring)}
-    .toggle-pass{position:absolute;right:10px;top:36px;border:1px solid var(--border);border-radius:10px;background:#fff;padding:6px 10px;cursor:pointer}
+    .toggle-pass{position:absolute;right:10px;top:36px;border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:6px 10px;cursor:pointer}
     .actions{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:14px}
-    .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:11px 16px;font-weight:700;background:#fff;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06);text-decoration:none;color:var(--ink)}
+    .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:11px 16px;font-weight:700;background:var(--surface);cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06);text-decoration:none;color:var(--ink)}
     .btn.primary{background:var(--brand-gradient);border-color:transparent;color:#fff}
     .error{margin-top:10px;color:#b00020;font-size:14px;display:none}
     .success{display:none;margin-top:12px;padding:10px 14px;border-radius:10px;background:#f5f4ff}
     /* Skip-link (skjult til fokus) */
     .skip-link{position:absolute;left:12px;top:8px;padding:10px 14px;border-radius:12px;background:#0b1220;color:#fff;text-decoration:none;box-shadow:var(--shadow);transform:translateY(-160%);transition:transform .12s ease;z-index:1000}
     .skip-link:focus,.skip-link:focus-visible{transform:translateY(0)}
+
+    body[data-theme="dark"]{--ink:#f9fafb;--surface:#111827;--muted:#1f2937;--border:#374151;background:radial-gradient(600px 240px at 10% -10%,rgba(125,121,249,.06),transparent 70%), #0b1220;color:var(--ink)}
+    body[data-theme="dark"] .card{background:var(--surface);border-color:var(--border)}
+    body[data-theme="dark"] .btn{background:var(--surface);color:var(--ink);border-color:var(--border)}
+    body[data-theme="dark"] .toggle-pass{background:var(--surface)}
+    body[data-theme="dark"] .logo{background:var(--surface)}
   </style>
 </head>
 <body>
@@ -75,11 +81,20 @@
   </main>
 
   <script>
+    const $ = (s,c=document)=>c.querySelector(s);
+
+    function applyTheme(theme){
+      document.body.setAttribute('data-theme', theme);
+      const cs=document.querySelector('meta[name="color-scheme"]');
+      if(cs) cs.setAttribute('content', theme==='dark' ? 'dark light' : 'light dark');
+    }
+
+    const savedTheme = localStorage.getItem('scope.theme') || 'light';
+    applyTheme(savedTheme);
+
     // Tillat kun denne demo-kontoen
     const VALID_EMAIL = "test@gressholmen.no";
     const VALID_PASS  = "Test123";
-
-    const $ = (s,c=document)=>c.querySelector(s);
 
     // Vis/skjul passord (hvis knappen finnes)
     const tp = $('#toggle-pass');

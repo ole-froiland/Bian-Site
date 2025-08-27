@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="light dark">
   <title data-i18n="meta.title">Scope — Innsikt for restauranter</title>
   <meta name="description" content="Konverter rådata til fulle bord og bedre marginer. Scope gir daglige KPI-er, varsler og integrasjoner for restauranter og kjeder." data-i18n-attr="content:meta.description" />
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
@@ -67,6 +67,19 @@
     .btn.ghost{background:transparent}
     .btn.sm{padding:9px 14px;font-size:14px}
     .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff;cursor:pointer}
+
+    .theme-switch{position:relative;display:inline-block;width:40px;height:20px}
+    .theme-switch input{opacity:0;width:0;height:0}
+    .theme-switch .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);transition:.4s;border-radius:34px}
+    .theme-switch .slider:before{position:absolute;content:"";height:16px;width:16px;left:2px;bottom:2px;background:var(--surface);transition:.4s;border-radius:50%}
+    .theme-switch input:checked + .slider{background:var(--brand-600)}
+    .theme-switch input:checked + .slider:before{transform:translateX(20px)}
+
+    body[data-theme="dark"]{--ink-900:#f9fafb;--ink-800:#e5e7eb;--ink-700:#d1d5db;--ink-600:#9ca3af;--ink-500:#6b7280;--surface:#111827;--muted:#1f2937;--border:#374151;background:#0b1220;color:var(--ink-900)}
+    body[data-theme="dark"] header{background:rgba(17,24,39,.96);border-bottom-color:var(--border)}
+    body[data-theme="dark"] .btn, body[data-theme="dark"] .chip{background:var(--surface);color:var(--ink-900);border-color:var(--border)}
+    body[data-theme="dark"] .menu{background:var(--surface)}
+    body[data-theme="dark"] .card{background:var(--surface)}
 
     .hero{padding-block:min(8vh,72px);display:grid;grid-template-columns:1.04fr .96fr;gap:40px;align-items:center}
     h1{margin:0 0 12px;font-size:clamp(36px,5.6vw,60px);line-height:1.06}
@@ -177,12 +190,16 @@
       </nav>
 
       <div class="nav-right">
-        <a href="login.html" class="btn ghost sm" data-i18n="right.login">Logg inn</a>
-        <a href="demo.html" class="btn primary sm" data-i18n="right.demo">Bestill en demo</a>
-        <button id="lang-toggle" class="chip" title="Språk">NO</button>
-      </div>
+      <a href="login.html" class="btn ghost sm" data-i18n="right.login">Logg inn</a>
+      <a href="demo.html" class="btn primary sm" data-i18n="right.demo">Bestill en demo</a>
+      <button id="lang-toggle" class="chip" title="Språk">NO</button>
+      <label class="theme-switch">
+        <input type="checkbox" id="theme-toggle" aria-label="Tema">
+        <span class="slider"></span>
+      </label>
     </div>
-  </header>
+  </div>
+</header>
 
   <main id="main">
     <section class="hero container" id="top">
@@ -289,6 +306,22 @@
   <script>
     const $=(s,c=document)=>c.querySelector(s);
     const $$=(s,c=document)=>Array.from(c.querySelectorAll(s));
+
+    function applyTheme(theme){
+      document.body.setAttribute('data-theme', theme);
+      const cs=document.querySelector('meta[name="color-scheme"]');
+      if(cs) cs.setAttribute('content', theme==='dark' ? 'dark light' : 'light dark');
+      const toggle=$('#theme-toggle');
+      if(toggle) toggle.checked = (theme==='dark');
+    }
+
+    const savedTheme = localStorage.getItem('scope.theme') || 'light';
+    applyTheme(savedTheme);
+    $('#theme-toggle')?.addEventListener('change',e=>{
+      const t=e.target.checked?'dark':'light';
+      localStorage.setItem('scope.theme',t);
+      applyTheme(t);
+    });
 
     // i18n-ordbok (NO & EN)
     const i18n = {
