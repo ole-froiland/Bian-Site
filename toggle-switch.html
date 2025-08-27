@@ -1,0 +1,142 @@
+<!-- toggle-switch.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>iOS‑style Toggle Switch</title>
+
+  <style>
+    /* Track colors for light/dark modes */
+    :root {
+      --light-track: #fff8c6;
+      --dark-track: #0d1b2a;
+      --knob-size: 26px;
+    }
+
+    /* Center demo on screen */
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--light-track);
+      transition: background 0.3s;
+    }
+
+    /* Dark mode background */
+    body.dark {
+      background: var(--dark-track);
+    }
+
+    /* Toggle wrapper */
+    .toggle {
+      position: relative;
+      width: 60px;
+      height: 34px;
+    }
+
+    /* Hide native checkbox */
+    .toggle input {
+      display: none;
+    }
+
+    /* Track (pill) */
+    .track {
+      position: absolute;
+      inset: 0;
+      background: var(--light-track);
+      border-radius: 9999px;
+      transition: background 0.3s;
+    }
+    body.dark .track {
+      background: var(--dark-track);
+    }
+
+    /* Knob */
+    .knob {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: var(--knob-size);
+      height: var(--knob-size);
+      border-radius: 50%;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.3s;
+    }
+    /* Slide knob to the right when checked */
+    .toggle input:checked + .track .knob {
+      transform: translateX(26px);
+    }
+
+    /* Icons inside knob */
+    .icon {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .sun {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .moon {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    /* Cross-fade / scale icons on toggle */
+    .toggle input:checked + .track .sun {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    .toggle input:checked + .track .moon {
+      opacity: 1;
+      transform: scale(1);
+    }
+  </style>
+</head>
+
+<body>
+  <label class="toggle">
+    <input type="checkbox" id="theme-toggle" />
+    <span class="track">
+      <span class="knob">
+        <!-- Sun icon (light mode) -->
+        <svg class="icon sun" viewBox="0 0 24 24" fill="none"
+             stroke="#FDB813" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <g>
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </g>
+        </svg>
+
+        <!-- Moon icon (dark mode) -->
+        <svg class="icon moon" viewBox="0 0 24 24" fill="#ffffff"
+             stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 12 21a9 9 0 0 1 9-8.21z" />
+        </svg>
+      </span>
+    </span>
+  </label>
+
+  <script>
+    const checkbox = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    // Toggle dark-mode class on <body> when the checkbox changes
+    checkbox.addEventListener('change', () => {
+      body.classList.toggle('dark', checkbox.checked);
+    });
+  </script>
+</body>
+</html>
