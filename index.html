@@ -106,7 +106,9 @@
     .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;box-shadow:var(--shadow);transition:transform .12s ease, box-shadow .12s ease}
     .card:hover{transform:translateY(-2px)}
     .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
-    .gallery img{width:100%;height:220px;object-fit:cover;border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+    .gallery figure{margin:0}
+    .gallery figure img{width:100%;height:220px;object-fit:cover;border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+    .gallery figcaption{margin-top:8px;text-align:center;font-size:14px;color:var(--ink-800)}
     .band{background:linear-gradient(180deg,#f6f5ff,#f2e6ff);color:var(--ink-900);border:1px solid var(--border);border-radius:20px;padding:26px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:30px}
     .pricing .price{font-size:44px;margin:10px 0 4px;color:var(--ink-900)}
     .pricing .price small{font-size:14px;color:var(--ink-700)}
@@ -243,12 +245,21 @@
     <section aria-labelledby="galleri-heading">
       <div class="container">
         <span class="eyebrow" data-i18n="oslo.eyebrow">Oslo</span>
-        <h2 id="galleri-heading" data-i18n="oslo.h2">Ekte steder — Oslo-restauranter</h2>
-        <p class="sub" data-i18n="oslo.sub">Bilder fra Gressholmen Kro, Way Down South og Gangnam (Munkedamsveien 59).</p>
+        <h2 id="galleri-heading" data-i18n="oslo.h2">Some of our customers</h2>
+        <p class="sub" data-i18n="oslo.sub">Trusted by restaurants across Oslo.</p>
         <div class="gallery" role="list">
-          <img role="listitem" loading="lazy" alt="Gressholmen Kro på Gressholmen i indre Oslofjord" data-i18n-attr="alt:gallery.gressholmen_alt" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/1280px-Gressholmen_kro.jpg"/>
-          <img role="listitem" loading="lazy" alt="Way Down South – uteservering ved Akerselva" data-i18n-attr="alt:gallery.wds_alt" src="https://static.wixstatic.com/media/580a76_cb72049b7fe04202b38fb3294a227aa1~mv2.jpg/v1/fill/w_980,h_654,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/580a76_cb72049b7fe04202b38fb3294a227aa1~mv2.jpg"/>
-          <img role="listitem" loading="lazy" alt="Munkedamsveien 59 i Oslo – bygget der Gangnam Korean Restaurant holder til" data-i18n-attr="alt:gallery.gangnam_alt" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Munkedamsveien_59_I.jpg/1280px-Munkedamsveien_59_I.jpg"/>
+          <figure role="listitem">
+            <img loading="lazy" alt="Gressholmen Kro på Gressholmen i indre Oslofjord" data-i18n-attr="alt:gallery.gressholmen_alt" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Gressholmen_kro.jpg/1280px-Gressholmen_kro.jpg"/>
+            <figcaption data-i18n="gallery.gressholmen_caption">Gressholmen Kro, Oslo</figcaption>
+          </figure>
+          <figure role="listitem">
+            <img loading="lazy" alt="Way Down South – uteservering ved Akerselva" data-i18n-attr="alt:gallery.wds_alt" src="https://static.wixstatic.com/media/580a76_cb72049b7fe04202b38fb3294a227aa1~mv2.jpg/v1/fill/w_980,h_654,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/580a76_cb72049b7fe04202b38fb3294a227aa1~mv2.jpg"/>
+            <figcaption data-i18n="gallery.wds_caption">Way Down South, Oslo</figcaption>
+          </figure>
+          <figure role="listitem">
+            <img loading="lazy" alt="Munkedamsveien 59 i Oslo – bygget der Gangnam Korean Restaurant holder til" data-i18n-attr="alt:gallery.gangnam_alt" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Munkedamsveien_59_I.jpg/1280px-Munkedamsveien_59_I.jpg"/>
+            <figcaption data-i18n="gallery.gangnam_caption">Gangnam Korean Restaurant, Oslo</figcaption>
+          </figure>
         </div>
       </div>
     </section>
@@ -389,11 +400,14 @@
         "hero.image_stamp":"Foto: Way Down South",
 
         "oslo.eyebrow":"Oslo",
-        "oslo.h2":"Ekte steder — Oslo-restauranter",
-        "oslo.sub":"Bilder fra Gressholmen Kro, Way Down South og Gangnam (Munkedamsveien 59).",
+        "oslo.h2":"Noen av våre kunder",
+        "oslo.sub":"Brukt av restauranter over hele Oslo.",
         "gallery.gressholmen_alt":"Gressholmen Kro på Gressholmen i indre Oslofjord",
         "gallery.wds_alt":"Way Down South – uteservering ved Akerselva",
         "gallery.gangnam_alt":"Munkedamsveien 59 i Oslo – bygget der Gangnam Korean Restaurant holder til",
+        "gallery.gressholmen_caption":"Gressholmen Kro, Oslo",
+        "gallery.wds_caption":"Way Down South, Oslo",
+        "gallery.gangnam_caption":"Gangnam Korean Restaurant, Oslo",
 
         "features.eyebrow":"Hvorfor Scope",
         "features.h2":"Alt du trenger — uten støy",
@@ -477,11 +491,14 @@
         "hero.image_stamp":"Photo: Way Down South",
 
         "oslo.eyebrow":"Oslo",
-        "oslo.h2":"Real places — Oslo restaurants",
-        "oslo.sub":"Photos from Gressholmen Kro, Way Down South, and Gangnam (Munkedamsveien 59).",
+        "oslo.h2":"Some of our customers",
+        "oslo.sub":"Trusted by restaurants across Oslo.",
         "gallery.gressholmen_alt":"Gressholmen Kro on Gressholmen in the inner Oslofjord",
         "gallery.wds_alt":"Way Down South — outdoor seating by the river",
         "gallery.gangnam_alt":"Munkedamsveien 59 in Oslo — building where Gangnam Korean Restaurant is located",
+        "gallery.gressholmen_caption":"Gressholmen Kro, Oslo",
+        "gallery.wds_caption":"Way Down South, Oslo",
+        "gallery.gangnam_caption":"Gangnam Korean Restaurant, Oslo",
 
         "features.eyebrow":"Why Scope",
         "features.h2":"Everything you need — no noise",
