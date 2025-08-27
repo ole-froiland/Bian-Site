@@ -70,24 +70,24 @@
     h1{font-size:clamp(32px,4.6vw,48px);margin:10px 0}
     .lead{color:var(--ink-800);max-width:70ch;margin:0 0 18px}
 
-    form.card{margin-top:18px;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:18px;background:var(--surface)}
+    form.card{margin-top:24px;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:32px;background:var(--surface)}
 
     /* fields */
-    label{display:block;margin:12px 0 8px;font-weight:700}
+    label{display:block;margin:0 0 12px;font-weight:600}
     .hint{font-size:13px;color:var(--ink-600);margin-top:6px}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
     @media (max-width:760px){.row,.grid{grid-template-columns:1fr}}
 
-    input,select{width:100%;padding:14px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--muted);outline:none;font-size:16px;color:var(--ink-900)}
+    input,select{width:100%;padding:16px 18px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);outline:none;font-size:16px;color:var(--ink-900)}
     input::placeholder{color:var(--ink-500)}
     select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='20' height='20' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:40px}
     input:focus,select:focus{box-shadow:var(--ring);background:var(--surface);border-color:var(--brand-600)}
     input[aria-invalid="true"],select[aria-invalid="true"]{border-color:#dc2626;background:var(--surface)}
 
-    .wizard .step{display:none}
-    .progress{font-weight:700;margin-bottom:12px}
-    .actions{display:flex;gap:12px;margin-top:16px;align-items:center;flex-wrap:wrap}
+    .wizard .step{display:none;margin:40px 0}
+    .progress{font-weight:700;margin-bottom:24px}
+    .actions{display:flex;gap:12px;margin-top:32px;align-items:center;flex-wrap:wrap}
     .success{display:none;margin-top:14px;padding:14px;border-radius:14px;background:#f6f5ff;border:1px solid #d1c3f8}
 
     footer{margin-top:26px}
@@ -95,6 +95,7 @@
     /* back-cta chip */
     .back{display:inline-flex;align-items:center;gap:10px;border-radius:999px;border:1px solid var(--border);padding:10px 14px;background:var(--surface);text-decoration:none;color:inherit;box-shadow:var(--shadow)}
     .back svg{flex:none}
+    .other-input{margin-top:12px;display:none}
   </style>
 </head>
 <body>
@@ -168,6 +169,8 @@
           <option value="Visma">Visma eAccounting</option>
           <option value="Other" data-i18n="other">Annet</option>
         </select>
+        <input id="acc-other" name="acc_other" type="text" class="other-input" data-i18n-attr="placeholder:other_ph" placeholder="Specify">
+        <small class="hint err" id="err-acc-other" hidden></small>
       </div>
 
       <div class="step">
@@ -178,6 +181,8 @@
           <option value="Zettle">Zettle</option>
           <option value="Other" data-i18n="other">Annet</option>
         </select>
+        <input id="pos-other" name="pos_other" type="text" class="other-input" data-i18n-attr="placeholder:other_ph" placeholder="Specify">
+        <small class="hint err" id="err-pos-other" hidden></small>
       </div>
 
       <div class="step">
@@ -187,6 +192,8 @@
           <option value="Tamigo">Tamigo</option>
           <option value="Other" data-i18n="other">Annet</option>
         </select>
+        <input id="time-other" name="time_other" type="text" class="other-input" data-i18n-attr="placeholder:other_ph" placeholder="Specify">
+        <small class="hint err" id="err-time-other" hidden></small>
       </div>
 
       <div class="step">
@@ -196,6 +203,8 @@
           <option value="Poster">Poster</option>
           <option value="Other" data-i18n="other">Annet</option>
         </select>
+        <input id="stock-other" name="stock_other" type="text" class="other-input" data-i18n-attr="placeholder:other_ph" placeholder="Specify">
+        <small class="hint err" id="err-stock-other" hidden></small>
       </div>
 
       <div class="step">
@@ -266,28 +275,28 @@
           email_label:"E‑post",email_ph:"din@restaurant.no",
           phone_label:"Telefon (valgfritt)",phone_ph:"+47 400 00 000",
           acc_label:"Regnskapssystem",pos_label:"Kassesystem",time_label:"Timeregistrering",stock_label:"Varetelling",
-          other:"Annet",date_label:"Foretrukket dato",timepick_label:"Foretrukket tidspunkt",
+          other:"Annet",other_ph:"Vennligst spesifiser",date_label:"Hvilken dag passer best for onboarding-møtet?",timepick_label:"Hvilket tidspunkt på dagen passer best for deg?",
           time_hint:"Kontortid 09:00–16:00 CET",
           submit:"Send forespørsel",add_gcal:"Legg til i Google Kalender",download_ics:"Last ned .ics",
           success:"Takk! Invitasjon sendt. Vi har også generert en .ics om du vil legge til manuelt.",
           back_home:"← Tilbake til siden",invalid:"Vennligst fyll ut alle felter korrekt.",
           sending:"Sender …",sent:"Invitasjon sendt!",btn_lang:"Bytt til engelsk",
           next:"Neste",back:"Tilbake",step:"Steg",of:"av",
-          err_name:"Skriv inn navn", err_org:"Ugyldig org.nr (9 siffer)", err_email:"Ugyldig e‑post", err_date:"Velg en dato", err_time:"Velg et tidspunkt 09–16"},
+          err_name:"Skriv inn navn", err_org:"Ugyldig org.nr (9 siffer)", err_email:"Ugyldig e‑post", err_date:"Velg en dato", err_time:"Velg et tidspunkt 09–16", err_other:"Vennligst spesifiser"},
       en:{eyebrow:"CONTACT",title:"Book a demo",lead:"Fill in your details and pick a time. You’ll receive a calendar invitation by email.",
           name_label:"Name",name_ph:"Jane Doe",
           org_label:"Org. number",org_ph:"999999999",org_hint:"9 digits (Brønnøysund)",
           email_label:"Email",email_ph:"you@restaurant.com",
           phone_label:"Phone (optional)",phone_ph:"+47 400 00 000",
           acc_label:"Accounting system",pos_label:"POS / Cash register",time_label:"Time tracking",stock_label:"Stock counting",
-          other:"Other",date_label:"Preferred date",timepick_label:"Preferred time",
+          other:"Other",other_ph:"Please specify",date_label:"Which day works best for your onboarding meeting?",timepick_label:"What time of day suits you best?",
           time_hint:"Office hours 09:00–16:00 CET",
           submit:"Send request",add_gcal:"Add to Google Calendar",download_ics:"Download .ics",
           success:"Thanks! Invitation sent. We also generated an .ics in case you want to add it manually.",
           back_home:"← Back to site",invalid:"Please fill in all fields correctly.",
           sending:"Sending …",sent:"Invitation sent!",btn_lang:"Switch to Norwegian",
           next:"Next",back:"Back",step:"Step",of:"of",
-          err_name:"Please enter your name", err_org:"Invalid org. number (9 digits)", err_email:"Invalid email", err_date:"Pick a date", err_time:"Pick a time 09–16"}
+          err_name:"Please enter your name", err_org:"Invalid org. number (9 digits)", err_email:"Invalid email", err_date:"Pick a date", err_time:"Pick a time 09–16", err_other:"Please specify"}
     };
     const langBtn=$('#lang');
     const initial=localStorage.getItem('scope.lang') || ((navigator.language||'').toLowerCase().startsWith('no')?'no':'en');
@@ -316,11 +325,16 @@
       submitBtn.style.display=i===steps.length-1?'inline-flex':'none';
       updateProgress();
     }
-    function validateStep(i){
+    
+function validateStep(i){
       switch(i){
         case 0:{const v=$('#name').value.trim(); if(!v){ setErr('name',t('err_name')); return false;} setErr('name'); return true;}
         case 1:{const v=$('#org').value.trim(); if(!/^\d{9}$/.test(v)){ setErr('org',t('err_org')); return false;} setErr('org'); return true;}
         case 2:{const v=$('#email').value.trim(); if(!/^\S+@\S+\.\S+$/.test(v)){ setErr('email',t('err_email')); return false;} setErr('email'); return true;}
+        case 4:{if($('#acc').value==='Other'){const v=$('#acc-other').value.trim(); if(!v){ setErr('acc-other',t('err_other')); return false;} setErr('acc-other');} return true;}
+        case 5:{if($('#pos').value==='Other'){const v=$('#pos-other').value.trim(); if(!v){ setErr('pos-other',t('err_other')); return false;} setErr('pos-other');} return true;}
+        case 6:{if($('#time').value==='Other'){const v=$('#time-other').value.trim(); if(!v){ setErr('time-other',t('err_other')); return false;} setErr('time-other');} return true;}
+        case 7:{if($('#stock').value==='Other'){const v=$('#stock-other').value.trim(); if(!v){ setErr('stock-other',t('err_other')); return false;} setErr('stock-other');} return true;}
         case 8:{const v=$('#date').value; if(!v){ setErr('date',t('err_date')); return false;} setErr('date'); return true;}
         case 9:{const v=$('#timepick').value; if(!v || v<'09:00' || v>'16:00'){ setErr('time',t('err_time')); return false;} setErr('time'); return true;}
         default:return true;
@@ -342,16 +356,42 @@
     // Inline validation helpers
     const setErr=(id,msg)=>{const el=$('#'+id); const err=$('#err-'+id); if(!msg){ el?.setAttribute('aria-invalid','false'); err?.setAttribute('hidden',''); err&&(err.textContent=''); } else { el?.setAttribute('aria-invalid','true'); if(err){ err.textContent=msg; err.removeAttribute('hidden'); } }};
 
+    function toggleOther(id){
+      const sel=$('#'+id);
+      const inp=$('#'+id+'-other');
+      if(sel.value==='Other'){
+        inp.style.display='block';
+        inp.required=true;
+      } else {
+        inp.style.display='none';
+        inp.required=false;
+        inp.value='';
+        setErr(id+'-other');
+      }
+    }
+    ['acc','pos','time','stock'].forEach(id=>{
+      $('#'+id).addEventListener('change',()=>toggleOther(id));
+      toggleOther(id);
+    });
+
     function validate(){
       const l=document.documentElement.lang||'no';
       const name=$('#name').value.trim();
       const org=$('#org').value.trim();
       const email=$('#email').value.trim();
       const date=$('#date').value; const time=$('#timepick').value;
+      const accSel=$('#acc').value; const accOther=$('#acc-other').value.trim();
+      const posSel=$('#pos').value; const posOther=$('#pos-other').value.trim();
+      const timeSel=$('#time').value; const timeOther=$('#time-other').value.trim();
+      const stockSel=$('#stock').value; const stockOther=$('#stock-other').value.trim();
       let ok=true;
       if(!name){ setErr('name',t('err_name')); ok=false; } else setErr('name');
       if(!/^\d{9}$/.test(org)){ setErr('org',t('err_org')); ok=false; } else setErr('org');
       if(!/^\S+@\S+\.\S+$/.test(email)){ setErr('email',t('err_email')); ok=false; } else setErr('email');
+      if(accSel==='Other' && !accOther){ setErr('acc-other',t('err_other')); ok=false; } else setErr('acc-other');
+      if(posSel==='Other' && !posOther){ setErr('pos-other',t('err_other')); ok=false; } else setErr('pos-other');
+      if(timeSel==='Other' && !timeOther){ setErr('time-other',t('err_other')); ok=false; } else setErr('time-other');
+      if(stockSel==='Other' && !stockOther){ setErr('stock-other',t('err_other')); ok=false; } else setErr('stock-other');
       if(!date){ setErr('date',t('err_date')); ok=false; } else setErr('date');
       if(!time || time<'09:00' || time>'16:00'){ setErr('time',t('err_time')); ok=false; } else setErr('time');
       return ok;
@@ -396,7 +436,10 @@
         org:$('#org').value.trim(),
         email:$('#email').value.trim(),
         phone:$('#phone').value.trim(),
-        acc:$('#acc').value, pos:$('#pos').value, time:$('#time').value, stock:$('#stock').value,
+        acc:$('#acc').value==='Other'?$('#acc-other').value.trim():$('#acc').value,
+        pos:$('#pos').value==='Other'?$('#pos-other').value.trim():$('#pos').value,
+        time:$('#time').value==='Other'?$('#time-other').value.trim():$('#time').value,
+        stock:$('#stock').value==='Other'?$('#stock-other').value.trim():$('#stock').value,
         date:$('#date').value, clock:$('#timepick').value
       };
 
