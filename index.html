@@ -68,7 +68,7 @@
     .btn:focus-visible{outline:none;box-shadow:var(--ring)}
     .btn:hover{transform:translateY(-1px)}
     .btn.primary{background:var(--brand-gradient);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(125,121,249,.25)}
-    .btn.primary:hover{filter:brightness(.95)}
+    .btn.primary:hover{box-shadow:0 0 0 4px rgba(255,182,193,.4),0 0 10px rgba(255,182,193,.6),0 6px 16px rgba(125,121,249,.25)}
     .btn.ghost{background:transparent}
     .btn.cta{padding:0 24px;height:48px;font-size:18px}
     .btn.sm{padding:0 10px;font-size:14px;height:32px}
@@ -127,34 +127,16 @@
     }
 
     .band .btn {
-      background: var(--brand-gradient); /* brand gradient */
-      color: #fff;
-      font-weight: 700;
-      border: none;
-      border-radius: 999px;
       padding: 0 24px;
       height: 48px;
       font-size: 16px;
-      text-decoration: none !important;
-      box-shadow: 0 6px 16px rgba(125,121,249,.25);
-      transition: transform .3s ease, box-shadow .3s ease, filter .2s ease;
     }
 
-    .band .btn:hover {
-      transform: scale(1.05);
-      filter: brightness(.96);
-      box-shadow: 0 10px 24px rgba(125,121,249,.35);
-    }
-
-    /* Maintain band and button styling in dark theme */
+    /* Maintain band styling in dark theme */
     body[data-theme="dark"] .band {
       background: #e6d6ff;
       color: #4b0082;
       box-shadow: inset 0 0 10px rgba(0,0,0,.12);
-    }
-    body[data-theme="dark"] .band .btn {
-      background: var(--brand-gradient);
-      color: #fff;
     }
     .pricing .price{font-size:44px;margin:10px 0 4px;color:var(--ink-900)}
     .pricing .price small{font-size:14px;color:var(--ink-700)}
@@ -324,7 +306,7 @@
             <h3 style="margin:0 0 6px;color:#111827" data-i18n="band.h3">Klar på under 15 minutter</h3>
             <p style="margin:0;opacity:.9" data-i18n="band.p">Integreres med regnskap, kassesystem og bemanningssystem på 15 minutter.</p>
           </div>
-          <a class="btn" href="demo.html" data-i18n="band.cta">Prøv det gratis</a>
+          <a class="btn primary" href="demo.html" data-i18n="band.cta">Prøv det gratis</a>
         </div>
       </div>
     </section>
@@ -335,39 +317,21 @@
         <h2 id="pricing-heading" data-i18n="pricing.h2">Én enkel plan</h2>
         <p class="sub" data-i18n="pricing.sub">Skaler fra én restaurant til kjede uten skjulte kostnader.</p>
         <div class="features" style="align-items:stretch">
+          <article class="card">
+            <h3 data-i18n="pricing.free_title">Prøv gratis</h3>
+            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.free_desc">Vi dekker oppstart og oppstartsmøte. Du får prøve det gratis i 30 dager og er du ikke fornøyd kan du si opp.</p>
+            <div class="cta"><a class="btn primary" href="demo.html" data-i18n="pricing.free_cta">Prøv gratis</a></div>
+          </article>
           <article class="card" style="background:linear-gradient(180deg,#f6f5ff,transparent);border-color:#d1c3f8">
-            <h3>Pro</h3>
-            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.pro_sub">Alt du trenger for daglig styring</p>
-            <p class="price"><strong>kr 990</strong> <small data-i18n="pricing.per_month">/ mnd</small></p>
-            <ul style="margin:10px 0 0 18px;color:var(--ink-700)">
-              <li data-i18n="pricing.b1">Ubegrensede brukere</li>
-              <li data-i18n="pricing.b2">POS + Tripletex integrasjon</li>
-              <li data-i18n="pricing.b3">Daglige e-postrapporter</li>
-              <li data-i18n="pricing.b4">Varsler i sanntid</li>
-              <li data-i18n="pricing.b5">E-postsupport</li>
-            </ul>
-            <div class="cta"><a class="btn primary" href="demo.html" data-i18n="pricing.cta_demo">Book demo</a></div>
+            <h3 data-i18n="pricing.standard_title">Standard</h3>
+            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.standard_desc">Få alle systemene knyttet sammen, ingen binding, og en enkel mobil app.</p>
+            <p class="price"><strong>kr 499</strong> <small data-i18n="pricing.per_month">/ mnd</small></p>
+            <div class="cta"><a class="btn primary" href="demo.html" data-i18n="pricing.standard_cta">Start standard</a></div>
           </article>
           <article class="card">
-            <h3>Enterprise</h3>
-            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.ent_sub">For kjeder og avanserte behov</p>
-            <ul style="margin:10px 0 0 18px;color:var(--ink-700)">
-              <li data-i18n="pricing.e1">Fler-enhetsdashbord</li>
-              <li data-i18n="pricing.e2">Dedikert kundekontakt</li>
-              <li data-i18n="pricing.e3">Tilpassede integrasjoner</li>
-              <li>SLA &amp; SSO</li>
-            </ul>
-            <div class="cta"><a class="btn ghost" href="demo.html" data-i18n="pricing.cta_talk">Snakk med oss</a></div>
-          </article>
-          <article class="card">
-            <h3 data-i18n="pricing.trial_title">Gratis prøve</h3>
-            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.trial_sub">14 dager, ingen betalingsinfo</p>
-            <ul style="margin:10px 0 0 18px;color:var(--ink-700)">
-              <li data-i18n="pricing.t1">Demo-data eller dine egne</li>
-              <li data-i18n="pricing.t2">Kom-i-gang-guide</li>
-              <li data-i18n="pricing.t3">Avslutt når som helst</li>
-            </ul>
-            <div class="cta"><a class="btn ghost" href="demo.html" data-i18n="pricing.cta_start">Start gratis</a></div>
+            <h3 data-i18n="pricing.pro_title">Pro</h3>
+            <p style="font-size:14px;color:var(--ink-500);margin-top:-4px" data-i18n="pricing.pro_desc">Har du en kompleks restaurant eller flere kjeder, og ønsker enda mer skreddersydd dashbord og råd?</p>
+            <div class="cta"><a class="btn primary" href="demo.html" data-i18n="pricing.pro_cta">Snakk med oss</a></div>
           </article>
         </div>
       </div>
@@ -471,24 +435,15 @@
         "pricing.h2":"Én enkel plan",
         "pricing.sub":"Skaler fra én restaurant til kjede uten skjulte kostnader.",
         "pricing.per_month":"/ mnd",
-        "pricing.pro_sub":"Alt du trenger for daglig styring",
-        "pricing.b1":"Ubegrensede brukere",
-        "pricing.b2":"POS + Tripletex integrasjon",
-        "pricing.b3":"Daglige e-postrapporter",
-        "pricing.b4":"Varsler i sanntid",
-        "pricing.b5":"E-postsupport",
-        "pricing.cta_demo":"Book demo",
-        "pricing.ent_sub":"For kjeder og avanserte behov",
-        "pricing.e1":"Fler-enhetsdashbord",
-        "pricing.e2":"Dedikert kundekontakt",
-        "pricing.e3":"Tilpassede integrasjoner",
-        "pricing.cta_talk":"Snakk med oss",
-        "pricing.trial_title":"Gratis prøve",
-        "pricing.trial_sub":"14 dager, ingen betalingsinfo",
-        "pricing.t1":"Demo-data eller dine egne",
-        "pricing.t2":"Kom-i-gang-guide",
-        "pricing.t3":"Avslutt når som helst",
-        "pricing.cta_start":"Start gratis",
+        "pricing.free_title":"Prøv gratis",
+        "pricing.free_desc":"Vi dekker oppstart og oppstartsmøte. Du får prøve det gratis i 30 dager og er du ikke fornøyd kan du si opp.",
+        "pricing.free_cta":"Prøv gratis",
+        "pricing.standard_title":"Standard",
+        "pricing.standard_desc":"Få alle systemene knyttet sammen, ingen binding, og en enkel mobil app.",
+        "pricing.standard_cta":"Start standard",
+        "pricing.pro_title":"Pro",
+        "pricing.pro_desc":"Har du en kompleks restaurant eller flere kjeder, og ønsker enda mer skreddersydd dashbord og råd?",
+        "pricing.pro_cta":"Snakk med oss",
 
         "footer.rights":"Alle rettigheter forbeholdt.",
         "footer.privacy":"Personvern"
@@ -561,24 +516,15 @@
         "pricing.h2":"One simple plan",
         "pricing.sub":"Scale from one venue to a chain with no hidden fees.",
         "pricing.per_month":"/ mo",
-        "pricing.pro_sub":"Everything you need for daily operations",
-        "pricing.b1":"Unlimited users",
-        "pricing.b2":"POS + Tripletex integration",
-        "pricing.b3":"Daily email reports",
-        "pricing.b4":"Real-time alerts",
-        "pricing.b5":"Email support",
-        "pricing.cta_demo":"Book demo",
-        "pricing.ent_sub":"For chains and advanced needs",
-        "pricing.e1":"Multi-unit dashboard",
-        "pricing.e2":"Dedicated account contact",
-        "pricing.e3":"Custom integrations",
-        "pricing.cta_talk":"Talk to us",
-        "pricing.trial_title":"Free trial",
-        "pricing.trial_sub":"14 days, no payment info",
-        "pricing.t1":"Demo data or your own",
-        "pricing.t2":"Getting-started guide",
-        "pricing.t3":"Cancel anytime",
-        "pricing.cta_start":"Start free",
+        "pricing.free_title":"Try free",
+        "pricing.free_desc":"We cover onboarding and kickoff. Try it free for 30 days and cancel if you're not satisfied.",
+        "pricing.free_cta":"Try free",
+        "pricing.standard_title":"Standard",
+        "pricing.standard_desc":"Connect all your systems, no commitment, and an easy mobile app.",
+        "pricing.standard_cta":"Start standard",
+        "pricing.pro_title":"Pro",
+        "pricing.pro_desc":"Have a complex restaurant or multiple chains and want an even more tailored dashboard and advice?",
+        "pricing.pro_cta":"Talk to us",
 
         "footer.rights":"All rights reserved.",
         "footer.privacy":"Privacy"
