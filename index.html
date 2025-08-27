@@ -25,7 +25,10 @@
       --brand-gradient:linear-gradient(90deg,#7d79f9,#c864aa);
       --ink-900:#0b1220; --ink-800:#111827; --ink-700:#1f2937; --ink-600:#374151; --ink-500:#4b5563;
       --surface:#ffffff; --muted:#f9fafb; --border:#e5e7eb;
-      --radius:16px; --shadow:0 10px 28px rgba(2,6,23,.06); --ring:0 0 0 3px rgba(125,121,249,.24)
+      --radius:16px; --shadow:0 10px 28px rgba(2,6,23,.06); --ring:0 0 0 3px rgba(125,121,249,.24);
+      /* Track colors for theme switch */
+      --track-light:#e5e7eb;
+      --track-dark:#374151;
     }
     @media (prefers-color-scheme: dark){:root{color-scheme:light;--ink-900:#0b1220;--ink-800:#111827;--ink-700:#1f2937;--ink-600:#374151;--ink-500:#4b5563;--surface:#fff;--muted:#f5f7fb;--border:#e5e7eb}body{background:#fff;color:var(--ink-900)}}
 
@@ -70,12 +73,14 @@
 
     .theme-switch{position:relative;display:inline-block;width:40px;height:20px}
     .theme-switch input{opacity:0;width:0;height:0}
-    .theme-switch .slider{position:relative;cursor:pointer;width:100%;height:100%;background:#e5e7eb;transition:.4s;border-radius:34px;border:2px solid var(--ink-700)}
+    .theme-switch .slider{position:relative;cursor:pointer;width:100%;height:100%;background:var(--track-light);transition:.4s;border-radius:34px;box-shadow:0 0 2px rgba(0,0,0,.3)}
+    body[data-theme="dark"] .theme-switch .slider{background:var(--track-dark);box-shadow:0 0 2px rgba(255,255,255,.3)}
     .theme-switch .thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.4s}
     .theme-switch input:checked + .slider{background:var(--brand-600)}
     .theme-switch input:checked + .slider .thumb{transform:translateX(20px)}
-    .theme-switch .icon{width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none}
-    .theme-switch .icon.moon{fill:currentColor;stroke:none;display:none}
+    .theme-switch .icon{width:12px;height:12px;stroke-width:2}
+    .theme-switch .icon.sun{stroke:#FDB813;fill:none}
+    .theme-switch .icon.moon{fill:#20354a;stroke:none;display:none}
     .theme-switch input:checked + .slider .icon.sun{display:none}
     .theme-switch input:checked + .slider .icon.moon{display:block}
 

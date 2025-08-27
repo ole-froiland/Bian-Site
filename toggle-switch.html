@@ -85,10 +85,12 @@
       transition: opacity 0.3s, transform 0.3s;
     }
     .sun {
+      stroke: #FDB813;
       opacity: 1;
       transform: scale(1);
     }
     .moon {
+      fill: #20354a;
       opacity: 0;
       transform: scale(0.5);
     }
@@ -110,8 +112,7 @@
     <span class="track">
       <span class="knob">
         <!-- Sun icon (light mode) -->
-        <svg class="icon sun" viewBox="0 0 24 24" fill="none"
-             stroke="#FDB813" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="icon sun" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="4" />
           <g>
             <line x1="12" y1="1" x2="12" y2="3" />
@@ -126,8 +127,7 @@
         </svg>
 
         <!-- Moon icon (dark mode) -->
-        <svg class="icon moon" viewBox="0 0 24 24" fill="#ffffff"
-             stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="icon moon" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 12 21a9 9 0 0 1 9-8.21z" />
         </svg>
       </span>
