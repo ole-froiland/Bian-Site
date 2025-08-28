@@ -3,85 +3,244 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Logg inn — Scope</title>
+  <title></title>
   <meta name="description" content="Demo-innlogging for Scope." />
   <meta name="color-scheme" content="light dark">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%237d79f9'/%3E%3Ccircle cx='64' cy='64' r='30' fill='none' stroke='white' stroke-width='8'/%3E%3Ccircle cx='64' cy='64' r='16' fill='none' stroke='white' stroke-width='8'/%3E%3Ccircle cx='64' cy='64' r='4' fill='white'/%3E%3C/svg%3E" />
   <style>
-    :root{--brand-600:#7d79f9;--brand-700:#6c63d9;--brand-gradient:linear-gradient(90deg,#7d79f9,#c864aa);--ink:#0b1220;--surface:#fff;--muted:#f9fafb;--border:#e5e7eb;--shadow:0 10px 28px rgba(2,6,23,.06);--ring:0 0 0 3px rgba(125,121,249,.24)}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;color:var(--ink);background:
-      radial-gradient(600px 240px at 10% -10%,rgba(125,121,249,.06),transparent 70%), var(--surface)}
-    a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
-    a:hover{color:var(--brand-600)}
-    .container{max-width:420px;margin:clamp(40px,8vh,96px) auto;padding:0 20px}
-    .brand{display:flex;gap:.6rem;align-items:center;justify-content:center;margin-bottom:18px;text-decoration:none;color:var(--ink);font-weight:800}
-    .logo{width:40px;height:40px;border-radius:14px;background:var(--surface);border:2px solid var(--brand-600);display:grid;place-items:center;color:var(--brand-600);box-shadow:var(--shadow)}
-    h1{margin:8px 0 4px;font-size:28px;letter-spacing:-.01em}
-    p.lead{margin:0 0 16px;color:#374151}
-    .card{border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:var(--surface);padding:18px}
-    label{display:block;margin:10px 0 6px;font-weight:600}
-    .row{position:relative}
-    input[type="email"],input[type="password"]{width:100%;padding:14px 44px 14px 14px;border-radius:12px;border:1px solid var(--border);outline:none}
-    input:focus{box-shadow:var(--ring)}
-    .toggle-pass{position:absolute;right:10px;top:36px;border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:6px 10px;cursor:pointer}
-    .actions{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:14px}
-    .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:11px 16px;font-weight:700;background:var(--surface);cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06);text-decoration:none;color:var(--ink)}
-    .btn.primary{background:var(--brand-gradient);border-color:transparent;color:#fff}
-    .error{margin-top:10px;color:#b00020;font-size:14px;display:none}
-    .success{display:none;margin-top:12px;padding:10px 14px;border-radius:10px;background:#f5f4ff}
-    /* Skip-link (skjult til fokus) */
-    .skip-link{position:absolute;left:12px;top:8px;padding:10px 14px;border-radius:12px;background:#0b1220;color:#fff;text-decoration:none;box-shadow:var(--shadow);transform:translateY(-160%);transition:transform .12s ease;z-index:1000}
-    .skip-link:focus,.skip-link:focus-visible{transform:translateY(0)}
+    :root{
+      --rosa:#ec4899;
+      --lilla:#8b5cf6;
+      --gradient:linear-gradient(90deg,var(--rosa),var(--lilla));
+      --ink-600:#6b7280;
+      --ink-900:#111111;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      margin:0;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;
+      background:#f1f5f9;
+      color:#111111;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:100vh;
+      padding:20px;
+      --surface:#ffffff;
+    }
+    body[data-theme="dark"]{
+      background:#0b1220;
+      color:#ffffff;
+      --surface:#0f172a;
+    }
+    main{width:100%;max-width:400px;}
 
-    body[data-theme="dark"]{--ink:#f9fafb;--surface:#111827;--muted:#1f2937;--border:#374151;background:radial-gradient(600px 240px at 10% -10%,rgba(125,121,249,.06),transparent 70%), #0b1220;color:var(--ink)}
-    body[data-theme="dark"] .card{background:var(--surface);border-color:var(--border)}
-    body[data-theme="dark"] .btn{background:var(--surface);color:var(--ink);border-color:var(--border)}
-    body[data-theme="dark"] .toggle-pass{background:var(--surface)}
-    body[data-theme="dark"] .logo{background:var(--surface)}
+    .tilbake{
+      align-self:flex-start;
+      display:inline-block;
+      margin-bottom:24px;
+      padding:8px 16px;
+      font-size:14px;
+      border-radius:12px;
+      text-decoration:none;
+      background:#ffffff;
+      color:#111111;
+      border:1px solid #d0d0d0;
+    }
+    body[data-theme="dark"] .tilbake{
+      background:transparent;
+      color:#ffffff;
+      border:1px solid #ffffff;
+    }
+
+    .auth-card{
+      position:relative;
+      border-radius:16px;
+      padding:32px;
+      width:100%;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      background:var(--surface, #0f172a);
+    }
+    .auth-card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:16px;
+      pointer-events:none;
+      padding:1px;
+      background: linear-gradient(90deg,#ec4899,#8b5cf6);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+    }
+
+    h1{
+      font-size:28px;
+      font-weight:700;
+      margin-bottom:8px;
+      color:#111111;
+    }
+    body[data-theme="dark"] h1{color:#ffffff;}
+
+    .lead{
+      font-size:16px;
+      font-weight:400;
+      margin-bottom:24px;
+      color:#555555;
+    }
+    body[data-theme="dark"] .lead{color:#cbd5e1;}
+
+    label{
+      font-size:14px;
+      font-weight:600;
+      color:#111111;
+      margin-bottom:8px;
+      display:block;
+    }
+    body[data-theme="dark"] label{color:#e2e8f0;}
+
+    .rad{
+      margin-bottom:16px;
+    }
+
+    .inp{
+      width:100%;
+      height:48px;
+      background:#f9fafb;
+      color:#111111;
+      border:1.5px solid #d0d0d0;
+      border-radius:12px;
+      padding:0 16px;
+    }
+    body[data-theme="dark"] .inp{
+      background:#1e293b;
+      color:#ffffff;
+      border-color:#475569;
+    }
+    .inp:focus{
+      outline:none;
+      border-color:transparent;
+      border-image:linear-gradient(to right,#ec4899,#8b5cf6) 1;
+    }
+
+    .password-field{position:relative;}
+    .password-field input{padding-right:76px;}
+    .toggle-password{
+      position:absolute; right:10px; top:50%; transform:translateY(-50%);
+      height:32px; padding:0 12px; border:0; border-radius:999px;
+      background:rgba(255,255,255,.08); color:#cbd5e1; font-weight:600; font-size:14px; cursor:pointer;
+    }
+    body:not([data-theme="dark"]) .toggle-password{ background:#eef2ff; color:#374151; }
+    .toggle-password:hover{ filter:brightness(.96); }
+
+    .btn-logginn{
+      width:100%;
+      height:48px;
+      margin-top:8px;
+      border:none;
+      border-radius:12px;
+      background:var(--gradient);
+      color:#ffffff;
+      font-size:16px;
+      font-weight:700;
+      cursor:pointer;
+      transition:box-shadow .2s;
+    }
+    .btn-logginn:hover{
+      box-shadow:0 0 8px rgba(236,72,153,0.5),0 0 8px rgba(139,92,246,0.5);
+    }
+
+    .error{margin-top:12px;color:#b00020;font-size:14px;display:none}
+    .success{display:none;margin-top:12px;padding:10px 14px;border-radius:10px;background:#f5f4ff}
+
+    .lenker{
+      margin-top:24px;
+      text-align:center;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      font-size:14px;
+    }
+    .lenker a{text-decoration:none;}
+    .lenker .glemt{color:#6b7280;}
+    body[data-theme="dark"] .lenker .glemt{color:#94a3b8;}
+    .lenker .opprett{color:#ec4899;}
+    .lenker .opprett:hover{text-decoration:underline;}
   </style>
 </head>
 <body>
-  <a class="skip-link" href="#main">Hopp til innhold</a>
-
-  <main id="main" class="container" aria-labelledby="login-title">
-    <a class="brand" href="index.html">
-      <div class="logo" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
-          <circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="3"/>
-          <circle cx="20" cy="20" r="9" fill="none" stroke="currentColor" stroke-width="3"/>
-          <circle cx="20" cy="20" r="3" fill="currentColor"/>
-        </svg>
+  <main id="main">
+    <a href="index.html" class="tilbake" data-i18n="login.back"></a>
+    <div class="auth-card" aria-labelledby="login-title">
+      <h1 id="login-title" data-i18n="login.title"></h1>
+      <p class="lead" data-i18n="login.subtitle"></p>
+      <form id="login-form" novalidate>
+        <div class="rad">
+          <label for="email" data-i18n="login.email"></label>
+          <input class="inp" id="email" name="email" type="email" placeholder="test@gressholmen.no" autocomplete="email" required>
+        </div>
+        <div class="rad">
+          <label for="password" data-i18n="login.password"></label>
+          <div class="password-field">
+            <input class="inp" id="password" name="password" type="password" placeholder="Test123" autocomplete="current-password" required>
+            <button id="toggle-password" class="toggle-password" type="button" aria-pressed="false"></button>
+          </div>
+        </div>
+        <button class="btn-logginn" type="submit" data-i18n="login.cta"></button>
+        <div id="error" class="error" role="alert"></div>
+          <div id="ok" class="success" data-i18n="login.success"></div>
+      </form>
+      <div class="lenker">
+        <a href="#" class="glemt" data-i18n="login.forgot"></a>
+        <a href="#" class="opprett" data-i18n="login.signup"></a>
       </div>
-      <span>Scope</span>
-    </a>
-    <h1 id="login-title">Logg inn</h1>
-    <p class="lead">Bruk demo-brukeren under for å logge inn.</p>
-
-    <form id="login-form" class="card" novalidate>
-      <div class="row">
-        <label for="email">E-post</label>
-        <input id="email" name="email" type="email" placeholder="test@gressholmen.no" autocomplete="email" required>
-      </div>
-
-      <div class="row">
-        <label for="pass">Passord</label>
-        <input id="pass" name="pass" type="password" placeholder="Test123" autocomplete="current-password" required>
-        <button type="button" class="toggle-pass" id="toggle-pass" aria-controls="pass" aria-pressed="false">Vis</button>
-      </div>
-
-      <div class="actions">
-        <a class="btn" href="index.html">Tilbake</a>
-        <button class="btn primary" type="submit">Logg inn</button>
-      </div>
-
-      <div id="error" class="error" role="alert"></div>
-      <div id="ok" class="success">Innlogging ok (demo). Sender deg til dashboard …</div>
-    </form>
+    </div>
   </main>
-
   <script>
-    const $ = (s,c=document)=>c.querySelector(s);
+    const dict={
+      no:{
+        "login.title":"Logg inn",
+        "login.subtitle":"Bruk demo-brukeren under for å logge inn.",
+        "login.email":"E-post",
+        "login.password":"Passord",
+        "login.show":"Vis",
+        "login.hide":"Skjul",
+        "login.cta":"Logg inn",
+        "login.back":"Tilbake",
+        "login.forgot":"Glemt passord?",
+        "login.signup":"Har du ikke bruker? Opprett konto",
+        "login.error":"Feil e-post eller passord.",
+        "login.success":"Innlogging ok (demo). Sender deg til dashbord …"
+      },
+      en:{
+        "login.title":"Log in",
+        "login.subtitle":"Use the demo user below to sign in.",
+        "login.email":"Email",
+        "login.password":"Password",
+        "login.show":"Show",
+        "login.hide":"Hide",
+        "login.cta":"Log in",
+        "login.back":"Back",
+        "login.forgot":"Forgot password?",
+        "login.signup":"Don’t have an account? Sign up",
+        "login.error":"Incorrect email or password.",
+        "login.success":"Login ok (demo). Redirecting to dashboard …"
+      }
+    };
+    const qp=new URLSearchParams(location.search).get('lang');
+    const saved=localStorage.getItem('scope.lang');
+    const lang=(qp==='en'||qp==='no')?qp:(saved||'no');
+    if(qp) localStorage.setItem('scope.lang',lang);
+    document.documentElement.lang=(lang==='en'?'en':'no');
+    document.title=dict[lang]["login.title"]+" — Scope";
+    function applyI18n(l){
+      document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const key=el.getAttribute('data-i18n');
+        if(dict[l][key]!==undefined) el.textContent=dict[l][key];
+      });
+    }
+    applyI18n(lang);
+
+    const $=(s,c=document)=>c.querySelector(s);
 
     function applyTheme(theme){
       document.body.setAttribute('data-theme', theme);
@@ -92,45 +251,48 @@
     const savedTheme = localStorage.getItem('scope.theme') || 'light';
     applyTheme(savedTheme);
 
-    // Tillat kun denne demo-kontoen
     const VALID_EMAIL = "test@gressholmen.no";
     const VALID_PASS  = "Test123";
 
-    // Vis/skjul passord (hvis knappen finnes)
-    const tp = $('#toggle-pass');
-    tp && tp.addEventListener('click', (e)=>{
-      const inp=$('#pass'); const isPw=inp.type==='password';
-      inp.type=isPw?'text':'password';
-      e.currentTarget.setAttribute('aria-pressed', String(isPw));
-      e.currentTarget.textContent = isPw ? 'Skjul' : 'Vis';
-    });
-
-    // Sjekk eksakt kombinasjon og gå til dashboard
     $('#login-form').addEventListener('submit', (e)=>{
       e.preventDefault();
       const email = ($('#email').value||'').trim().toLowerCase();
-      const pwd   = $('#pass').value;
-
+      const pwd   = $('#password').value;
       const err=$('#error'); const ok=$('#ok');
-      if(err){ err.style.display='none'; err.textContent=''; }
-      if(ok){ ok.style.display='none'; }
-
+      if(err){err.style.display='none';err.textContent='';}
+      if(ok){ok.style.display='none';}
       if(email===VALID_EMAIL.toLowerCase() && pwd===VALID_PASS){
-        try {
+        try{
           localStorage.setItem('scope.authed','1');
           localStorage.setItem('scope.user', VALID_EMAIL);
-        } catch(e){}
-        // Direkte redirect til dashboard
-        window.location.href = 'dashboard.html';
-      } else {
+        }catch(e){}
+        window.location.href='dashboard.html';
+      }else{
         if(err){
-          err.textContent = 'Feil e-post eller passord.';
+          err.textContent=dict[lang]["login.error"];
           err.style.display='block';
-        } else {
-          alert('Feil e-post eller passord.');
+        }else{
+          alert(dict[lang]["login.error"]);
         }
       }
     });
+
+    const pwd=document.querySelector('#password');
+    const btn=document.querySelector('#toggle-password');
+    if(pwd && btn){
+      const pwdTxt=dict[lang]["login.password"].toLowerCase();
+      const showTxt=dict[lang]["login.show"];
+      const hideTxt=dict[lang]["login.hide"];
+      const set=(show)=>{
+        pwd.type=show?'text':'password';
+        const t=show?hideTxt:showTxt;
+        btn.textContent=t;
+        btn.setAttribute('aria-label',t+" "+pwdTxt);
+        btn.setAttribute('aria-pressed',String(show));
+      };
+      set(false);
+      btn.addEventListener('click',()=>set(pwd.type==='password'));
+    }
   </script>
 </body>
 </html>
