@@ -22,33 +22,45 @@
     button{font-family:inherit}
     button:focus-visible,a:focus-visible{outline:none;box-shadow:var(--ring)}
 
-    header.appbar{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
-    .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding:0 clamp(28px,6vw,96px);height:64px}
-    .brand{display:flex;gap:.6rem;align-items:center;font-weight:800;color:var(--ink-900);text-decoration:none}
-    .brand .logo{inline-size:40px;block-size:40px;border-radius:12px;background:#fff;border:2px solid var(--brand-600);display:grid;place-items:center;box-shadow:var(--shadow)}
-    .brand span{font-size:18px}
-    .appbar-center{justify-self:center;font-weight:800}
-    .nav-right{justify-self:end;display:flex;gap:12px;align-items:center}
-    .btn{appearance:none;border:1px solid var(--brand-outline);border-radius:999px;padding:0 12px;height:32px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .3s ease,transform .3s ease,box-shadow .3s ease;background:#fff;text-decoration:none !important;box-shadow:0 1px 2px rgba(2,6,23,.06)}
-    .btn:focus-visible{outline:none;box-shadow:var(--ring)}
-    .btn:hover{transform:translateY(-1px)}
-    .btn.ghost{background:transparent}
-    .btn.sm{padding:0 10px;font-size:14px;height:32px}
-    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 10px;height:32px;font-weight:700;background:#fff;cursor:pointer;display:inline-flex;align-items:center;font-size:14px;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background .3s ease,box-shadow .3s ease}
-    .chip:focus-visible{outline:none;box-shadow:var(--ring)}
-    .theme-switch{position:relative;display:inline-flex;width:56px;height:32px}
-    .theme-switch input{opacity:0;width:0;height:0}
-    .theme-switch .slider{position:relative;cursor:pointer;display:block;width:100%;height:100%;background:var(--track-light);transition:background .3s ease;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,.15);border:1px solid var(--brand-outline);padding:3px}
-    .theme-switch input:focus-visible + .slider{box-shadow:var(--ring)}
-    body[data-theme="dark"] .theme-switch .slider{background:var(--track-dark);box-shadow:0 1px 2px rgba(255,255,255,.3)}
-    .theme-switch .thumb{position:absolute;top:50%;left:3px;width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:left .3s ease,transform .3s ease;border:1px solid var(--brand-outline);box-shadow:0 2px 4px rgba(0,0,0,.2);transform:translateY(-50%)}
-    .theme-switch input:checked + .slider{background:var(--brand-600)}
-    .theme-switch input:checked + .slider .thumb{left:calc(100% - 3px);transform:translate(-100%,-50%)}
+    .appbar{
+      position:sticky; top:0; z-index:50; height:80px;
+      display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+      padding:0 24px; gap:14px; background:rgba(255,255,255,.96);
+      backdrop-filter:blur(10px); border-bottom:1px solid var(--border);
+    }
+    body[data-theme="dark"] .appbar{ background:rgba(17,24,39,.92); }
+    .appbar .brand{ display:flex; align-items:center; gap:.6rem; font-weight:800; color:var(--ink-900); text-decoration:none; }
+    .appbar-center{ justify-self:center; font-weight:800; color:var(--ink-900); }
+    .nav-right{ justify-self:end; display:flex; align-items:center; gap:12px; }
+
+    .chip{
+      border:1px solid var(--brand-outline); border-radius:999px; height:36px; padding:0 12px;
+      display:inline-flex; align-items:center; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+      background:var(--surface); color:var(--ink-900); cursor:pointer;
+    }
+    .theme-switch{ position:relative; display:inline-flex; width:56px; height:36px; }
+    .theme-switch input{ opacity:0; width:0; height:0; }
+    .theme-switch .slider{
+      position:relative; display:block; width:100%; height:100%;
+      background:var(--track-light); border:1px solid var(--brand-outline); border-radius:9999px; box-shadow:0 1px 2px rgba(0,0,0,.1);
+    }
+    body[data-theme="dark"] .theme-switch .slider{ background:var(--track-dark); }
+    .theme-switch .thumb{
+      position:absolute; top:50%; left:4px; transform:translateY(-50%);
+      width:28px; height:28px; border-radius:50%; background:#fff; border:1px solid var(--brand-outline);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .theme-switch .icon{ width:16px; height:16px; stroke-width:2; }
+    .theme-switch .icon.sun{ stroke:#FDB813; fill:none; }
+    .theme-switch .icon.moon{ fill:#20354a; stroke:none; display:none; }
+    .theme-switch input:checked + .slider .thumb{ left:calc(100% - 4px); transform:translate(-100%,-50%); }
+    .theme-switch input:checked + .slider .icon.sun{ display:none; }
+    .theme-switch input:checked + .slider .icon.moon{ display:block; }
+
+    .hamburger{ background:transparent; border:0; font-size:22px; line-height:1; padding:8px; cursor:pointer; color:var(--ink-900); }
 
     body[data-theme="dark"]{--ink-900:#f9fafb;--ink-800:#e5e7eb;--ink-700:#d1d5db;--ink-600:#9ca3af;--ink-500:#6b7280;--surface:#111827;--muted:#1f2937;--border:#374151;background:#0b1220;color:var(--ink-900)}
-    body[data-theme="dark"] header.appbar{background:rgba(17,24,39,.96);border-bottom-color:var(--border)}
-    body[data-theme="dark"] .btn,body[data-theme="dark"] .chip{background:var(--surface);color:var(--ink-900);border-color:var(--brand-outline)}
-    body[data-theme="dark"] .btn.ghost{background:transparent}
+    body[data-theme="dark"] .chip{background:var(--surface);color:var(--ink-900);border-color:var(--brand-outline)}
 
     /* Drawer */
     #drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(2px);z-index:40}
@@ -101,14 +113,29 @@
 <body>
   <header class="appbar nav">
     <a class="brand" href="/" aria-label="Scope">
-      <div class="logo" style="color:var(--brand-600)"><svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true"><use href="#icon-scope"/></svg></div><span>Scope</span>
+      <div class="logo" style="color:var(--brand-600)"><svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true"><use href="#icon-scope"/></svg></div>
+      <span>Scope</span>
     </a>
+
     <div class="appbar-center"><span id="company-name">Gressholmen Kro</span></div>
+
     <div class="nav-right">
-      <a href="login.html" class="btn ghost sm" data-i18n="right.login">Logg inn</a>
-      <button id="lang-toggle" class="chip">NO</button>
-      <label class="theme-switch"><input id="theme-toggle" type="checkbox"><span class="slider"><span class="thumb"></span></span></label>
-      <button id="menu-toggle" class="btn ghost sm" aria-label="Meny">☰</button>
+      <button id="lang-toggle" class="chip" title="Language">NO</button>
+      <label class="theme-switch" aria-label="Tema">
+        <input type="checkbox" id="theme-toggle"/>
+        <span class="slider">
+          <span class="thumb">
+            <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="5"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+            </svg>
+          </span>
+        </span>
+      </label>
+      <button id="menu-toggle" class="hamburger" aria-label="Meny">☰</button>
     </div>
   </header>
 
@@ -160,56 +187,37 @@
     </section>
   </main>
   <script>
-    const $=(s,c=document)=>c.querySelector(s);
-    const $$=(s,c=document)=>Array.from(c.querySelectorAll(s));
-
-    function applyTheme(theme){
-      document.body.setAttribute('data-theme',theme);
-      const cs=document.querySelector('meta[name="color-scheme"]');
-      if(cs) cs.setAttribute('content',theme==='dark'?'dark light':'light dark');
-      const toggle=$('#theme-toggle');
-      if(toggle) toggle.checked=(theme==='dark');
-    }
-
-    function labelForNext(lang){return lang==='no'?'EN':'NO';}
-
-    const i18n={
-      no:{"right.login":"Logg inn"},
-      en:{"right.login":"Log in"}
-    };
-
-    function applyLang(lang){
-      const dict=i18n[lang]||i18n.no;
-      document.documentElement.lang=(lang==='en'?'en':'no');
-      $$('[data-i18n]').forEach(el=>{
-        const k=el.getAttribute('data-i18n');
-        if(k in dict) el.textContent=dict[k];
-      });
-      const btn=$('#lang-toggle');
-      if(btn) btn.textContent=labelForNext(lang);
-    }
-
-    const savedTheme=localStorage.getItem('scope.theme')||'light';
-    applyTheme(savedTheme);
-    $('#theme-toggle')?.addEventListener('change',e=>{
-      const t=e.target.checked?'dark':'light';
-      localStorage.setItem('scope.theme',t);
-      applyTheme(t);
-    });
-
-    const saved=localStorage.getItem('scope.lang');
-    const browser=((navigator.language||'').toLowerCase().startsWith('no'))?'no':'en';
-    const start=saved||browser||'no';
-    applyLang(start);
-    $('#lang-toggle')?.addEventListener('click',()=>{
-      const next=(document.documentElement.lang==='en')?'no':'en';
-      localStorage.setItem('scope.lang',next);
-      applyLang(next);
-    });
-
-    const drawer=$('#side-drawer');
-    const backdrop=$('#drawer-backdrop');
-    const menuToggle=$('#menu-toggle');
+    (function(){
+      const btn = document.getElementById('lang-toggle');
+      if(btn){
+        const saved = localStorage.getItem('scope.lang') || 'no';
+        btn.textContent = saved.toUpperCase();
+        btn.addEventListener('click', ()=>{
+          const next = (btn.textContent.trim().toLowerCase()==='no') ? 'EN' : 'NO';
+          btn.textContent = next;
+          localStorage.setItem('scope.lang', next.toLowerCase());
+          // if applyLang exists, call it:
+          if (typeof applyLang === 'function') applyLang(next.toLowerCase());
+        });
+      }
+      // theme toggle hookup (reuse existing applyTheme if present)
+      const t = document.getElementById('theme-toggle');
+      if(t){
+        const savedTheme = localStorage.getItem('scope.theme') || 'light';
+        t.checked = (savedTheme==='dark');
+        t.addEventListener('change', ()=>{
+          const theme = t.checked ? 'dark' : 'light';
+          localStorage.setItem('scope.theme', theme);
+          if (typeof applyTheme === 'function') applyTheme(theme);
+          else document.body.setAttribute('data-theme', theme);
+        });
+      }
+    })();
+  </script>
+  <script>
+    const drawer=document.getElementById('side-drawer');
+    const backdrop=document.getElementById('drawer-backdrop');
+    const menuToggle=document.getElementById('menu-toggle');
     menuToggle?.addEventListener('click',()=>{
       const hidden=drawer.hasAttribute('hidden');
       if(hidden){
