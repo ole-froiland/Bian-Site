@@ -93,6 +93,7 @@
     body[data-theme="dark"] header{background:rgba(17,24,39,.96);border-bottom-color:var(--border)}
     body[data-theme="dark"] .btn, body[data-theme="dark"] .chip{background:var(--surface);color:var(--ink-900);border-color:var(--brand-outline)}
     body[data-theme="dark"] .btn.primary{background:var(--brand-gradient);color:#fff;border-color:transparent}
+    body[data-theme="dark"] .btn.primary:hover{filter:brightness(1.06);box-shadow:0 8px 24px rgba(236,72,153,.25),0 4px 12px rgba(139,92,246,.25)}
     body[data-theme="dark"] .btn.ghost{background:transparent}
     body[data-theme="dark"] .menu{background:var(--surface)}
     body[data-theme="dark"] .card{background:var(--surface);border:1px solid var(--card-border)}
@@ -137,6 +138,23 @@
       background: #e6d6ff;
       color: #4b0082;
       box-shadow: inset 0 0 10px rgba(0,0,0,.12);
+    }
+    body[data-theme="dark"] .band:hover,
+    body[data-theme="dark"] .pricing .card:hover{
+      background:#2a1f4f;
+      transition:background .2s ease, box-shadow .2s ease, transform .2s ease;
+      box-shadow:0 12px 32px rgba(139,92,246,.25);
+    }
+    body[data-theme="dark"] .band:hover h3,
+    body[data-theme="dark"] .band:hover p,
+    body[data-theme="dark"] .pricing .card:hover h3,
+    body[data-theme="dark"] .pricing .card:hover .sub,
+    body[data-theme="dark"] .pricing .card:hover .price,
+    body[data-theme="dark"] .pricing .card:hover .price small{
+      color:#fff!important;
+    }
+    body[data-theme="dark"] .pricing .card:hover p{
+      color:#d6ccff!important;
     }
     .pricing .card h3{font-size:24px;font-weight:700;margin:0 0 8px}
     .pricing .card{

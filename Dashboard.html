@@ -1,503 +1,169 @@
-<!doctype html>
-<html lang="no">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Tripletex kontoposter — Scope</title>
-  <style>
-    :root{
-       --brand-600:#8b5cf6; --brand-700:#7c3aed;
-      --ink-900:#0b1220; --ink-700:#374151; --border:#e5e7eb;
-      --surface:#fff; --muted:#f8fafc; --shadow:0 10px 28px rgba(2,6,23,.06);
-      --ring:0 0 0 3px rgba(139,92,246,.25);
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;color:var(--ink-900);background:#fff}
-    a{color:inherit}
-    .container{max-width:1200px;margin-inline:auto;padding-inline:clamp(20px,6vw,100px)}
-
-    header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
-    .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding-block:12px}
-    .brand{display:flex;gap:.6rem;align-items:center;text-decoration:none;font-weight:800}
-    .logo{width:36px;height:36px;border-radius:12px;background:#fff;border:2px solid var(--brand-600);color:var(--brand-600);display:grid;place-items:center;box-shadow:var(--shadow)}
-    .org{font-weight:800}
-    .nav-right{display:flex;align-items:center;gap:10px}
-
-    /* Piller/knapper */
-    .btn,.chip,.chipbtn,.tab{color:var(--ink-900)}
-    .chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;font-weight:700;background:#fff}
-    .btn{appearance:none;border:1px solid var(--border);border-radius:999px;padding:9px 14px;background:#fff;font-weight:700;cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06)}
-    .btn:hover,.chip:hover,.chipbtn:hover,.tab:hover{background:var(--muted)}
-    .btn:focus-visible,.chip:focus-visible,.chipbtn:focus-visible,.tab:focus-visible{outline:none;box-shadow:var(--ring)}
-
-    /* Tabbar */
-    .tabbar-wrap{position:sticky;top:64px;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);z-index:40}
-    .tabbar{display:flex;gap:8px;padding:10px 0}
-    .tab{display:inline-flex;align-items:center;gap:6px;text-decoration:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer;line-height:1.1;white-space:nowrap}
-    .tab[aria-selected="true"]{background:var(--brand-600);color:#fff;border-color:transparent}
-
-    main{padding-block:22px}
-
-    /* NY: Seksjonstittel/beskrivelse for hver fane */
-    .pagehead{padding-block:10px 4px}
-    .pagehead h1{margin:0;font-size:clamp(22px,3.2vw,28px);letter-spacing:-.01em}
-    .pagehead p{margin:6px 0 0;color:#6b7280}
-
-    .grid{display:grid;grid-template-columns:1fr;gap:20px}
-
-    .card{border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow);background:#fff}
-    h1{margin:0 0 14px;font-size:20px;letter-spacing:-.01em}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    label{display:block;font-weight:600;font-size:.92rem;margin-bottom:6px}
-    input[type="date"], input[type="text"]{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff}
-    .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
-    button{appearance:none;border:1px solid var(--border);border-radius:12px;padding:10px 16px;background:#111827;color:#fff;font-weight:700;cursor:pointer}
-    button:disabled{opacity:.55;cursor:not-allowed}
-    small{display:block;color:#6b7280;margin-top:6px}
-
-    .presets{display:flex;gap:8px;justify-content:flex-end;margin-bottom:12px}
-    .chipbtn{appearance:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:8px 12px;font-weight:700;cursor:pointer}
-    .chipbtn.active{background:var(--brand-600);color:#fff;border-color:transparent}
-
-    .status{font-weight:700}
-
-    table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
-    thead th{position:sticky;top:0;background:var(--muted);text-align:left;font-weight:700;border-bottom:1px solid var(--border);padding:10px 12px}
-    tbody td{padding:10px 12px;border-bottom:1px solid var(--border)}
-    tbody tr:last-child td{border-bottom:none}
-    .mono{font-variant-numeric:tabular-nums}
-    .right{text-align:right}
-    .muted{color:#6b7280}
-
-    .totals{display:flex;gap:12px;flex-wrap:wrap}
-    .pill{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#f3e8ff;font-weight:700}
-
-    /* KPI cards */
-    .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-    .kpi .small{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff}
-    .kpi .small h3{margin:0 0 4px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em}
-    .kpi .small .val{font-weight:800;font-size:22px}
-    @media (max-width:900px){.kpi{grid-template-columns:1fr 1fr}}
-    @media (max-width:560px){.kpi{grid-template-columns:1fr}}
-
-    /* Tips */
-    .tips{display:grid;gap:10px}
-    .tip{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}
-
-    /* Panelvisning + offset så sticky header ikke dekker */
-    [role="tabpanel"]{display:none}
-    [role="tabpanel"].active,[role="tabpanel"]:target{display:block}
-    :where(#oversikt,#kpi,#ai){scroll-margin-top:140px}
-
-    /* Skjul visuelt men behold for skjermlesere */
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-  </style>
-
-  <script>
-    /* Enkel auth-guard */
-    (function(){
-      try{
-        const authed = localStorage.getItem('scope.authed') === '1';
-        const user = (localStorage.getItem('scope.user')||'').toLowerCase();
-        if(!authed || user!=='test@gressholmen.no'){
-          window.location.replace('login.html');
-        }
-      }catch(e){ window.location.replace('login.html'); }
-    })();
-  </script>
-</head>
-<body>
-  <a class="skip-link" href="#main" style="position:absolute;left:12px;top:8px;padding:10px 14px;border-radius:12px;background:#0b1220;color:#fff;text-decoration:none;box-shadow:var(--shadow);transform:translateY(-160%);transition:transform .12s ease;z-index:1000">Hopp til innhold</a>
-
-  <header>
-    <div class="container nav">
-      <a class="brand" href="index.html" title="Til forsiden">
-        <div class="logo" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
-            <circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="3"/>
-            <circle cx="20" cy="20" r="9" fill="none" stroke="currentColor" stroke-width="3"/>
-            <circle cx="20" cy="20" r="3" fill="currentColor"/>
-          </svg>
-        </div>
-        <span>Scope</span>
-      </a>
-      <div style="justify-self:center;text-align:center">
-        <div class="org">Gressholmen Kro AS</div>
-        <div class="sub" id="subtitle" style="color:#374151"></div>
-      </div>
-      <div class="nav-right">
-        <span id="who" class="chip" title="Innlogget bruker">…</span>
-        <button id="logout" class="btn">Logg ut</button>
-      </div>
-    </div>
-
-    <!-- Faner -->
-    <div class="container tabbar-wrap">
-      <div class="tabbar" role="tablist" aria-label="Visning">
-        <a class="tab" id="tab-oversikt" role="tab" aria-selected="true"  aria-controls="oversikt" href="#oversikt">Oversikt</a>
-        <a class="tab" id="tab-kpi"      role="tab" aria-selected="false" aria-controls="kpi"      href="#kpi">KPI-er</a>
-        <a class="tab" id="tab-ai"       role="tab" aria-selected="false" aria-controls="ai"       href="#ai">AI-tips</a>
-      </div>
-    </div>
-  </header>
-
-  <main id="main">
-    <div class="container">
-      <!-- NY: Felles seksjonstittel som endres per fane -->
-      <div class="pagehead" aria-live="polite">
-        <h1 id="page-title">Oversikt</h1>
-        <p id="page-sub">Kontoposter fra Tripletex</p>
-      </div>
-    </div>
-
-    <div class="container grid">
-      <!-- Oversikt -->
-      <section id="oversikt" class="active" role="tabpanel" aria-labelledby="tab-oversikt">
-        <h1 class="sr-only">Oversikt</h1>
-        <div class="card" aria-label="Velg konto og periode">
-          <h2 style="margin:0 0 10px;font-size:18px">Filtrering</h2>
-
-          <div class="presets" role="group" aria-label="Hurtigvalg for periode">
-            <button class="chipbtn" data-preset="day">I dag</button>
-            <button class="chipbtn" data-preset="7">Siste 7</button>
-            <button class="chipbtn" data-preset="30">Siste 30</button>
-          </div>
-
-          <div class="row" style="margin-bottom:12px">
-            <div>
-              <label for="accountNo">Konto-nr (f.eks. 1920)</label>
-              <input id="accountNo" type="text" inputmode="numeric" autocomplete="off" placeholder="1920" value="1920" />
-              <small class="muted">Vi slår opp konto-ID via <code>/v2/ledger/account?number=</code>.</small>
-            </div>
-            <div></div>
-          </div>
-
-          <div class="row">
-            <div>
-              <label for="from">Start</label>
-              <input id="from" type="date" autocomplete="off">
-            </div>
-            <div>
-              <label for="to">Slutt</label>
-              <input id="to" type="date" autocomplete="off">
-              <small class="muted">Merk: Tripletex sine <code>dateTo</code>-parametre er «til og <em>eksklusiv</em>», så vi legger automatisk på +1 dag i API-kallet.</small>
-            </div>
-          </div>
-
-          <div class="actions">
-            <button id="fetchBtn">Hent transaksjoner</button>
-          </div>
-          <small id="hint" class="status"></small>
-        </div>
-
-        <div class="card" aria-label="Resultater">
-          <div class="totals" id="totals" hidden>
-            <span class="pill" id="pillCount"></span>
-            <span class="pill" id="pillSum"></span>
-          </div>
-          <div style="overflow:auto">
-            <table aria-describedby="hint">
-              <thead>
-                <tr>
-                  <th style="width:140px">Dato</th>
-                  <th>Tekst</th>
-                  <th class="right">Beløp</th>
-                  <th style="width:110px">Bunt/Voucher</th>
-                </tr>
-              </thead>
-              <tbody id="rows">
-                <tr><td colspan="4" class="muted">Ingen data ennå. Velg konto og periode, og trykk «Hent transaksjoner».</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- KPIer -->
-      <section id="kpi" role="tabpanel" aria-labelledby="tab-kpi">
-        <h1 class="sr-only">KPI-er</h1>
-        <div class="card">
-          <h2 style="margin:0 0 10px;font-size:18px">Nøkkeltall</h2>
-          <div id="kpi-cards" class="kpi"></div>
-        </div>
-        <div class="card">
-          <h2 style="margin:0 0 10px;font-size:18px">Største posteringer</h2>
-          <div style="overflow:auto">
-            <table>
-              <thead>
-                <tr><th>Dato</th><th>Tekst</th><th class="right">Beløp</th><th>Bunt</th></tr>
-              </thead>
-              <tbody id="top-rows"><tr><td colspan="4" class="muted">Hent transaksjoner først.</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- AI tips -->
-      <section id="ai" role="tabpanel" aria-labelledby="tab-ai">
-        <h1 class="sr-only">AI-tips</h1>
-        <div class="card">
-          <h2 style="margin:0 0 10px;font-size:18px">Forslag</h2>
-          <p class="muted" id="tips-info">Tipsene baseres på transaksjonene i valgt periode.</p>
-          <div id="tips" class="tips">
-            <div class="tip muted">Hent transaksjoner først for å se innsikt.</div>
-          </div>
-          <div class="actions" style="justify-content:flex-start;margin-top:18px"><button id="regen">Regenerer tips</button></div>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <script>
-    /* Header-info */
-    const user = (localStorage.getItem('scope.user')||'');
-    const who = document.getElementById('who'); if (who) who.textContent = user || 'Innlogget';
-    const d = new Date();
-    const subtitle = document.getElementById('subtitle');
-    if (subtitle) subtitle.textContent = d.toLocaleDateString('no-NO',{weekday:'long', day:'2-digit', month:'long', year:'numeric'});
-    document.getElementById('logout')?.addEventListener('click',()=>{ try{ localStorage.removeItem('scope.authed'); localStorage.removeItem('scope.user'); }catch(e){} window.location.href='login.html'; });
-
-    /* Små utils */
-    const toISO = dt => new Date(dt.getTime()-dt.getTimezoneOffset()*60000).toISOString().slice(0,10);
-    const addDays = (iso, n) => { const t = new Date(iso+'T00:00:00'); t.setDate(t.getDate()+n); return toISO(t); };
-
-    /* Tripletex proxy-kall */
-    const API = (() => {
-      async function getAccountIdByNumber(number){
-        const url = new URL('/api/ledger/account', location.origin);
-        url.searchParams.set('number', String(number));
-        url.searchParams.set('count', '1');
-        const resp = await fetch(url, { headers: { 'Accept':'application/json' } });
-        if (!resp.ok) throw new Error('Account ' + resp.status);
-        const data = await resp.json();
-        const values = Array.isArray(data?.values) ? data.values : [];
-        if (!values.length) throw new Error('Finner ikke konto '+number);
-        return values[0].id;
-      }
-      async function fetchPostingsByAccountNumber(accountNumber, fromISO, toISOExclusive){
-        const accountId = await getAccountIdByNumber(accountNumber);
-        let page = 0; const count = 1000; const all = [];
-        while(true){
-          const url = new URL('/api/ledger/posting', location.origin);
-          url.searchParams.set('dateFrom', fromISO);
-          url.searchParams.set('dateTo', toISOExclusive);
-          url.searchParams.set('accountId', String(accountId));
-          url.searchParams.set('page', String(page));
-          url.searchParams.set('count', String(count));
-          const resp = await fetch(url, { headers: { 'Accept':'application/json' } });
-          if (!resp.ok) throw new Error('Posting ' + resp.status);
-          const json = await resp.json();
-          const vals = Array.isArray(json?.values) ? json.values : [];
-          all.push(...vals);
-          if (vals.length < count) break;
-          page += 1;
-        }
-        return all;
-      }
-      return { fetchPostingsByAccountNumber };
-    })();
-
-    /* Tabs + sideheader-tekst */
-    const tabs = Array.from(document.querySelectorAll('.tab'));
-    const panels = { oversikt:document.getElementById('oversikt'),
-                     kpi:document.getElementById('kpi'),
-                     ai:document.getElementById('ai') };
-    const pageMeta = {
-      oversikt:{title:'Oversikt', sub:'Kontoposter fra Tripletex'},
-      kpi:{title:'KPI-er', sub:'Nøkkeltall og største posteringer'},
-      ai:{title:'AI-tips', sub:'Automatiske forslag basert på posteringene'}
-    };
-    const titleEl = document.getElementById('page-title');
-    const subEl   = document.getElementById('page-sub');
-
-    function applyPageMeta(key){
-      const m = pageMeta[key] || pageMeta.oversikt;
-      if (titleEl) titleEl.textContent = m.title;
-      if (subEl)   subEl.textContent   = m.sub;
-      document.title = `Scope — ${m.title}`;
-    }
-    function setTab(key){
-      tabs.forEach(t=>t.setAttribute('aria-selected','false'));
-      document.getElementById('tab-'+key)?.setAttribute('aria-selected','true');
-      Object.entries(panels).forEach(([k,el])=>{ el.classList.toggle('active', k===key); });
-      applyPageMeta(key);
-    }
-    function syncFromHash(){
-      const key = ['oversikt','kpi','ai'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'oversikt';
-      setTab(key);
-    }
-    window.addEventListener('hashchange', syncFromHash);
-    syncFromHash();
-    document.querySelector('.tabbar')?.addEventListener('keydown',(e)=>{
-      const idx = tabs.findIndex(t=>t.getAttribute('aria-selected')==='true');
-      if(e.key==='ArrowRight' || e.key==='ArrowLeft'){
-        e.preventDefault();
-        const dir = e.key==='ArrowRight'?1:-1; const next = (idx+dir+tabs.length)%tabs.length;
-        tabs[next].focus(); tabs[next].click();
-      }
-    });
-
-    /* UI-wiring */
-    const fromEl = document.getElementById('from');
-    const toEl   = document.getElementById('to');
-    const acctEl = document.getElementById('accountNo');
-    const btn    = document.getElementById('fetchBtn');
-    const hint   = document.getElementById('hint');
-    const rowsEl = document.getElementById('rows');
-    const totalsWrap = document.getElementById('totals');
-    const pillCount = document.getElementById('pillCount');
-    const pillSum = document.getElementById('pillSum');
-
-    let CURRENT = [];
-
-    function setDefaults(){
-      const now = new Date();
-      const from = new Date(now); from.setDate(from.getDate()-29);
-      fromEl.value = toISO(from);
-      toEl.value   = toISO(now);
-      acctEl.focus();
-      updateSubtitle();
-    }
-    function updateSubtitle(){
-      const presetBtns = Array.from(document.querySelectorAll('.chipbtn'));
-      const f = new Date(fromEl.value), t = new Date(toEl.value);
-      const now = new Date();
-      const sameDay = f.toDateString()===t.toDateString() && t.toDateString()===now.toDateString();
-      const diffDays=Math.round((t-f)/86400000)+1;
-      const toISO_ = d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
-      let key=null;
-      if(sameDay) key='day'; else if(diffDays===7 && toISO_(t)===toISO_(now)) key='7'; else if(diffDays===30 && toISO_(t)===toISO_(now)) key='30';
-      presetBtns.forEach(b=>b.classList.toggle('active', b.dataset.preset===key));
-    }
-
-    function renderRows(list){
-      rowsEl.innerHTML = '';
-      if (!list.length){
-        rowsEl.innerHTML = '<tr><td colspan="4" class="muted">Ingen posteringer funnet for valgt periode/konto.</td></tr>';
-        totalsWrap.hidden = true; return;
-      }
-      list.sort((a,b)=>a.date.localeCompare(b.date));
-      let sum = 0;
-      const fmt = new Intl.NumberFormat('nb-NO', { minimumFractionDigits:2, maximumFractionDigits:2 });
-      const esc = s => String(s??'').replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
-      const tr = (p)=>{
-        sum += Number(p.amount||0);
-        const text = p.text || p.description || (p.voucher && p.voucher.description) || '';
-        const voucher = p.voucher?.id || p.voucherId || '';
-        return `<tr>
-          <td class="mono">${esc(p.date||'')}</td>
-          <td>${esc(text)}</td>
-          <td class="right mono">${fmt.format(Number(p.amount||0))}</td>
-          <td class="mono">${voucher}</td>
-        </tr>`;
-      };
-      rowsEl.innerHTML = list.map(tr).join('');
-      pillCount.textContent = `${list.length} posteringer`;
-      pillSum.textContent = `Sum: ${fmt.format(sum)}`;
-      totalsWrap.hidden = false;
-    }
-
-    function computeKPIs(list){
-      const sum = list.reduce((a,b)=>a+Number(b.amount||0),0);
-      const pos = list.filter(p=>Number(p.amount||0)>0).reduce((a,b)=>a+Number(b.amount||0),0);
-      const neg = list.filter(p=>Number(p.amount||0)<0).reduce((a,b)=>a+Number(b.amount||0),0);
-      const avg = list.length? sum/list.length : 0;
-      const perDay = {};
-      for(const p of list){ perDay[p.date] = (perDay[p.date]||0) + Number(p.amount||0); }
-      const top = [...list].sort((a,b)=>Math.abs(b.amount)-Math.abs(a.amount)).slice(0,10);
-      const dates = list.map(p=>p.date).sort();
-      return {count:list.length,sum,pos,neg,avg,perDay,top,first:dates[0],last:dates[dates.length-1]};
-    }
-
-    function renderKPIs(k){
-      const fmt = new Intl.NumberFormat('nb-NO', { minimumFractionDigits:2, maximumFractionDigits:2 });
-      const el = document.getElementById('kpi-cards');
-      if(!k || !k.count){ el.innerHTML = '<div class="small"><h3>Info</h3><div class="val">Hent transaksjoner</div></div>'; return; }
-      el.innerHTML = `
-        <div class="small"><h3>Antall</h3><div class="val">${k.count}</div><div class="muted">${k.first||''} – ${k.last||''}</div></div>
-        <div class="small"><h3>Nettobeløp</h3><div class="val">${fmt.format(k.sum)}</div></div>
-        <div class="small"><h3>Inn / Ut</h3><div class="val">${fmt.format(k.pos)} / ${fmt.format(k.neg)}</div></div>
-        <div class="small"><h3>Snitt per post</h3><div class="val">${fmt.format(k.avg)}</div></div>`;
-      const fmt2 = new Intl.NumberFormat('nb-NO',{minimumFractionDigits:2,maximumFractionDigits:2});
-      const esc = s => String(s??'').replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
-      const tbody = document.getElementById('top-rows');
-      if(!k.top.length){ tbody.innerHTML='<tr><td colspan="4" class="muted">Ingen data</td></tr>'; return; }
-      tbody.innerHTML = k.top.map(p=>`<tr><td class="mono">${esc(p.date)}</td><td>${esc(p.text||p.description||'')}</td><td class="right mono">${fmt2.format(Number(p.amount||0))}</td><td>${esc(p.voucher?.id||p.voucherId||'')}</td></tr>`).join('');
-    }
-
-    function renderTips(k){
-      const tipsEl = document.getElementById('tips');
-      const acct = (document.getElementById('accountNo').value||'').trim();
-      if(!k || !k.count){ tipsEl.innerHTML = '<div class="tip muted">Hent transaksjoner først for å se innsikt.</div>'; return; }
-      const items = [];
-      const absMax = k.top[0]? Math.abs(Number(k.top[0].amount||0)) : 0;
-      if (absMax > 50000) items.push(`Stor enkeltpost oppdaget (≈ ${absMax.toLocaleString('nb-NO',{maximumFractionDigits:0})}). Vurder å legge på notat/bilag.`);
-      if (k.neg < 0 && Math.abs(k.neg) > k.pos*1.2) items.push('Mye utgående mot inngående i perioden. Dobbeltsjekk leverandørutbetalinger.');
-      if (acct === '1920') items.push('Dette er bankkontoen (1920). Avstem mot kontoutskrift for valgt periode.');
-      const days = Object.keys(k.perDay).length; if(days>=5 && k.count/days>20) items.push('Høy volum per dag – vurder å samle småposteringer eller automatisere import.');
-      if (!items.length) items.push('Ingen avvik funnet. Alt ser normalt ut for valgt periode.');
-      tipsEl.innerHTML = items.map(t=>`<div class="tip">${t}</div>`).join('');
-    }
-
-    async function fetchNow(){
-      const acct = (acctEl.value||'').trim();
-      const f = fromEl.value, t = toEl.value;
-      if (!acct || !f || !t){ hint.textContent = '❌ Fyll ut konto og datoer'; return; }
-      document.getElementById('fetchBtn').disabled = true;
-      hint.textContent = '🌐 Henter fra Tripletex… (kan ta litt tid ved mange posteringer)';
-      try{
-        const toExclusive = addDays(t, 1);
-        const postings = await API.fetchPostingsByAccountNumber(acct, f, toExclusive);
-        CURRENT = postings;
-        try{ localStorage.setItem('scope.ledger', JSON.stringify({ from:f, to:t, account:acct, values: postings })); }catch(e){}
-        hint.textContent = `✅ Fant ${postings.length} posteringer på konto ${acct}`;
-        renderRows(postings);
-        const k=computeKPIs(postings); renderKPIs(k); renderTips(k);
-      }catch(e){
-        console.error(e);
-        hint.textContent = '❌ ' + (e?.message || 'Feil ved henting') + ' — sjekk CORS hvis dette kjøres direkte i nettleser.';
-        rowsEl.innerHTML = '<tr><td colspan="4" class="muted">Ingen data</td></tr>';
-        totalsWrap.hidden = true;
-      }finally{ document.getElementById('fetchBtn').disabled = false; }
-    }
-
-    /* Hurtigvalg */
-    const presetBtns = Array.from(document.querySelectorAll('.chipbtn'));
-    function toISOdate(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
-    function applyPreset(key){
-      const now = new Date();
-      let from = new Date(now);
-      if(key==='day'){ /* samme dag */ }
-      else if(key==='7'){ from.setDate(from.getDate()-6); }
-      else if(key==='30'){ from.setDate(from.getDate()-29); }
-      fromEl.value = toISOdate(from);
-      toEl.value   = toISOdate(now);
-      updateSubtitle();
-    }
-    presetBtns.forEach(b=>b.addEventListener('click',()=>applyPreset(b.dataset.preset)));
-
-    /* Init */
-    document.getElementById('fetchBtn').addEventListener('click', fetchNow);
-    document.getElementById('accountNo').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); fetchNow(); }});
-    document.getElementById('regen').addEventListener('click',()=>{ const k=computeKPIs(CURRENT||[]); renderTips(k); });
-    fromEl?.addEventListener('change', updateSubtitle);
-    toEl?.addEventListener('change', updateSubtitle);
-
-    /* Prefill fra lagring */
-    try{
-      const saved = JSON.parse(localStorage.getItem('scope.ledger')||'null');
-      if(saved && saved.values){
-        fromEl.value = saved.from || fromEl.value;
-        toEl.value   = saved.to   || toEl.value;
-        acctEl.value = saved.account || acctEl.value;
-        CURRENT = saved.values;
-        renderRows(CURRENT);
-        const k=computeKPIs(CURRENT);
-        renderKPIs(k); renderTips(k);
-        document.getElementById('totals').hidden = false;
-        document.getElementById('hint').textContent = `ℹ️ Viser lagrede data for konto ${acctEl.value}`;
-      } else { setDefaults(); }
-    }catch(e){ setDefaults(); }
-  </script>
-</body>
-</html>
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a//dev/null b/dashboard.html
+index 0000000000000000000000000000000000000000..b456e9a5a2dcac1577623b60f068c304b4636116 100644
+--- a//dev/null
++++ b/dashboard.html
+@@ -0,0 +1,160 @@
++<!doctype html>
++<html lang="no">
++<head>
++  <meta charset="utf-8" />
++  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
++  <title>Dashboard — Scope</title>
++  <style>
++    :root{
++      --brand-600:#8b5cf6; --brand-700:#7c3aed;
++      --ink-900:#0b1220; --ink-700:#374151;
++      --surface:#fff; --muted:#f8fafc;
++      --ring:0 0 0 3px rgba(139,92,246,.25);
++      --card-radius:16px; --card-shadow:0 10px 28px rgba(2,6,23,.06);
++      --card-border:#c4b5fd33;
++      --appbar-bg:rgba(255,255,255,.8);
++    }
++    body[data-theme="dark"]{
++      --ink-900:#f9fafb; --ink-700:#cbd5e1;
++      --surface:#1e293b; --muted:#0f172a;
++      --card-border:#c4b5fd55;
++      --appbar-bg:rgba(30,41,59,.8);
++    }
++    *{box-sizing:border-box}
++    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;color:var(--ink-900);background:var(--muted)}
++    a{color:inherit;text-decoration:none}
++    button{font-family:inherit}
++    button:focus-visible,a:focus-visible{outline:none;box-shadow:var(--ring)}
++
++    /* Header */
++    .appbar{position:sticky;top:0;display:grid;grid-template-columns:auto 1fr auto;align-items:center;height:64px;padding:0 16px;background:var(--appbar-bg);backdrop-filter:blur(10px);border-bottom:1px solid var(--card-border);z-index:50}
++    .brand{display:flex;align-items:center;gap:8px;padding:8px;background:none;border:none;cursor:pointer;border-radius:8px}
++    .logo{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;border:2px solid var(--brand-600);color:var(--brand-600);background:var(--surface)}
++    .appbar-center{text-align:center;font-weight:700}
++    .hamburger{background:none;border:none;cursor:pointer;padding:8px;border-radius:8px}
++    .hamburger span{display:block;width:22px;height:2px;background:var(--ink-900);margin:4px 0}
++
++    /* Drawer */
++    #drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(2px);z-index:40}
++    .drawer{position:fixed;top:0;right:0;height:100%;width:280px;max-width:80%;background:var(--surface);border-left:1px solid var(--card-border);box-shadow:-4px 0 18px rgba(0,0,0,.1);transform:translateX(100%);transition:transform .3s;z-index:50;padding:20px;display:flex;flex-direction:column;gap:20px}
++    .drawer.open{transform:translateX(0)}
++    .drawer a{padding:10px 0;font-weight:600}
++
++    /* Layout */
++    .container{max-width:1200px;margin-inline:auto;padding:20px}
++    .kpis{display:grid;gap:20px;grid-template-columns:repeat(3,1fr)}
++    @media (max-width:1024px){
++      .kpis{grid-template-columns:repeat(2,1fr)}
++      .kpi-card.is-right{grid-column:1/-1}
++    }
++    @media (max-width:768px){
++      .kpis{grid-template-columns:1fr}
++    }
++    .kpi-card,.card{border:1px solid var(--card-border);border-radius:var(--card-radius);background:var(--surface);box-shadow:var(--card-shadow);padding:20px;transition:transform .2s,box-shadow .2s}
++    .kpi-card:hover,.card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(2,6,23,.08)}
++    .kpi-title{margin:0;font-size:14px;color:var(--ink-700);text-transform:uppercase;letter-spacing:.08em}
++    .kpi-value{margin:6px 0;font-size:28px;font-weight:700;display:flex;align-items:center;gap:8px}
++    .trend{font-size:12px;border-radius:999px;padding:2px 6px}
++    .trend.positive{background:rgba(16,185,129,.2);color:#16a34a}
++    .sparkline{width:100%;height:60px}
++    .grid-sm{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:20px}
++  </style>
++  <script>
++    (function(){
++      try{
++        const authed = localStorage.getItem('scope.authed') === '1';
++        const user = (localStorage.getItem('scope.user')||'').toLowerCase();
++        if(!authed || user!=='test@gressholmen.no'){
++          window.location.replace('login.html');
++        }
++      }catch(e){ window.location.replace('login.html'); }
++    })();
++    document.addEventListener('DOMContentLoaded',function(){
++      const toggle=document.getElementById('menu-toggle');
++      const drawer=document.getElementById('side-drawer');
++      const backdrop=document.getElementById('drawer-backdrop');
++      function open(){
++        drawer.classList.add('open');
++        drawer.hidden=false;backdrop.hidden=false;
++        toggle.setAttribute('aria-expanded','true');
++        document.body.style.overflow='hidden';
++      }
++      function close(){
++        drawer.classList.remove('open');
++        drawer.hidden=true;backdrop.hidden=true;
++        toggle.setAttribute('aria-expanded','false');
++        document.body.style.overflow='';
++      }
++      toggle.addEventListener('click',()=>drawer.classList.contains('open')?close():open());
++      backdrop.addEventListener('click',close);
++      document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
++    });
++  </script>
++</head>
++<body>
++  <header class="appbar">
++    <a href="/" class="brand" aria-label="Scope home">
++      <div class="logo" aria-hidden="true">
++        <svg width="18" height="18" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
++          <circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="3"/>
++          <circle cx="20" cy="20" r="9" fill="none" stroke="currentColor" stroke-width="3"/>
++          <circle cx="20" cy="20" r="3" fill="currentColor"/>
++        </svg>
++      </div>
++    </a>
++    <div class="appbar-center"><span id="company-name">Gressholmen Kro</span></div>
++    <button id="menu-toggle" class="hamburger" aria-label="Open menu" aria-controls="side-drawer" aria-expanded="false">
++      <span></span><span></span><span></span>
++    </button>
++  </header>
++
++  <div id="drawer-backdrop" hidden></div>
++  <aside id="side-drawer" class="drawer" hidden>
++    <a href="dashboard.html">Dashboard</a>
++    <a href="#">Reports</a>
++    <a href="#">Inventory</a>
++    <a href="#">Settings</a>
++    <a href="#" id="logout">Log out</a>
++  </aside>
++
++  <main class="container">
++    <section class="kpis">
++      <article class="kpi-card is-left">
++        <h3 class="kpi-title">Omsetning i dag</h3>
++        <div class="kpi-value">245&nbsp;900 kr<span class="trend positive">+3.1%</span></div>
++        <svg class="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
++          <polyline points="0,20 20,10 40,15 60,5 80,12 100,8" fill="none" stroke="url(#grad)" stroke-width="2"/>
++          <defs>
++            <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
++              <stop offset="0%" stop-color="#7d79f9"/>
++              <stop offset="100%" stop-color="#c864aa"/>
++            </linearGradient>
++          </defs>
++        </svg>
++      </article>
++      <article class="kpi-card is-center">
++        <h3 class="kpi-title">Dekningsbidrag</h3>
++        <div class="kpi-value">115&nbsp;000 kr<span class="trend positive">+1.6%</span></div>
++        <svg class="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
++          <polyline points="0,15 20,18 40,10 60,12 80,6 100,14" fill="none" stroke="url(#grad)" stroke-width="2"/>
++        </svg>
++      </article>
++      <article class="kpi-card is-right">
++        <h3 class="kpi-title">Besøk/Bookings</h3>
++        <div class="kpi-value">1&nbsp;240<span class="trend positive">+0.8%</span></div>
++        <svg class="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
++          <polyline points="0,25 20,16 40,20 60,12 80,18 100,10" fill="none" stroke="url(#grad)" stroke-width="2"/>
++        </svg>
++      </article>
++    </section>
++
++    <section class="grid-sm">
++      <article class="card">Widget A</article>
++      <article class="card">Widget B</article>
++      <article class="card">Widget C</article>
++      <article class="card">Widget D</article>
++    </section>
++  </main>
++</body>
++</html>
++
+ 
+EOF
+)
