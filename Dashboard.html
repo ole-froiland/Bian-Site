@@ -205,6 +205,57 @@
     @media (max-width:760px){
       .card-title{ height:50px; font-size:18px; }
     }
+
+    :root{
+      --card-radius: 24px;              /* adjust if you want softer/harder corners */
+    }
+
+    .card.big{
+      position: relative;
+      border: 1px solid transparent;    /* needed for the gradient border trick */
+      border-radius: var(--card-radius);
+      border-image: none;
+      background:
+        linear-gradient(var(--surface), var(--surface)) padding-box,         /* inner fill */
+        var(--brand-gradient) border-box;                                    /* outer gradient */
+      box-shadow: 0 10px 28px rgba(2,6,23,.06);
+      overflow: hidden;                           /* clip content & shadows to radius */
+      isolation: isolate;                         /* safer with shadows/filters */
+    }
+
+    /* If there is an inner content wrapper, keep the same radius */
+    .card.big .card-inner,
+    .card.big .card-body{
+      border-radius: inherit;
+      background: transparent;
+    }
+
+    /* Hover state keeps radius */
+    .card.big:hover{
+      box-shadow: 0 12px 34px rgba(2,6,23,.10);
+      transform: translateY(-1px);
+    }
+
+    /* KILL any old gradient border implementations that break corners */
+    .card.big::before,
+    .card.big::after{
+      content: none !important;
+      display: none !important;
+    }
+
+    /* If some previous rule forces a different radius, neutralize it */
+    .card,
+    .panel,
+    .board-card{
+      border-radius: var(--card-radius);
+    }
+
+    /* Dark mode divider/header inside the card should also follow radius if needed */
+    body[data-theme="dark"] .card.big{
+      background:
+        linear-gradient(var(--surface), var(--surface)) padding-box,
+        var(--brand-gradient) border-box;
+    }
   </style>
   <!-- Inline SVGs for Scope logo -->
   <svg width="0" height="0" style="position:absolute">
