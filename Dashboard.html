@@ -34,6 +34,16 @@
 
     .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 10px;height:32px;font-weight:700;background:#fff;cursor:pointer;display:inline-flex;align-items:center;font-size:14px;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background .3s ease, box-shadow .3s ease}
     .chip:focus-visible{outline:none;box-shadow:var(--ring)}
+    body:not([data-theme="dark"]) .chip{color:#0b1220}
+    body[data-theme="dark"] .chip{color:var(--ink-900);background:var(--surface);border-color:var(--brand-outline)}
+
+    .hamburger{
+      background:transparent;border:1px solid var(--brand-outline);
+      width:36px;height:36px;border-radius:999px;line-height:1;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-size:18px;color:var(--ink-900);cursor:pointer;
+    }
+    .hamburger:focus-visible{outline:none;box-shadow:var(--ring)}
 
     .theme-switch{position:relative;display:inline-flex;width:56px;height:32px}
     .theme-switch input{opacity:0;width:0;height:0}
@@ -56,7 +66,6 @@
     }
 
     body[data-theme="dark"]{--ink-900:#f9fafb;--ink-800:#e5e7eb;--ink-700:#d1d5db;--ink-600:#9ca3af;--ink-500:#6b7280;--surface:#111827;--muted:#1f2937;--border:#374151;background:#0b1220;color:var(--ink-900)}
-    body[data-theme="dark"] .chip{background:var(--surface);color:var(--ink-900);border-color:var(--brand-outline)}
 
     /* Drawer */
     #drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(2px);z-index:40}
@@ -132,7 +141,7 @@
             </span>
           </span>
         </label>
-        <button id="menu-toggle" class="mobile-toggle" aria-label="Meny" aria-expanded="false">☰</button>
+        <button id="menu-toggle" class="hamburger" aria-label="Meny" type="button">☰</button>
       </div>
     </div>
   </header>
