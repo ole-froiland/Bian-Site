@@ -116,6 +116,69 @@
     @media (max-width: 760px){
       .cards{ grid-template-columns: 1fr; }
     }
+    :root{
+      --brand-1:#8e2de2; /* purple */
+      --brand-2:#ff66c7; /* pink */
+      --surface:#ffffff;
+      --border:#e8e8f2;
+      --ink-900:#0b1220;
+      --shadow:0 10px 28px rgba(2,6,23,.06);
+    }
+
+    .container{ max-width:1400px; margin-inline:auto; padding-inline:clamp(16px,4vw,40px); }
+
+    .cards{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:clamp(16px,2.4vw,26px);
+      padding-bottom:24px;
+    }
+
+    /* gradient border + rounded corners + fills remaining height */
+    .card.big{
+      background:var(--surface);
+      border:2px solid transparent;
+      border-radius:24px;
+      border-image:linear-gradient(135deg,var(--brand-1),var(--brand-2)) 1;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+
+      /* “helt ned”: viewport minus header & topp-margin */
+      min-height:clamp(520px, calc(100vh - 160px), 1000px);
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* card header */
+    .card-title{
+      margin:0;
+      padding:16px 18px;
+      font-size:20px;
+      font-weight:800;
+      color:var(--ink-900);
+      border-bottom:1px solid var(--border);
+      background:rgba(255,255,255,.75);
+      backdrop-filter:saturate(140%) blur(4px);
+    }
+
+    /* space for future content */
+    .card.big > *:not(.card-title){ padding:18px; }
+
+    /* dark mode */
+    body[data-theme="dark"] .card.big{
+      background:#111827;
+      box-shadow:0 10px 28px rgba(0,0,0,.28);
+    }
+    body[data-theme="dark"] .card-title{
+      color:#f9fafb;
+      background:rgba(17,24,39,.72);
+      border-bottom-color:#374151;
+    }
+
+    /* responsive: 3 -> 2 -> 1 columns */
+    @media (max-width:1200px){ .cards{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:760px){ .cards{ grid-template-columns:1fr; } }
   </style>
   <!-- Inline SVGs for Scope logo -->
   <svg width="0" height="0" style="position:absolute">
@@ -171,11 +234,18 @@
     </div>
     </header>
 
-<section class="cards container" aria-label="Hovedpanel">
-  <article class="card big" aria-label="Tom boks venstre"></article>
-  <article class="card big" aria-label="Tom boks midten"></article>
-  <article class="card big" aria-label="Tom boks høyre"></article>
-</section>
+  <section class="cards container" aria-label="Hovedpanel">
+    <article class="card big" aria-label="KPI-er">
+      <header class="card-title">KPI-er</header>
+      <!-- content can go here -->
+    </article>
+    <article class="card big" aria-label="Oversikt">
+      <header class="card-title">Oversikt</header>
+    </article>
+    <article class="card big" aria-label="AI-tips">
+      <header class="card-title">AI-tips</header>
+    </article>
+  </section>
 
   <div id="drawer-backdrop" hidden></div>
   <aside id="side-drawer" class="drawer" hidden>
