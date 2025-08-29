@@ -244,8 +244,14 @@
 
     function applyTheme(theme){
       document.body.setAttribute('data-theme', theme);
-      const cs=document.querySelector('meta[name="color-scheme"]');
-      if(cs) cs.setAttribute('content', theme==='dark' ? 'dark light' : 'light dark');
+      // stop changing meta[name="color-scheme"] here to avoid full repaint flicker
+      const toggle=document.querySelector('#theme-toggle');
+      if(toggle) toggle.checked = (theme === 'dark');
+      // brief easing class to normalize transitions (prevents blink)
+      document.body.classList.add('theme-changing');
+      requestAnimationFrame(()=> setTimeout(()=> {
+        document.body.classList.remove('theme-changing');
+      }, 160));
     }
 
     const savedTheme = localStorage.getItem('scope.theme') || 'light';

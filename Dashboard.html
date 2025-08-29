@@ -30,13 +30,14 @@
     .brand .logo{inline-size:40px;block-size:40px;border-radius:12px;background:#fff;border:2px solid var(--brand-600);display:grid;place-items:center;box-shadow:var(--shadow)}
     .brand span{font-size:18px}
     .appbar-center{justify-self:center;font-weight:800;color:var(--ink-900)}
-    .nav-right{display:flex;align-items:center;gap:12px}
+    .nav-right{display:flex;align-items:center;gap:12px;contain:layout paint}
     .nav-right>*{display:flex;align-items:center}
 
-    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 10px;height:32px;font-weight:700;background:#fff;cursor:pointer;display:inline-flex;align-items:center;font-size:14px;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background .3s ease, box-shadow .3s ease}
+    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 10px;height:32px;font-weight:700;background:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:52px;font-size:14px;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background-color .20s ease,border-color .20s ease,color .20s ease;will-change:background-color,border-color,color;backface-visibility:hidden;transform:translateZ(0)}
     .chip:focus-visible{outline:none;box-shadow:var(--ring)}
+    .chip:hover{background:var(--muted)}
     body:not([data-theme="dark"]) .chip{color:#0b1220}
-    body[data-theme="dark"] .chip{color:var(--ink-900);background:var(--surface);border-color:var(--brand-outline)}
+    body[data-theme="dark"] .chip{background:var(--surface);border-color:var(--brand-outline);color:#f3f5fa}
 
     .hamburger{
       background:transparent;border:1px solid var(--brand-outline);
@@ -48,17 +49,21 @@
 
     .theme-switch{position:relative;display:inline-flex;width:56px;height:32px}
     .theme-switch input{opacity:0;width:0;height:0}
-    .theme-switch .slider{position:relative;cursor:pointer;display:block;width:100%;height:100%;background:var(--track-light);transition:background .3s ease;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,.15);border:1px solid var(--brand-outline);padding:3px}
+    .theme-switch .slider{position:relative;cursor:pointer;display:block;width:100%;height:100%;background:var(--track-light);transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,.15);border:1px solid var(--brand-outline);padding:3px;backface-visibility:hidden;transform:translateZ(0)}
     .theme-switch input:focus-visible + .slider{box-shadow:var(--ring)}
     body[data-theme="dark"] .theme-switch .slider{background:var(--track-dark);box-shadow:0 1px 2px rgba(255,255,255,.3)}
-    .theme-switch .thumb{position:absolute;top:50%;left:3px;width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:left .3s ease, transform .3s ease;border:1px solid var(--brand-outline);box-shadow:0 2px 4px rgba(0,0,0,.2);transform:translateY(-50%)}
+    .theme-switch .thumb{position:absolute;top:50%;left:3px;width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;border:1px solid var(--brand-outline);box-shadow:0 2px 4px rgba(0,0,0,.2);transform:translateY(-50%) translateZ(0);backface-visibility:hidden}
     .theme-switch input:checked + .slider{background:var(--brand-600)}
-    .theme-switch input:checked + .slider .thumb{left:calc(100% - 3px);transform:translate(-100%,-50%)}
+    .theme-switch input:checked + .slider .thumb{left:calc(100% - 3px);transform:translate(-100%,-50%) translateZ(0)}
     .theme-switch .icon{width:16px;height:16px;stroke-width:2}
     .theme-switch .icon.sun{stroke:#FDB813;fill:none}
     .theme-switch .icon.moon{fill:#20354a;stroke:none;display:none}
     .theme-switch input:checked + .slider .icon.sun{display:none}
     .theme-switch input:checked + .slider .icon.moon{display:block}
+
+    .theme-changing .chip,
+    .theme-changing .theme-switch .slider,
+    .theme-changing .theme-switch .thumb{transition-duration:.10s}
 
     .mobile-toggle{display:none;background:none;border:1px solid var(--border);border-radius:999px;padding:10px 14px}
     .mobile-toggle:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -347,6 +352,15 @@
     <a href="#" id="logout">Log out</a>
   </aside>
   <script>
+    function applyTheme(theme){
+      document.body.setAttribute('data-theme', theme);
+      const toggle=document.querySelector('#theme-toggle');
+      if(toggle) toggle.checked = (theme === 'dark');
+      document.body.classList.add('theme-changing');
+      requestAnimationFrame(()=> setTimeout(()=> {
+        document.body.classList.remove('theme-changing');
+      }, 160));
+    }
     (function(){
       const btn = document.getElementById('lang-toggle');
       if(btn){
@@ -364,12 +378,12 @@
       const t = document.getElementById('theme-toggle');
       if(t){
         const savedTheme = localStorage.getItem('scope.theme') || 'light';
-        if (typeof applyTheme === 'function') applyTheme(savedTheme); else document.body.setAttribute('data-theme', savedTheme);
+        applyTheme(savedTheme);
         t.checked = (savedTheme==='dark');
         t.addEventListener('change', ()=>{
           const theme = t.checked ? 'dark' : 'light';
           localStorage.setItem('scope.theme', theme);
-          if (typeof applyTheme === 'function') applyTheme(theme); else document.body.setAttribute('data-theme', theme);
+          applyTheme(theme);
         });
       }
     })();
