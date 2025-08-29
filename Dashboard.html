@@ -15,6 +15,7 @@
       --radius:16px; --shadow:0 10px 28px rgba(2,6,23,.06); --ring:0 0 0 3px rgba(125,121,249,0.6);
       --track-light:#e5e7eb; --track-dark:#374151;
       --card-radius:16px; --card-shadow:0 10px 28px rgba(2,6,23,.06);
+      --appbar-h:72px;
     }
     *,*::before,*::after{box-sizing:border-box}
     body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;background:var(--muted);color:var(--ink-900);line-height:1.7;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -75,14 +76,40 @@
 
     /* Layout */
     .container{max-width:1200px;margin-inline:auto;padding:20px}
-    .kpis{display:grid;gap:20px;grid-template-columns:repeat(3,1fr)}
-    @media (max-width:1024px){
-      .kpis{grid-template-columns:repeat(2,1fr)}
-      .kpi-card.is-right{grid-column:1/-1}
+    .cards.wide{
+      /* full-bleed container */
+      width: 100%;
+      margin: 0;
+      padding: 24px clamp(16px, 4vw, 40px);
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(16px, 2vw, 24px);
+      /* make the row fill the screen below header */
+      min-height: calc(100vh - var(--appbar-h));
+      box-sizing: border-box;
     }
-    @media (max-width:768px){
-      .kpis{grid-template-columns:1fr}
+    .card.big{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      /* give each card a generous height; grows with viewport */
+      min-height: clamp(360px, 60vh, 640px);
     }
+
+    body[data-theme="dark"] .card.big{
+      background: var(--surface);
+      border-color: var(--border);
+    }
+
+    /* Responsive: 3 -> 2 -> 1 columns */
+    @media (max-width: 1200px){
+      .cards.wide{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 780px){
+      .cards.wide{ grid-template-columns: 1fr; }
+    }
+<<<<<<< ours
     .kpi-card,.card{border:1px solid var(--card-border);border-radius:var(--card-radius);background:var(--surface);box-shadow:var(--card-shadow);padding:20px;transition:transform .2s,box-shadow .2s}
     .kpi-card:hover,.card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(2,6,23,.08)}
     .kpi-title{margin:0;font-size:14px;color:var(--ink-700);text-transform:uppercase;letter-spacing:.08em}
@@ -119,6 +146,8 @@
     @media (max-width: 760px){
       .cards{ grid-template-columns: 1fr; }
     }
+=======
+>>>>>>> theirs
   </style>
   <!-- Inline SVGs for Scope logo -->
   <svg width="0" height="0" style="position:absolute">
@@ -174,7 +203,11 @@
     </div>
   </header>
 
+<<<<<<< ours
   <section class="cards container" aria-label="Hovedpanel">
+=======
+  <section class="cards wide" aria-label="Hovedpanel">
+>>>>>>> theirs
     <article class="card big" aria-label="Tom boks venstre"></article>
     <article class="card big" aria-label="Tom boks midten"></article>
     <article class="card big" aria-label="Tom boks høyre"></article>
@@ -188,45 +221,6 @@
     <a href="#">Settings</a>
     <a href="#" id="logout">Log out</a>
   </aside>
-
-  <main class="container">
-    <section class="kpis">
-      <article class="kpi-card is-left">
-        <h3 class="kpi-title">Omsetning i dag</h3>
-        <div class="kpi-value">245&nbsp;900 kr<span class="trend positive">+3.1%</span></div>
-        <svg class="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
-          <polyline points="0,20 20,10 40,15 60,5 80,12 100,8" fill="none" stroke="url(#grad)" stroke-width="2"/>
-          <defs>
-            <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#7d79f9"/>
-              <stop offset="100%" stop-color="#c864aa"/>
-            </linearGradient>
-          </defs>
-        </svg>
-      </article>
-      <article class="kpi-card is-center">
-        <h3 class="kpi-title">Dekningsbidrag</h3>
-        <div class="kpi-value">115&nbsp;000 kr<span class="trend positive">+1.6%</span></div>
-        <svg class="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
-          <polyline points="0,15 20,18 40,10 60,12 80,6 100,14" fill="none" stroke="url(#grad)" stroke-width="2"/>
-        </svg>
-      </article>
-      <article class="kpi-card is-right">
-        <h3 class="kpi-title">Besøk/Bookings</h3>
-        <div class="kpi-value">1&nbsp;240<span class="trend positive">+0.8%</span></div>
-        <svg class="sparkline" viewBox="0 0 100 30" preserveAspectRatio="none">
-          <polyline points="0,25 20,16 40,20 60,12 80,18 100,10" fill="none" stroke="url(#grad)" stroke-width="2"/>
-        </svg>
-      </article>
-    </section>
-
-    <section class="grid-sm">
-      <article class="card">Widget A</article>
-      <article class="card">Widget B</article>
-      <article class="card">Widget C</article>
-      <article class="card">Widget D</article>
-    </section>
-  </main>
   <script>
     (function(){
       const btn = document.getElementById('lang-toggle');
