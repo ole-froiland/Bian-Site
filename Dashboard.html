@@ -150,30 +150,13 @@
       flex-direction:column;
     }
 
-    /* card header */
-    .card-title{
-      margin:0;
-      padding:16px 18px;
-      font-size:20px;
-      font-weight:800;
-      color:var(--ink-900);
-      border-bottom:1px solid var(--border);
-      background:rgba(255,255,255,.75);
-      backdrop-filter:saturate(140%) blur(4px);
-    }
-
     /* space for future content */
-    .card.big > *:not(.card-title){ padding:18px; }
+    .card.big > *:not(.card-header){ padding:18px; }
 
     /* dark mode */
     body[data-theme="dark"] .card.big{
       background:#111827;
       box-shadow:0 10px 28px rgba(0,0,0,.28);
-    }
-    body[data-theme="dark"] .card-title{
-      color:#f9fafb;
-      background:rgba(17,24,39,.72);
-      border-bottom-color:#374151;
     }
 
     /* responsive: 3 -> 2 -> 1 columns */
@@ -187,23 +170,55 @@
     }
 
     .card-title{
-      display:flex;               /* center heading */
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      height:56px;                /* consistent header height */
-      padding:0 16px;
       font-size:20px;
-      font-weight:800;
-      border-bottom:1px solid var(--border);
-    }
-
-    body[data-theme="dark"] .card-title{
-      border-bottom-color:#374151;  /* dark-mode divider */
     }
 
     @media (max-width:760px){
-      .card-title{ height:50px; font-size:18px; }
+      .card-title{ font-size:18px; }
+    }
+
+    .card h2, .panel h2, .dash-card h2, .card-header h2{
+      text-align:left; margin:0; font-weight:800;
+    }
+
+    .card-header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 18px; gap:12px;
+    }
+    .btn-group{ display:flex; gap:8px; }
+
+    .btn{
+      height:36px; padding:0 16px; border-radius:999px;
+      font-weight:700; font-size:14px; line-height:36px;
+      border:1px solid var(--brand-outline, #cdb9ff);
+      background:var(--surface, #fff); color:var(--ink-900, #0b1220);
+      cursor:pointer; transition:transform .06s ease, filter .15s ease;
+    }
+    .btn:hover{ filter:brightness(.96); }
+    .btn:active{ transform:scale(.98); }
+
+    /* Start = gradient (rosa/lilla), hvit tekst, ingen kant */
+    .btn.start{
+      background:linear-gradient(90deg,#7d79f9 0%, #c864aa 100%);
+      color:#fff; border-color:transparent; box-shadow:0 6px 16px rgba(125,121,249,.18);
+    }
+    .btn.start:hover{ filter:brightness(.97); }
+
+    /* Slutt = nøytral/outline */
+    .btn.stop{
+      background:transparent;
+      color:var(--ink-900, #0b1220);
+      border:1px solid var(--brand-outline, #cdb9ff);
+    }
+
+    /* Dark mode justeringer */
+    body[data-theme="dark"] .btn{
+      background:var(--surface-2, #141a22);
+      color:var(--ink-100, #eaf0ff);
+      border-color:rgba(205,185,255,.35);
+    }
+    body[data-theme="dark"] .btn.stop{
+      background:transparent; color:var(--ink-100, #eaf0ff);
     }
 
     :root{
@@ -313,14 +328,20 @@
 
   <section class="cards container" aria-label="Hovedpanel">
     <article class="card big" aria-label="KPI-er">
-      <header class="card-title">KPI-er</header>
+      <div class="card-header"><h2 class="card-title">KPI-er</h2></div>
       <!-- content can go here -->
     </article>
     <article class="card big" aria-label="Oversikt">
-      <header class="card-title">Oversikt</header>
+      <div class="card-header"><h2 class="card-title">Oversikt</h2></div>
     </article>
-    <article class="card big" aria-label="AI-tips">
-      <header class="card-title">AI-tips</header>
+    <article class="card big ai-tips" aria-label="AI-tips">
+      <div class="card-header">
+        <h2 class="card-title">AI-tips</h2>
+        <div class="btn-group">
+          <button class="btn start" type="button">Start</button>
+          <button class="btn stop" type="button">Slutt</button>
+        </div>
+      </div>
     </article>
   </section>
 
