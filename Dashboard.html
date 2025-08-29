@@ -73,81 +73,49 @@
     .drawer{position:fixed;top:0;right:0;height:100%;width:280px;max-width:80%;background:var(--surface);border-left:1px solid var(--card-border);box-shadow:-4px 0 18px rgba(0,0,0,.1);transform:translateX(100%);transition:transform .3s;z-index:50;padding:20px;display:flex;flex-direction:column;gap:20px}
     .drawer.open{transform:translateX(0)}
     .drawer a{padding:10px 0;font-weight:600}
-
     /* Layout */
-    .container{max-width:1200px;margin-inline:auto;padding:20px}
-    .cards.wide{
-      /* full-bleed container */
-      width: 100%;
-      margin: 0;
-      padding: 24px clamp(16px, 4vw, 40px);
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: clamp(16px, 2vw, 24px);
-      /* make the row fill the screen below header */
-      min-height: calc(100vh - var(--appbar-h));
-      box-sizing: border-box;
+
+    :root{
+      --brand-1: #8e2de2;  /* purple */
+      --brand-2: #ff66c7;  /* pink   */
+      --surface: #ffffff;
+      --border: #e8e8f2;
+      --shadow: 0 10px 28px rgba(2,6,23,.06);
     }
+
+    .container{ max-width: 1400px; margin-inline: auto; padding-inline: clamp(16px,4vw,40px); }
+
+    .cards{
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: clamp(16px, 2.4vw, 26px);
+      padding-bottom: 32px;
+    }
+
+    /* Gradient border (no weird masks): use border-image */
     .card.big{
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
+      border: 2px solid transparent;
+      border-radius: 20px;
+      border-image: linear-gradient(135deg, var(--brand-1), var(--brand-2)) 1;
+      min-height: clamp(320px, 52vh, 560px);
       box-shadow: var(--shadow);
-      /* give each card a generous height; grows with viewport */
-      min-height: clamp(360px, 60vh, 640px);
     }
 
+    /* Dark mode parity */
     body[data-theme="dark"] .card.big{
       background: var(--surface);
-      border-color: var(--border);
+      box-shadow: 0 10px 28px rgba(0,0,0,.28);
     }
 
     /* Responsive: 3 -> 2 -> 1 columns */
     @media (max-width: 1200px){
-      .cards.wide{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 780px){
-      .cards.wide{ grid-template-columns: 1fr; }
-    }
-<<<<<<< ours
-    .kpi-card,.card{border:1px solid var(--card-border);border-radius:var(--card-radius);background:var(--surface);box-shadow:var(--card-shadow);padding:20px;transition:transform .2s,box-shadow .2s}
-    .kpi-card:hover,.card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(2,6,23,.08)}
-    .kpi-title{margin:0;font-size:14px;color:var(--ink-700);text-transform:uppercase;letter-spacing:.08em}
-    .kpi-value{margin:6px 0;font-size:28px;font-weight:700;display:flex;align-items:center;gap:8px}
-    .trend{font-size:12px;border-radius:999px;padding:2px 6px}
-    .trend.positive{background:rgba(16,185,129,.2);color:#16a34a}
-    .sparkline{width:100%;height:60px}
-    .grid-sm{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:20px}
-    .cards{
-      margin-top: 12px;               /* just under the header border */
-      padding: 16px 24px 40px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 20px;
-    }
-    .card.big{
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      min-height: 300px;              /* large empty panels */
-      box-shadow: var(--shadow);
-    }
-
-    /* dark mode uses the same tokens */
-    body[data-theme="dark"] .card.big{
-      background: var(--surface);
-      border-color: var(--border);
-    }
-
-    /* responsive: 3 -> 2 -> 1 columns */
-    @media (max-width: 1100px){
-      .cards{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cards{ grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
     @media (max-width: 760px){
       .cards{ grid-template-columns: 1fr; }
     }
-=======
->>>>>>> theirs
   </style>
   <!-- Inline SVGs for Scope logo -->
   <svg width="0" height="0" style="position:absolute">
@@ -201,17 +169,13 @@
         <button id="menu-toggle" class="hamburger" aria-label="Meny" type="button">☰</button>
       </div>
     </div>
-  </header>
+    </header>
 
-<<<<<<< ours
-  <section class="cards container" aria-label="Hovedpanel">
-=======
-  <section class="cards wide" aria-label="Hovedpanel">
->>>>>>> theirs
-    <article class="card big" aria-label="Tom boks venstre"></article>
-    <article class="card big" aria-label="Tom boks midten"></article>
-    <article class="card big" aria-label="Tom boks høyre"></article>
-  </section>
+<section class="cards container" aria-label="Hovedpanel">
+  <article class="card big" aria-label="Tom boks venstre"></article>
+  <article class="card big" aria-label="Tom boks midten"></article>
+  <article class="card big" aria-label="Tom boks høyre"></article>
+</section>
 
   <div id="drawer-backdrop" hidden></div>
   <aside id="side-drawer" class="drawer" hidden>
