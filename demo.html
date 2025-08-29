@@ -34,7 +34,9 @@
     header{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
     a.brand{display:flex;gap:.6rem;align-items:center;text-decoration:none;color:var(--ink-900);font-weight:800}
     .logo{width:40px;height:40px;border-radius:14px;background:#fff;border:2px solid var(--brand-600);display:grid;place-items:center;color:var(--brand-600);box-shadow:var(--shadow)}
-    .nav-right{display:flex;align-items:center;gap:12px;contain:layout paint}
+    .nav-actions{display:flex;align-items:center;gap:12px;white-space:nowrap}
+    #lang-toggle,.theme-switch{height:32px}
+    .theme-switch{min-width:56px}
 
     .btn{appearance:none;border:1px solid var(--brand-outline);border-radius:999px;padding:12px 18px;font-weight:800;cursor:pointer;background:var(--surface);box-shadow:0 1px 2px rgba(2,6,23,.06);text-decoration:none;color:var(--ink-900);display:inline-flex;align-items:center}
     .btn:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -118,8 +120,8 @@
         </div>
         <span>Scope</span>
       </a>
-      <div class="nav-right">
-        <button id="lang" class="chip" aria-label="Bytt språk">NO</button>
+      <div class="nav-actions">
+        <button id="lang-toggle" class="chip" aria-label="Bytt språk">NO</button>
         <label class="theme-switch">
           <input type="checkbox" id="theme-toggle" aria-label="Tema">
           <span class="slider">
@@ -214,17 +216,39 @@
         <small class="hint err" id="err-stock-other" hidden></small>
       </div>
 
-      <div class="step">
-        <label for="date" data-i18n="date_label">Foretrukket dato</label>
-        <input id="date" name="date" type="date" required min="">
-        <small class="hint err" id="err-date" hidden></small>
+      <div class="step" id="step-meetingMode">
+        <fieldset id="meetingMode">
+          <legend data-i18n="meeting.title">Møteform</legend>
+          <p data-i18n="meeting.question">Ønsker du digitalt eller fysisk møte?</p>
+          <div class="grid">
+            <label><input type="radio" name="meetingMode" value="digital"><span data-i18n="meeting.digital">Digitalt</span></label>
+            <label><input type="radio" name="meetingMode" value="physical"><span data-i18n="meeting.physical">Fysisk</span></label>
+          </div>
+          <small class="hint err" id="err-meetingMode" aria-live="polite" hidden></small>
+        </fieldset>
       </div>
 
-      <div class="step">
-        <label for="timepick" data-i18n="timepick_label">Foretrukket tidspunkt</label>
-        <input id="timepick" name="timepick" type="time" required step="900" min="09:00" max="16:00" value="10:00">
-        <div class="hint" data-i18n="time_hint">Kontortid 09:00–16:00 CET</div>
-        <small class="hint err" id="err-time" hidden></small>
+      <div class="step" id="step-meetingWhen">
+        <fieldset id="meetingWhen">
+          <legend data-i18n="meetingWhen.title">Dato og tidspunkt</legend>
+          <div class="grid">
+            <div>
+              <label for="meetingDate" data-i18n="meetingWhen.dateLabel">Dato</label>
+              <input id="meetingDate" name="meetingDate" type="date" required min="">
+              <small class="hint err" id="err-meetingDate" aria-live="polite" hidden></small>
+            </div>
+            <div>
+              <label for="meetingTime" data-i18n="meetingWhen.timeLabel">Tid</label>
+              <input id="meetingTime" name="meetingTime" type="time" required step="900" min="09:00" max="16:00">
+              <div class="hint" data-i18n="time_hint">Kontortid 09:00–16:00 CET</div>
+              <small class="hint err" id="err-meetingTime" aria-live="polite" hidden></small>
+            </div>
+          </div>
+          <div id="address-wrap" style="margin-top:18px;display:none">
+            <label for="meetingAddress" data-i18n="meetingWhen.addressOptional">Adresse / sted (valgfritt)</label>
+            <input id="meetingAddress" name="meetingAddress" type="text">
+          </div>
+        </fieldset>
       </div>
 
       <div class="actions">
@@ -286,8 +310,10 @@
           email_label:"E‑post",email_ph:"din@restaurant.no",
           phone_label:"Telefon (valgfritt)",phone_ph:"+47 400 00 000",
           acc_label:"Regnskapssystem",pos_label:"Kassesystem",time_label:"Timeregistrering",stock_label:"Varetelling",
-          other:"Annet",other_ph:"Vennligst spesifiser",date_label:"Hvilken dag passer best for onboarding-møtet?",timepick_label:"Hvilket tidspunkt på dagen passer best for deg?",
+          other:"Annet",other_ph:"Vennligst spesifiser",
           time_hint:"Kontortid 09:00–16:00 CET",
+          "meeting.title":"Møteform","meeting.question":"Ønsker du digitalt eller fysisk møte?","meeting.digital":"Digitalt","meeting.physical":"Fysisk",
+          "meetingWhen.title":"Dato og tidspunkt","meetingWhen.dateLabel":"Dato","meetingWhen.timeLabel":"Tidspunkt","meetingWhen.addressOptional":"Adresse / sted (valgfritt)","meetingWhen.errors.required":"Oppgi dato og tidspunkt","meetingWhen.errors.window":"Velg et tidspunkt mellom 09:00 og 16:00",
           submit:"Send forespørsel",add_gcal:"Legg til i Google Kalender",download_ics:"Last ned .ics",
           success:"Takk! Invitasjon sendt. Vi har også generert en .ics om du vil legge til manuelt.",
           back_home:"← Tilbake til siden",invalid:"Vennligst fyll ut alle felter korrekt.",
@@ -300,8 +326,10 @@
           email_label:"Email",email_ph:"you@restaurant.com",
           phone_label:"Phone (optional)",phone_ph:"+47 400 00 000",
           acc_label:"Accounting system",pos_label:"POS / Cash register",time_label:"Time tracking",stock_label:"Stock counting",
-          other:"Other",other_ph:"Please specify",date_label:"Which day works best for your onboarding meeting?",timepick_label:"What time of day suits you best?",
+          other:"Other",other_ph:"Please specify",
           time_hint:"Office hours 09:00–16:00 CET",
+          "meeting.title":"Meeting type","meeting.question":"Do you prefer a digital or an in-person meeting?","meeting.digital":"Digital","meeting.physical":"In-person",
+          "meetingWhen.title":"Date & time","meetingWhen.dateLabel":"Date","meetingWhen.timeLabel":"Time","meetingWhen.addressOptional":"Address / venue (optional)","meetingWhen.errors.required":"Please pick a date and time","meetingWhen.errors.window":"Please pick a time between 09:00 and 16:00",
           submit:"Send request",add_gcal:"Add to Google Calendar",download_ics:"Download .ics",
           success:"Thanks! Invitation sent. We also generated an .ics in case you want to add it manually.",
           back_home:"← Back to site",invalid:"Please fill in all fields correctly.",
@@ -309,7 +337,7 @@
           next:"Next",back:"Back",step:"Step",of:"of",
           err_name:"Please enter your name", err_org:"Invalid org. number (9 digits)", err_email:"Invalid email", err_date:"Pick a date", err_time:"Pick a time 09–16", err_other:"Please specify"}
     };
-    const langBtn=$('#lang');
+    const langBtn=$('#lang-toggle');
     const initial=localStorage.getItem('scope.lang') || ((navigator.language||'').toLowerCase().startsWith('no')?'no':'en');
     function t(k){return dict[(document.documentElement.lang)||'no'][k]||k}
     function applyLang(l){
@@ -346,8 +374,8 @@ function validateStep(i){
         case 5:{if($('#pos').value==='Other'){const v=$('#pos-other').value.trim(); if(!v){ setErr('pos-other',t('err_other')); return false;} setErr('pos-other');} return true;}
         case 6:{if($('#time').value==='Other'){const v=$('#time-other').value.trim(); if(!v){ setErr('time-other',t('err_other')); return false;} setErr('time-other');} return true;}
         case 7:{if($('#stock').value==='Other'){const v=$('#stock-other').value.trim(); if(!v){ setErr('stock-other',t('err_other')); return false;} setErr('stock-other');} return true;}
-        case 8:{const v=$('#date').value; if(!v){ setErr('date',t('err_date')); return false;} setErr('date'); return true;}
-        case 9:{const v=$('#timepick').value; if(!v || v<'09:00' || v>'16:00'){ setErr('time',t('err_time')); return false;} setErr('time'); return true;}
+        case 8:{const v=$$('input[name="meetingMode"]:checked')[0]?.value; if(!v){ setErr('meetingMode',t('meetingWhen.errors.required')); return false;} setErr('meetingMode'); return true;}
+        case 9:{const d=$('#meetingDate').value; const tm=$('#meetingTime').value; let ok=true; if(!d){ setErr('meetingDate',t('meetingWhen.errors.required')); ok=false;} else setErr('meetingDate'); if(!tm){ setErr('meetingTime',t('meetingWhen.errors.required')); ok=false;} else if(tm<'09:00' || tm>'16:00'){ setErr('meetingTime',t('meetingWhen.errors.window')); ok=false;} else setErr('meetingTime'); return ok;}
         default:return true;
       }
     }
@@ -362,7 +390,7 @@ function validateStep(i){
     (function(){const u=new URL(location.href); const qp=(k)=>u.searchParams.get(k)||''; if(qp('email')) $('#email').value=qp('email'); if(qp('name')) $('#name').value=qp('name');})();
 
     // min date = today + default to today
-    const today=new Date();today.setHours(0,0,0,0);const iso=today.toISOString().slice(0,10);$('#date').min=iso; if(!$('#date').value) $('#date').value=iso;
+    const today=new Date();today.setHours(0,0,0,0);const iso=today.toISOString().slice(0,10);$('#meetingDate').min=iso; if(!$('#meetingDate').value) $('#meetingDate').value=iso;
 
     // Inline validation helpers
     const setErr=(id,msg)=>{const el=$('#'+id); const err=$('#err-'+id); if(!msg){ el?.setAttribute('aria-invalid','false'); err?.setAttribute('hidden',''); err&&(err.textContent=''); } else { el?.setAttribute('aria-invalid','true'); if(err){ err.textContent=msg; err.removeAttribute('hidden'); } }};
@@ -385,12 +413,27 @@ function validateStep(i){
       toggleOther(id);
     });
 
+    function toggleAddress(){
+      const mode=$$('input[name="meetingMode"]:checked')[0]?.value;
+      const wrap=$('#address-wrap');
+      if(mode==='physical'){
+        wrap.style.display='block';
+      } else {
+        wrap.style.display='none';
+        $('#meetingAddress').value='';
+      }
+    }
+    $$('input[name="meetingMode"]').forEach(r=>r.addEventListener('change',toggleAddress));
+    toggleAddress();
+
     function validate(){
       const l=document.documentElement.lang||'no';
       const name=$('#name').value.trim();
       const org=$('#org').value.trim();
       const email=$('#email').value.trim();
-      const date=$('#date').value; const time=$('#timepick').value;
+      const meetingMode=$$('input[name="meetingMode"]:checked')[0]?.value;
+      const meetingDate=$('#meetingDate').value; const meetingTime=$('#meetingTime').value;
+      const meetingAddress=$('#meetingAddress').value.trim();
       const accSel=$('#acc').value; const accOther=$('#acc-other').value.trim();
       const posSel=$('#pos').value; const posOther=$('#pos-other').value.trim();
       const timeSel=$('#time').value; const timeOther=$('#time-other').value.trim();
@@ -403,15 +446,16 @@ function validateStep(i){
       if(posSel==='Other' && !posOther){ setErr('pos-other',t('err_other')); ok=false; } else setErr('pos-other');
       if(timeSel==='Other' && !timeOther){ setErr('time-other',t('err_other')); ok=false; } else setErr('time-other');
       if(stockSel==='Other' && !stockOther){ setErr('stock-other',t('err_other')); ok=false; } else setErr('stock-other');
-      if(!date){ setErr('date',t('err_date')); ok=false; } else setErr('date');
-      if(!time || time<'09:00' || time>'16:00'){ setErr('time',t('err_time')); ok=false; } else setErr('time');
+      if(!meetingMode){ setErr('meetingMode',t('meetingWhen.errors.required')); ok=false;} else setErr('meetingMode');
+      if(!meetingDate){ setErr('meetingDate',t('meetingWhen.errors.required')); ok=false;} else setErr('meetingDate');
+      if(!meetingTime){ setErr('meetingTime',t('meetingWhen.errors.required')); ok=false; } else if(meetingTime<'09:00' || meetingTime>'16:00'){ setErr('meetingTime',t('meetingWhen.errors.window')); ok=false; } else setErr('meetingTime');
       return ok;
     }
 
     // ICS helpers
     function pad(n){return String(n).padStart(2,'0')}
     function toUTCStamp(d){return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+pad(d.getUTCSeconds())+'Z'}
-    function makeICS({start,end,summary,description,organizer,attendee,email}){
+    function makeICS({start,end,summary,description,organizer,attendee,email,location='Online'}){
       const uid='scope-'+Math.random().toString(36).slice(2)+'@scope';
       return [
         'BEGIN:VCALENDAR','PRODID:-//Scope//Demo//NO','VERSION:2.0','CALSCALE:GREGORIAN','METHOD:REQUEST',
@@ -421,7 +465,7 @@ function validateStep(i){
         'DTEND:'+toUTCStamp(end),
         'SUMMARY:'+summary,
         'DESCRIPTION:'+description.replace(/\n/g,'\\n'),
-        'LOCATION:Online',
+        'LOCATION:'+location,
         'ORGANIZER;CN='+organizer+':mailto:demo@scope.app',
         'ATTENDEE;CN='+attendee+';ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:'+email,
         'UID:'+uid,'SEQUENCE:0','STATUS:CONFIRMED',
@@ -431,9 +475,9 @@ function validateStep(i){
     function blobDownload(name,content,type='text/calendar'){
       const a=$('#ics');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.style.display='inline-flex';
     }
-    function googleCalendarUrl({start,end,title,details}){
+    function googleCalendarUrl({start,end,title,details,location}){
       const fmt=(d)=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
-      const p=new URLSearchParams({action:'TEMPLATE',text:title,dates:`${fmt(start)}/${fmt(end)}`,details,location:'Online'});
+      const p=new URLSearchParams({action:'TEMPLATE',text:title,dates:`${fmt(start)}/${fmt(end)}`,details,location});
       return 'https://calendar.google.com/calendar/render?'+p.toString();
     }
 
@@ -451,13 +495,18 @@ function validateStep(i){
         pos:$('#pos').value==='Other'?$('#pos-other').value.trim():$('#pos').value,
         time:$('#time').value==='Other'?$('#time-other').value.trim():$('#time').value,
         stock:$('#stock').value==='Other'?$('#stock-other').value.trim():$('#stock').value,
-        date:$('#date').value, clock:$('#timepick').value
+        meetingMode:$$('input[name="meetingMode"]:checked')[0]?.value,
+        meetingDate:$('#meetingDate').value,
+        meetingTime:$('#meetingTime').value
       };
-
-      const [hh,mm]=data.clock.split(':').map(Number);
-      const [yyyy,MM,dd]=data.date.split('-').map(Number);
-      const start=new Date(yyyy,MM-1,dd,hh,mm,0);
+      if(data.meetingMode==='physical'){
+        const addr=$('#meetingAddress').value.trim();
+        if(addr) data.meetingAddress=addr;
+      }
+      const meetingDateTime=new Date(`${data.meetingDate}T${data.meetingTime}:00`);
+      const start=meetingDateTime;
       const end=new Date(start.getTime()+45*60*1000);
+      data.meetingDateTime=meetingDateTime.toISOString();
 
       const title=l==='en'?'Scope demo call':'Scope demomøte';
       const desc=[
@@ -466,17 +515,20 @@ function validateStep(i){
         `Org.nr: ${data.org}`,
         `Email: ${data.email}`,
         `Phone: ${data.phone||'-'}`,
+        `Meeting type: ${data.meetingMode==='physical'?t('meeting.physical'):t('meeting.digital')}`,
+        data.meetingAddress?`Address: ${data.meetingAddress}`:'',
         `Accounting: ${data.acc}`,
         `POS: ${data.pos}`,
         `Time: ${data.time}`,
         `Stock: ${data.stock}`
-      ].join('\n');
+      ].filter(Boolean).join('\n');
 
       submitBtn.disabled=true; submitBtn.textContent=t('sending');
 
-      const ics=makeICS({start,end,summary:title,description:desc,organizer:'Scope',attendee:data.name,email:data.email});
+      const location=data.meetingMode==='physical'?(data.meetingAddress||(l==='en'?'In-person':'Fysisk')):'Online';
+      const ics=makeICS({start,end,summary:title,description:desc,organizer:'Scope',attendee:data.name,email:data.email,location});
       blobDownload('Scope-demo.ics',ics);
-      const gcal=googleCalendarUrl({start,end,title,details:desc});
+      const gcal=googleCalendarUrl({start,end,title,details:desc,location});
       const gcalLink=$('#gcal'); gcalLink.href=gcal; gcalLink.style.display='inline-flex';
 
       $('#status').textContent=t('sending');

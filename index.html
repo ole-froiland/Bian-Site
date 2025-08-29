@@ -56,6 +56,9 @@
     .nav a:hover,nav .dropdown>button:hover{background:var(--muted)}
     .nav-right{display:flex;align-items:center;gap:12px;contain:layout paint}
     .nav-right>*{display:flex;align-items:center}
+    .nav-actions{display:flex;align-items:center;gap:12px;white-space:nowrap}
+    #lang-toggle,.theme-switch{height:32px}
+    .theme-switch{min-width:56px}
     .dropdown{position:relative}
     .dropdown>button{display:flex;align-items:center;gap:6px;background:none;border:0;color:inherit;cursor:pointer}
     .dropdown>button::after{content:"▾";font-size:12px;opacity:.7}
@@ -291,21 +294,23 @@
 
       <div class="nav-right">
       <a href="login.html" class="btn ghost sm" data-i18n="right.login">Logg inn</a>
-      <button id="lang-toggle" class="chip" title="Språk">NO</button>
-      <label class="theme-switch">
-        <input type="checkbox" id="theme-toggle" aria-label="Tema">
-        <span class="slider">
-          <span class="thumb">
-            <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="12" r="5"/>
-              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
-            </svg>
+      <div class="nav-actions">
+        <button id="lang-toggle" class="chip" title="Språk">NO</button>
+        <label class="theme-switch">
+          <input type="checkbox" id="theme-toggle" aria-label="Tema">
+          <span class="slider">
+            <span class="thumb">
+              <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+              </svg>
+            </span>
           </span>
-        </span>
-      </label>
+        </label>
+      </div>
     </div>
   </div>
 </header>
