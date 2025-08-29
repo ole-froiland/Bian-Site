@@ -270,6 +270,41 @@
         linear-gradient(var(--surface), var(--surface)) padding-box,
         var(--brand-gradient) border-box;
     }
+    /* Popover shell */
+    .month-popover{
+      position:absolute; z-index:1000; min-width:260px;
+      background:var(--surface); color:var(--ink-900);
+      border:1px solid var(--brand-outline); border-radius:14px;
+      box-shadow:0 12px 28px rgba(2,6,23,.18); padding:10px;
+      animation:mpo .12s ease;
+    }
+    @keyframes mpo{from{opacity:.0; transform:translateY(-6px)} to{opacity:1; transform:none}}
+    body[data-theme="dark"] .month-popover{
+      background:var(--surface); border-color:var(--brand-outline);
+    }
+    .month-popover .mpo-head{
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      padding:6px 6px 8px; border-bottom:1px solid var(--border);
+    }
+    .mpo-head .mpo-nav{display:flex; gap:6px}
+    .mpo-head .icon-btn{
+      appearance:none; border:1px solid var(--brand-outline); background:transparent;
+      width:28px; height:28px; border-radius:999px; display:grid; place-items:center;
+      cursor:pointer;
+    }
+    .mpo-grid{
+      display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 4px 4px;
+    }
+    .mpo-grid button{
+      appearance:none; cursor:pointer; border:1px solid var(--brand-outline);
+      background:transparent; color:inherit; border-radius:12px;
+      padding:10px 8px; font-weight:700;
+    }
+    .mpo-grid button:hover{background:var(--muted)}
+    .mpo-grid button[aria-pressed="true"]{
+      background:var(--brand-gradient); border-color:transparent; color:#fff;
+    }
+    .mpo-foot{padding:8px 6px 4px; color:var(--ink-600); font-size:12px; min-height:18px}
   </style>
   <!-- Inline SVGs for Scope logo -->
   <svg width="0" height="0" style="position:absolute">
@@ -330,8 +365,8 @@
       <div class="card-header">
         <h3>KPI-er</h3>
         <div class="card-actions">
-          <button class="btn btn-pill btn-outline" type="button">Start</button>
-          <button class="btn btn-pill btn-outline" type="button">Slutt</button>
+          <button id="monthStartBtn" class="chip" type="button">Start</button>
+          <button id="monthEndBtn" class="chip" type="button">Slutt</button>
         </div>
       </div>
       <!-- content can go here -->
@@ -354,6 +389,7 @@
     <a href="#">Settings</a>
     <a href="#" id="logout">Log out</a>
   </aside>
+  <div id="month-portals"></div>
   <script>
     function applyTheme(theme){
       document.body.setAttribute('data-theme', theme);
@@ -420,6 +456,152 @@
         menuToggle.setAttribute('aria-expanded','false');
       }
     });
+  </script>
+  <script>
+(() => {
+  const $ = (s,c=document)=>c.querySelector(s);
+  const portals = $('#month-portals') || (()=>{const d=document.createElement('div'); d.id='month-portals'; document.body.appendChild(d); return d;})();
+  const lang = document.documentElement.lang === 'en' ? 'en' : 'no';
+  const monthFmt = new Intl.DateTimeFormat(lang, { month:'short' });
+  const yearNow = (new Date()).getFullYear();
+
+  const state = {
+    start: null, // 'YYYY-MM'
+    end:   null, // 'YYYY-MM'
+  };
+
+  function isoYM(y,m){ return `${y}-${String(m+1).padStart(2,'0')}`; }
+
+  function placePopover(pop, anchor){
+    const r = anchor.getBoundingClientRect();
+    pop.style.top  = `${window.scrollY + r.bottom + 8}px`;
+    pop.style.left = `${window.scrollX + Math.min(r.left, window.innerWidth - pop.offsetWidth - 12)}px`;
+  }
+
+  function monthGrid(year, selectedYM){
+    const wrap = document.createElement('div');
+    wrap.className = 'mpo-grid';
+    for(let i=0;i<12;i++){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      const label = monthFmt.format(new Date(year, i, 1));
+      btn.textContent = label.charAt(0).toUpperCase()+label.slice(1);
+      const ym = isoYM(year,i);
+      if(selectedYM && selectedYM === ym) btn.setAttribute('aria-pressed','true');
+      btn.dataset.ym = ym;
+      wrap.appendChild(btn);
+    }
+    return wrap;
+  }
+
+  function makePopover({ anchorBtn, current, onPick }){
+    const pop = document.createElement('div');
+    pop.className = 'month-popover';
+    let year = yearNow;
+
+    const head = document.createElement('div');
+    head.className = 'mpo-head';
+    const nav = document.createElement('div'); nav.className='mpo-nav';
+    const prev = document.createElement('button'); prev.className='icon-btn'; prev.innerHTML='‹';
+    const next = document.createElement('button'); next.className='icon-btn'; next.innerHTML='›';
+    const title = document.createElement('div'); title.style.fontWeight='800'; title.textContent = String(year);
+    nav.append(prev,next); head.append(title, nav);
+
+    let grid = monthGrid(year, current); // initial
+    const foot = document.createElement('div'); foot.className='mpo-foot';
+
+    pop.append(head, grid, foot);
+    portals.appendChild(pop);
+    placePopover(pop, anchorBtn);
+
+    function redraw(){
+      const g2 = monthGrid(year, current);
+      pop.replaceChild(g2, grid);
+      grid = g2;
+      title.textContent = String(year);
+      wireGrid();
+    }
+
+    function wireGrid(){
+      grid.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          current = btn.dataset.ym;
+          onPick(current, (msg)=> foot.textContent = msg || '');
+          grid.querySelectorAll('button[aria-pressed="true"]').forEach(b=>b.removeAttribute('aria-pressed'));
+          btn.setAttribute('aria-pressed','true');
+          if(!foot.textContent) close();
+        });
+      });
+    }
+
+    function close(){
+      document.removeEventListener('keydown', onEsc, true);
+      document.removeEventListener('click', onDoc, true);
+      pop.remove();
+    }
+
+    function onEsc(e){ if(e.key==='Escape'){ e.stopPropagation(); close(); } }
+    function onDoc(e){
+      if(!pop.contains(e.target) && e.target !== anchorBtn){ close(); }
+    }
+
+    prev.addEventListener('click', ()=>{ year--; redraw(); });
+    next.addEventListener('click', ()=>{ year++; redraw(); });
+
+    document.addEventListener('keydown', onEsc, true);
+    setTimeout(()=>document.addEventListener('click', onDoc, true), 0);
+    wireGrid();
+    return { close };
+  }
+
+  function label(btnBase, ym){
+    if(!ym) return btnBase;
+    const [y,m] = ym.split('-').map(Number);
+    const mName = new Intl.DateTimeFormat(lang,{month:'short'}).format(new Date(y,m-1,1));
+    return `${btnBase} · ${mName} ${y}`;
+  }
+
+  const startBtn = document.getElementById('monthStartBtn');
+  const endBtn   = document.getElementById('monthEndBtn');
+
+  startBtn?.addEventListener('click', ()=>{
+    makePopover({
+      anchorBtn:startBtn,
+      current: state.start,
+      onPick:(ym,setMsg)=>{
+        setMsg('');
+        state.start = ym;
+        if(state.end && state.end < state.start){
+          setMsg(lang==='en' ? 'End is before start' : 'Slutt er før start');
+        } else {
+          startBtn.textContent = label('Start', state.start);
+        }
+      }
+    });
+  });
+
+  endBtn?.addEventListener('click', ()=>{
+    makePopover({
+      anchorBtn:endBtn,
+      current: state.end,
+      onPick:(ym,setMsg)=>{
+        setMsg('');
+        if(state.start && ym < state.start){
+          setMsg(lang==='en' ? 'Choose a month after Start' : 'Velg en måned etter Start');
+          return;
+        }
+        state.end = ym;
+        endBtn.textContent = label('Slutt', state.end);
+      }
+    });
+  });
+
+  window.dashboard = window.dashboard || {};
+  window.dashboard.monthRange = {
+    get start(){ return state.start },
+    get end(){ return state.end }
+  };
+})();
   </script>
 </body>
 </html>
