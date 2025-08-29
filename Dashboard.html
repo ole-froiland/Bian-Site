@@ -179,6 +179,32 @@
     /* responsive: 3 -> 2 -> 1 columns */
     @media (max-width:1200px){ .cards{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media (max-width:760px){ .cards{ grid-template-columns:1fr; } }
+
+    /* Dashboard card tweaks */
+    .card.big{
+      border-radius:24px;         /* round corners */
+      overflow:hidden;            /* clip header to radius */
+    }
+
+    .card-title{
+      display:flex;               /* center heading */
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      height:56px;                /* consistent header height */
+      padding:0 16px;
+      font-size:20px;
+      font-weight:800;
+      border-bottom:1px solid var(--border);
+    }
+
+    body[data-theme="dark"] .card-title{
+      border-bottom-color:#374151;  /* dark-mode divider */
+    }
+
+    @media (max-width:760px){
+      .card-title{ height:50px; font-size:18px; }
+    }
   </style>
   <!-- Inline SVGs for Scope logo -->
   <svg width="0" height="0" style="position:absolute">
