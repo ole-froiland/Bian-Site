@@ -182,9 +182,9 @@
       font-weight:700;
     }
     .card-actions{
-      margin-left:auto;
       display:flex;
-      gap:10px;
+      gap:12px;
+      flex-wrap:wrap;
     }
 
     /* Button base */
@@ -192,41 +192,37 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      height:36px;
-      padding:0 14px;
-      border-radius:9999px;
-      font-size:14px;
       font-weight:600;
       line-height:1;
       cursor:pointer;
-      transition:background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+      transition:.2s ease;
     }
-
-    /* Unified outline style (used by both Start and Slutt) */
+    .btn-pill{
+      border-radius:9999px;
+      padding:10px 18px;
+      font-size:16px;
+    }
+    .btn-primary{
+      background:var(--brand-gradient,linear-gradient(90deg,#8e2de2,#ff66c7));
+      color:#fff;
+      border:none;
+      box-shadow:0 8px 24px rgba(142,45,226,.15);
+    }
+    .btn-primary:hover{
+      filter:brightness(1.05);
+      transform:translateY(-1px);
+    }
     .btn-outline{
       background:transparent;
-      border:1.5px solid var(--brand-300, #c4b5fd);
-      color:var(--ink-900, #0b1320);
-      box-shadow:0 1px 2px rgba(0,0,0,.04);
+      border:2px solid var(--brand-300,#bfa7ff);
+      color:var(--ink-900,#0b1220);
+    }
+    [data-theme="dark"] .btn-outline{
+      border-color:var(--brand-400,#c38cff);
+      color:var(--ink-100,#f5f7ff);
     }
     .btn-outline:hover{
-      background:rgba(164, 120, 255, .08);
-      border-color:var(--brand-400, #a78bfa);
-    }
-    .btn-outline:active{
-      background:rgba(164, 120, 255, .14);
-      border-color:var(--brand-500, #8b5cf6);
-    }
-
-    /* Dark mode tweaks */
-    body[data-theme="dark"] .btn-outline{
-      color:#e7e7ee;
-      border-color:rgba(167,139,250,.6);
-      box-shadow:0 1px 2px rgba(0,0,0,.35);
-    }
-    body[data-theme="dark"] .btn-outline:hover{
-      background:rgba(167,139,250,.12);
-      border-color:#a78bfa;
+      background:rgba(143,45,226,.06);
     }
 
     :root{
@@ -336,7 +332,13 @@
 
   <section class="cards container" aria-label="Hovedpanel">
     <article class="card big" aria-label="KPI-er">
-      <div class="card-header"><h3>KPI-er</h3></div>
+      <div class="card-header">
+        <h3>KPI-er</h3>
+        <div class="card-actions">
+          <button class="btn btn-pill btn-primary" type="button">Start</button>
+          <button class="btn btn-pill btn-outline" type="button">Slutt</button>
+        </div>
+      </div>
       <!-- content can go here -->
     </article>
     <article class="card big" aria-label="Oversikt">
@@ -345,10 +347,6 @@
     <article class="card big ai-tips" aria-label="AI-tips">
       <div class="card-header">
         <h3>AI-tips</h3>
-        <div class="card-actions">
-          <button class="btn btn-outline" type="button">Start</button>
-          <button class="btn btn-outline" type="button">Slutt</button>
-        </div>
       </div>
     </article>
   </section>
