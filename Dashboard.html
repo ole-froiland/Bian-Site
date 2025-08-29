@@ -305,6 +305,12 @@
       background:var(--brand-gradient); border-color:transparent; color:#fff;
     }
     .mpo-foot{padding:8px 6px 4px; color:var(--ink-600); font-size:12px; min-height:18px}
+
+    .btn.sm{padding:6px 12px;font-size:14px;border:1px solid var(--brand-outline);border-radius:8px;background:var(--surface)}
+    .btn.sm.ghost{background:transparent}
+    #tt-table{display:grid;grid-template-columns:110px 1fr 160px;gap:8px;align-items:center}
+    #tt-table .th{font-weight:800;opacity:.8}
+    #tt-table .td-amt{text-align:right;font-variant-numeric:tabular-nums}
   </style>
   <!-- Inline SVGs for Scope logo -->
   <svg width="0" height="0" style="position:absolute">
@@ -379,6 +385,19 @@
         <h3>AI-tips</h3>
       </div>
     </article>
+    <section id="tripletex-sales" class="card big" data-i18n-scope="tripletex">
+      <div class="card-header">
+        <h3 class="card-title" data-i18n="tripletex.title">Tripletex – Salg</h3>
+        <div class="card-actions">
+          <button id="tt-refresh" class="btn sm" data-i18n="tripletex.fetch">Hent</button>
+          <a id="tt-csv" class="btn sm ghost" data-i18n="tripletex.csv" download="salgsrapport.csv">CSV</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <p id="tt-status" class="sub" data-i18n="tripletex.status.ready">Klar</p>
+        <div class="table-like" id="tt-table"></div>
+      </div>
+    </section>
   </section>
 
   <div id="drawer-backdrop" hidden></div>
@@ -390,6 +409,7 @@
     <a href="#" id="logout">Log out</a>
   </aside>
   <div id="month-portals"></div>
+  <script src="assets/js/tripletex.js"></script>
   <script>
     function applyTheme(theme){
       document.body.setAttribute('data-theme', theme);
