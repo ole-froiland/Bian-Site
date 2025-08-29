@@ -188,41 +188,28 @@
     }
 
     /* Button base */
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:600;
-      line-height:1;
-      cursor:pointer;
-      transition:.2s ease;
-    }
-    .btn-pill{
-      border-radius:9999px;
-      padding:10px 18px;
-      font-size:16px;
-    }
-    .btn-primary{
-      background:var(--brand-gradient,linear-gradient(90deg,#8e2de2,#ff66c7));
-      color:#fff;
-      border:none;
-      box-shadow:0 8px 24px rgba(142,45,226,.15);
-    }
-    .btn-primary:hover{
-      filter:brightness(1.05);
-      transform:translateY(-1px);
-    }
+    .btn{font-weight:600;line-height:1;cursor:pointer;transition:.2s ease}
+    .btn-pill{border-radius:9999px;padding:10px 18px;font-size:16px}
     .btn-outline{
       background:transparent;
       border:2px solid var(--brand-300,#bfa7ff);
       color:var(--ink-900,#0b1220);
+      box-shadow:0 0 0 0 rgba(0,0,0,0);
+    }
+    .btn-outline:hover{
+      background:rgba(143,45,226,.06);
+      transform:translateY(-1px);
+    }
+    .btn-outline:focus-visible{
+      outline:none;
+      box-shadow:0 0 0 3px rgba(179,144,255,.35);
     }
     [data-theme="dark"] .btn-outline{
       border-color:var(--brand-400,#c38cff);
       color:var(--ink-100,#f5f7ff);
     }
-    .btn-outline:hover{
-      background:rgba(143,45,226,.06);
+    [data-theme="dark"] .btn-outline:hover{
+      background:rgba(195,140,255,.10);
     }
 
     :root{
@@ -335,7 +322,7 @@
       <div class="card-header">
         <h3>KPI-er</h3>
         <div class="card-actions">
-          <button class="btn btn-pill btn-primary" type="button">Start</button>
+          <button class="btn btn-pill btn-outline" type="button">Start</button>
           <button class="btn btn-pill btn-outline" type="button">Slutt</button>
         </div>
       </div>
