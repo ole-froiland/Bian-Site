@@ -22,16 +22,15 @@
     button{font-family:inherit}
     button:focus-visible,a:focus-visible{outline:none;box-shadow:var(--ring)}
 
-    .appbar{
-      position:sticky; top:0; z-index:50; height:80px;
-      display:grid; grid-template-columns:auto 1fr auto; align-items:center;
-      padding:0 24px; gap:14px; background:rgba(255,255,255,.96);
-      backdrop-filter:blur(10px); border-bottom:1px solid var(--border);
-    }
-    body[data-theme="dark"] .appbar{ background:rgba(17,24,39,.92); }
-    .appbar .brand{ display:flex; align-items:center; gap:.6rem; font-weight:800; color:var(--ink-900); text-decoration:none; }
-    .appbar-center{ justify-self:center; font-weight:800; color:var(--ink-900); }
-    .nav-right{ justify-self:end; display:flex; align-items:center; gap:12px; }
+    header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
+    body[data-theme="dark"] header{background:rgba(17,24,39,.96);border-bottom-color:var(--border)}
+    .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-block:14px;padding-inline-end:clamp(28px,6vw,96px)}
+    .brand{display:flex;gap:.6rem;align-items:center;font-weight:800;color:var(--ink-900);text-decoration:none}
+    .brand .logo{inline-size:40px;block-size:40px;border-radius:12px;background:#fff;border:2px solid var(--brand-600);display:grid;place-items:center;box-shadow:var(--shadow)}
+    .brand span{font-size:18px}
+    .appbar-center{justify-self:center;font-weight:800;color:var(--ink-900)}
+    .nav-right{display:flex;align-items:center;gap:12px}
+    .nav-right>*{display:flex;align-items:center}
 
     .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 10px;height:32px;font-weight:700;background:#fff;cursor:pointer;display:inline-flex;align-items:center;font-size:14px;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background .3s ease, box-shadow .3s ease}
     .chip:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -50,7 +49,11 @@
     .theme-switch input:checked + .slider .icon.sun{display:none}
     .theme-switch input:checked + .slider .icon.moon{display:block}
 
-    .hamburger{ background:transparent; border:0; font-size:22px; line-height:1; padding:8px; cursor:pointer; color:var(--ink-900); }
+    .mobile-toggle{display:none;background:none;border:1px solid var(--border);border-radius:999px;padding:10px 14px}
+    .mobile-toggle:focus-visible{outline:none;box-shadow:var(--ring)}
+    @media (max-width:820px){
+      .mobile-toggle{display:inline-flex}
+    }
 
     body[data-theme="dark"]{--ink-900:#f9fafb;--ink-800:#e5e7eb;--ink-700:#d1d5db;--ink-600:#9ca3af;--ink-500:#6b7280;--surface:#111827;--muted:#1f2937;--border:#374151;background:#0b1220;color:var(--ink-900)}
     body[data-theme="dark"] .chip{background:var(--surface);color:var(--ink-900);border-color:var(--brand-outline)}
@@ -104,31 +107,33 @@
   </script>
 </head>
 <body>
-  <header class="appbar nav">
-    <a class="brand" href="/" aria-label="Scope">
-      <div class="logo" style="color:var(--brand-600)"><svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true"><use href="#icon-scope"/></svg></div>
-      <span>Scope</span>
-    </a>
+  <header>
+    <div class="container nav" role="navigation" aria-label="Toppmeny">
+      <a class="brand" href="/" aria-label="Scope">
+        <div class="logo" style="color:var(--brand-600)"><svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true"><use href="#icon-scope"/></svg></div>
+        <span>Scope</span>
+      </a>
 
-    <div class="appbar-center"><span id="company-name">Gressholmen Kro</span></div>
+      <div class="appbar-center"><span id="company-name">Gressholmen Kro</span></div>
 
-    <div class="nav-right">
-      <button id="lang-toggle" class="chip">NO</button>
-      <label class="theme-switch" aria-label="Tema">
-        <input type="checkbox" id="theme-toggle" />
-        <span class="slider">
-          <span class="thumb">
-            <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="12" cy="12" r="5"/>
-              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
-            </svg>
+      <div class="nav-right">
+        <button id="lang-toggle" class="chip">NO</button>
+        <label class="theme-switch">
+          <input type="checkbox" id="theme-toggle" aria-label="Tema">
+          <span class="slider">
+            <span class="thumb">
+              <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+              </svg>
+            </span>
           </span>
-        </span>
-      </label>
-      <button id="menu-toggle" class="hamburger" aria-label="Meny">☰</button>
+        </label>
+        <button id="menu-toggle" class="mobile-toggle" aria-label="Meny" aria-expanded="false">☰</button>
+      </div>
     </div>
   </header>
 
@@ -184,13 +189,14 @@
       const btn = document.getElementById('lang-toggle');
       if(btn){
         const saved = localStorage.getItem('scope.lang') || 'no';
-        btn.textContent = saved.toUpperCase();
         if (typeof applyLang === 'function') applyLang(saved); else document.documentElement.lang = saved;
+        btn.textContent = (saved==='no' ? 'EN' : 'NO');
         btn.addEventListener('click', ()=>{
-          const next = (btn.textContent.trim().toLowerCase()==='no') ? 'en' : 'no';
-          btn.textContent = next.toUpperCase();
+          const current = document.documentElement.lang === 'en' ? 'en' : 'no';
+          const next = current === 'en' ? 'no' : 'en';
           localStorage.setItem('scope.lang', next);
           if (typeof applyLang === 'function') applyLang(next); else document.documentElement.lang = next;
+          btn.textContent = (next==='no' ? 'EN' : 'NO');
         });
       }
       const t = document.getElementById('theme-toggle');
