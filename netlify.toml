@@ -1,2 +1,13 @@
+[build]
+  functions = "netlify/functions"
+  publish   = "."
+
+[dev]
+  command   = "netlify dev"
+  port      = 8888
+
 [functions]
+  node_bundler = "esbuild"
+
+[functions.tripletex]
   node_bundler = "esbuild"

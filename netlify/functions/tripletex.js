@@ -1,95 +1,84 @@
-const fetch = global.fetch;
+if (process.env.NETLIFY_DEV || process.env.NETLIFY_LOCAL) { try { require('dotenv').config(); } catch {} }
 
-let sessionCache = { token: null, expiresAt: 0 };
+const API_BASE = 'https://api-test.tripletex.tech/v2';
+let cachedSession = { token: null, expiresAt: 0 };
+const b64 = s => Buffer.from(s, 'utf8').toString('base64');
 
-async function fetchSessionToken() {
+async function ensureSession() {
   const now = Date.now();
-  if (sessionCache.token && now < sessionCache.expiresAt - 5 * 60 * 1000) {
-    return sessionCache.token;
-  }
+  if (cachedSession.token && now < cachedSession.expiresAt - 30_000) return cachedSession.token;
+
   const consumerToken = process.env.TRIPLETEX_CONSUMER_TOKEN;
   const employeeToken = process.env.TRIPLETEX_EMPLOYEE_TOKEN;
-  if (!consumerToken || !employeeToken) {
-    throw new Error('Missing Tripletex tokens');
-  }
-  const exp = new Date(now + 24 * 60 * 60 * 1000).toISOString();
-  const url = new URL('https://api-test.tripletex.tech/v2/token/session/:create');
+  if (!consumerToken || !employeeToken) throw new Error('Missing TRIPLETEX_* env vars');
+
+  const expISO = new Date(now + 23 * 60 * 60 * 1000).toISOString();
+  const url = new URL(`${API_BASE}/token/session/:create`);
   url.searchParams.set('consumerToken', consumerToken);
   url.searchParams.set('employeeToken', employeeToken);
-  url.searchParams.set('expirationDate', exp);
-  const res = await fetch(url.toString(), { method: 'PUT', headers: { Accept: 'application/json' } });
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error('Session error ' + res.status + ' ' + txt);
-  }
-  const data = await res.json();
-  const token = data?.value?.token;
-  if (!token) throw new Error('No session token');
-  sessionCache = { token, expiresAt: now + 24 * 60 * 60 * 1000 };
+  url.searchParams.set('expirationDate', expISO);
+
+  const res = await fetch(url, { method: 'PUT', headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`Session failed: ${res.status} ${await res.text()}`);
+  const json = await res.json();
+  const token = json?.value?.token;
+  if (!token) throw new Error('No token returned');
+  cachedSession = { token, expiresAt: now + 23 * 60 * 60 * 1000 };
   return token;
 }
 
-async function apiGet(path, params) {
-  const token = await fetchSessionToken();
-  const url = new URL('https://api-test.tripletex.tech' + path);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const auth = Buffer.from('0:' + token).toString('base64');
-  const res = await fetch(url.toString(), {
-    headers: {
-      Authorization: 'Basic ' + auth,
-      Accept: 'application/json'
-    }
+async function ttGet(path, params = {}) {
+  const token = await ensureSession();
+  const url = new URL(`${API_BASE}${path}`);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json', Authorization: `Basic ${b64(`0:${token}`)}` }
   });
-  if (!res.ok) {
-    const msg = await res.text();
-    const err = new Error('Tripletex error ' + res.status);
-    err.status = res.status;
-    err.body = msg;
-    throw err;
-  }
+  if (!res.ok) throw new Error(`GET ${path}: ${res.status} ${await res.text()}`);
   return res.json();
 }
 
-exports.handler = async function(event) {
-  try {
-    if (event.httpMethod !== 'GET') {
-      return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed', status: 405 }) };
-    }
-    const target = event.queryStringParameters?.target;
-    if (target === 'ledger') {
-      const { dateFrom, dateTo } = event.queryStringParameters;
-      if (!dateFrom || !dateTo) {
-        return { statusCode: 400, body: JSON.stringify({ error: 'Missing dateFrom/dateTo', status: 400 }) };
-      }
-      let page = 0;
-      const count = 1000;
-      const values = [];
-      while (true) {
-        const data = await apiGet('/v2/ledger/posting', {
-          dateFrom,
-          dateTo,
-          page: String(page),
-          count: String(count),
-          fields: 'id,date,amount,account(id,accountNumber,name)'
-        });
-        const pageVals = data?.values || [];
-        values.push(...pageVals);
-        if (pageVals.length < count) break;
-        page++;
-      }
-      return { statusCode: 200, body: JSON.stringify({ values }) };
-    } else if (target === 'accounts') {
-      const data = await apiGet('/v2/account', {
-        page: '0',
-        count: '1000',
-        isActive: 'true',
-        fields: 'id,accountNumber,name'
-      });
-      return { statusCode: 200, body: JSON.stringify({ values: data?.values || [] }) };
-    } else {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Unknown target', status: 400 }) };
-    }
-  } catch (err) {
-    return { statusCode: err.status || 500, body: JSON.stringify({ error: err.message, status: err.status || 500 }) };
+async function resolveAccountId(accountNumber) {
+  const pageSize = 100, wanted = String(accountNumber);
+  let page = 0;
+  while (true) {
+    const data = await ttGet('/account', { number: wanted, page, count: pageSize });
+    const values = data?.values || [];
+    const exact = values.find(a => String(a.number ?? a.accountNumber) === wanted);
+    if (exact) return { id: exact.id, name: exact.name || 'Ukjent konto' };
+    if (values.length < pageSize) break;
+    page++;
   }
+  throw new Error(`Account not found: ${wanted}`);
+}
+
+async function fetchLedgerByAccountId(accountId, dateFrom, dateTo) {
+  const pageSize = 1000; let page = 0, all = [];
+  while (true) {
+    const data = await ttGet('/ledger/posting', { accountId, dateFrom, dateTo, page, count: pageSize });
+    const values = data?.values || [];
+    all = all.concat(values.map(v => ({ id: v.id, date: v.date, amount: Number(v.amount || 0) })));
+    if (values.length < pageSize) break;
+    page++;
+  }
+  return all;
+}
+
+const ok  = x => ({ statusCode: 200, headers: {'content-type':'application/json'}, body: JSON.stringify(x) });
+const err = (s,e,d) => ({ statusCode: s, headers: {'content-type':'application/json'}, body: JSON.stringify({ error:e, detail:d }) });
+
+exports.handler = async (event) => {
+  try {
+    if (!event.path.endsWith('/sales')) return err(404, 'NotFound', 'Use /.netlify/functions/tripletex/sales');
+    const qs = new URLSearchParams(event.queryStringParameters || {});
+    const accountNumber = Number(qs.get('accountNumber') || 3003); // default Øl-salg
+    const now = new Date();
+    const dateFrom = qs.get('dateFrom') || new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+    const dateTo   = qs.get('dateTo')   || now.toISOString().slice(0,10);
+
+    const { id: accountId, name: accountName } = await resolveAccountId(accountNumber);
+    const postings = await fetchLedgerByAccountId(accountId, dateFrom, dateTo);
+    const totalNOK = Math.abs(postings.reduce((s,p)=> s + (Number.isFinite(p.amount)?p.amount:0), 0));
+    return ok({ accountNumber, accountName, dateFrom, dateTo, count: postings.length, totalNOK, postings });
+  } catch (e) { return err(502, 'TripletexError', e instanceof Error ? e.message : String(e)); }
 };
