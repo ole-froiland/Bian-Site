@@ -9,8 +9,6 @@
   const tbody    = table ? table.querySelector('tbody') : null;
   const startBtn = document.getElementById('monthStartBtn');
   const endBtn   = document.getElementById('monthEndBtn');
-  const startLbl = document.getElementById('startLabel');
-  const endLbl   = document.getElementById('endLabel');
 
   const ACCOUNT_ID_3003 = 289896744;
 
@@ -23,53 +21,62 @@
   const toYMD = (y, m, d) =>
     `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 
-  // Godta "DD.MM.YYYY", "YYYY-MM-DD" eller Date-parsbare ting.
-  function normalizeDateString(raw) {
-    if (!raw) return null;
-    const s = String(raw).trim();
-    const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (m1) return toYMD(m1[1], m1[2], m1[3]);
-    const m2 = s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-    if (m2) return toYMD(m2[3], m2[2], m2[1]);
-    const d = new Date(s);
-    if (!Number.isNaN(d.getTime())) return toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
-    return null;
-  }
-
-  const fmtDate = (d) => toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
   const nbMoney = new Intl.NumberFormat('nb-NO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // ---------- state ----------
   let lastData = { from: null, to: null, postings: [] };
 
-  // Defaults
-  const today = new Date();
-  const ytdStart = new Date(today.getFullYear(), 0, 1);
-  startEl.value = normalizeDateString(fmtDate(ytdStart));
-  endEl.value   = normalizeDateString(fmtDate(today));
-  startLbl.textContent = startEl.value;
-  endLbl.textContent   = endEl.value;
-  outEl.textContent = '–';
-  function hasRange(){ return !!(startEl.value && endEl.value); }
-  fetchBtn.disabled = !hasRange();
-  csvBtn.disabled   = !hasRange();
-  ['change','input'].forEach(ev => {
-    startEl.addEventListener(ev, () => { fetchBtn.disabled = csvBtn.disabled = !hasRange(); });
-    endEl.addEventListener(ev,   () => { fetchBtn.disabled = csvBtn.disabled = !hasRange(); });
-  });
+  const months = ['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
 
-  function openPicker(input, label){
-    if (input.showPicker) { input.showPicker(); }
-    else {
-      const v = prompt('Velg dato (YYYY-MM-DD):', input.value || '');
-      if (v) input.value = normalizeDateString(v);
-    }
-    setTimeout(() => { label.textContent = input.value || '—'; }, 0);
+  function updateRange(){
+    const ok = !!(startEl.value && endEl.value);
+    fetchBtn.disabled = !ok;
+    csvBtn.disabled = !ok;
   }
-  startBtn.addEventListener('click', () => openPicker(startEl, startLbl));
-  endBtn.addEventListener('click',   () => openPicker(endEl, endLbl));
-  startEl.addEventListener('change', () => startLbl.textContent = startEl.value || '—');
-  endEl.addEventListener('change',   () => endLbl.textContent   = endEl.value   || '—');
+
+  function openMonthMenu(btn, input){
+    const existing = document.getElementById('month-menu');
+    if(existing) existing.remove();
+    const menu = document.createElement('div');
+    menu.id = 'month-menu';
+    menu.style.position = 'absolute';
+    menu.style.background = '#fff';
+    menu.style.border = '1px solid #c4b5fd';
+    menu.style.padding = '4px';
+    menu.style.display = 'grid';
+    menu.style.gridTemplateColumns = 'repeat(3,1fr)';
+    months.forEach((name, idx) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = name;
+      b.addEventListener('click', () => {
+        const year = new Date().getFullYear();
+        input.value = `${year}-${String(idx+1).padStart(2,'0')}`;
+        btn.textContent = `${btn === startBtn ? 'Start: ' : 'Slutt: '}${name}`;
+        menu.remove();
+        updateRange();
+      });
+      menu.appendChild(b);
+    });
+    const rect = btn.getBoundingClientRect();
+    menu.style.left = `${rect.left + window.scrollX}px`;
+    menu.style.top  = `${rect.bottom + window.scrollY}px`;
+    menu.style.zIndex = 1000;
+    document.body.appendChild(menu);
+    const close = (e) => {
+      if(!menu.contains(e.target) && e.target !== btn){
+        menu.remove();
+        document.removeEventListener('click', close);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', close), 0);
+  }
+
+  startBtn.addEventListener('click', () => openMonthMenu(startBtn, startEl));
+  endBtn.addEventListener('click', () => openMonthMenu(endBtn, endEl));
+
+  outEl.textContent = '–';
+  updateRange();
 
   function setBusy(isBusy, msg) {
     fetchBtn.disabled = isBusy;
@@ -95,44 +102,23 @@
     return endpointCandidates[0];
   }
 
-  function demoData(from, to) {
-    // Generer 8 demoposter med beløp +- for å vise at UI virker.
-    const base = new Date(from);
-    const items = Array.from({length: 8}).map((_, i) => {
-      const d = new Date(base); d.setDate(d.getDate() + i*3);
-      const dd = toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
-      const amt = Math.round((Math.random()*4000+500) * (Math.random() > 0.2 ? 1 : -1)) / 1;
-      return { id: 1000 + i, date: dd, amount: amt, accountId: ACCOUNT_ID_3003 };
-    });
-    return { postings: items, count: items.length, totalBeerSales: items.reduce((a,b)=>a+Math.abs(b.amount),0) };
-  }
-
-  function render(data, from, to, isDemo=false) {
-    const raw = Array.isArray(data.postings) ? data.postings : [];
-    const postings = raw.filter(p => (p.account?.id ?? p.accountId ?? null) === ACCOUNT_ID_3003);
-    tbody.innerHTML = '';
-    let sum = typeof data.totalBeerSales === 'number' ? data.totalBeerSales : 0;
-    if (!sum) sum = postings.reduce((acc, p) => acc + Math.abs(Number(p.amount || 0)), 0);
-
-    for (const p of postings) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${p.id ?? ''}</td>
-        <td>${p.date ?? ''}</td>
-        <td style="text-align:right">${nbMoney.format(Number(p.amount || 0))}</td>
-      `;
-      tbody.appendChild(tr);
-    }
-    lastData = { from, to, postings };
-    const count = typeof data.count === 'number' ? data.count : postings.length;
-    outEl.textContent = `${count} transaksjoner — Sum: ${nbMoney.format(sum)} NOK${isDemo ? ' (demo)' : ''}`;
+  function computeRange(){
+    if(!startEl.value || !endEl.value) return null;
+    const [sy, sm] = startEl.value.split('-').map(Number);
+    const [ey, em] = endEl.value.split('-').map(Number);
+    let fromDate = new Date(sy, sm-1, 1);
+    let toDate   = new Date(ey, em, 0);
+    if(startEl.value > endEl.value) [fromDate, toDate] = [toDate, fromDate];
+    const from = toYMD(fromDate.getFullYear(), fromDate.getMonth()+1, fromDate.getDate());
+    const to   = toYMD(toDate.getFullYear(),   toDate.getMonth()+1,   toDate.getDate());
+    return { from, to };
   }
 
   async function loadData(evt){
     const useDemo = !!(evt && evt.altKey);
-    let from = normalizeDateString(startEl.value) || fmtDate(ytdStart);
-    let to   = normalizeDateString(endEl.value)   || fmtDate(today);
-    if(from > to) [from,to] = [to,from];
+    const range = computeRange();
+    if(!range) return;
+    const {from, to} = range;
 
     setBusy(true, useDemo ? 'Viser demodata …' : 'Henter …');
     try{
