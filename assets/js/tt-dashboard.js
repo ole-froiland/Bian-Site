@@ -1,4 +1,3 @@
-// assets/js/tt-dashboard.js
 (() => {
   const section = document.querySelector('[data-tt-section="tripletex"]') || document;
   const startEl = section.querySelector('#start-date') || section.querySelector('input[name="start"]');
@@ -14,42 +13,34 @@
     return;
   }
 
-  // ---- HJELPERE ----
-  const toYMD = (y, m, d) => `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  // ---------- helpers ----------
+  const toYMD = (y, m, d) =>
+    `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 
-  // Tåler både "DD.MM.YYYY" og "YYYY-MM-DD". Returnerer "YYYY-MM-DD" eller null hvis ugyldig.
+  // Godta "DD.MM.YYYY", "YYYY-MM-DD" eller Date-parsbare ting.
   function normalizeDateString(raw) {
     if (!raw) return null;
     const s = String(raw).trim();
-
-    // YYYY-MM-DD
     const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (m1) return toYMD(m1[1], m1[2], m1[3]);
-
-    // DD.MM.YYYY
     const m2 = s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
     if (m2) return toYMD(m2[3], m2[2], m2[1]);
-
-    // Prøv Date()
     const d = new Date(s);
     if (!Number.isNaN(d.getTime())) return toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
-
     return null;
   }
 
   const fmtDate = (d) => toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
   const nbMoney = new Intl.NumberFormat('nb-NO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  // ---- STATE ----
+  // ---------- state ----------
   let lastData = { from: null, to: null, postings: [] };
 
-  // Default: YTD
+  // Defaults (visuelt kan feltene være DD.MM)
   const now = new Date();
   const ytdStart = new Date(now.getFullYear(), 0, 1);
-
-  // Hvis feltene allerede har DD.MM.YYYY, behold dem visuelt – men normaliser ved bruk.
-  if (!startEl.value) startEl.value = '01.01.' + now.getFullYear(); // matcher visuell stil
-  if (!endEl.value)   endEl.value   = toYMD(now.getFullYear(), now.getMonth()+1, now.getDate()); // ok om denne vises som YYYY-MM-DD
+  if (!startEl.value) startEl.value = `01.01.${now.getFullYear()}`;
+  if (!endEl.value)   endEl.value   = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
   outEl.textContent = '–';
   csvBtn.disabled = true;
 
@@ -59,48 +50,92 @@
     if (msg !== undefined) outEl.textContent = msg;
   }
 
-  async function loadData() {
-    // Normaliser input → YYYY-MM-DD
+  // Prøv flere mulige paths, returner første som svarer OK på ping
+  const endpointCandidates = [
+    '/.netlify/functions/tripletex',
+    '/api/tripletex',
+    '/functions/tripletex'
+  ];
+
+  async function resolveEndpoint() {
+    for (const base of endpointCandidates) {
+      try {
+        const r = await fetch(`${base}?ping=1`, { method: 'GET' });
+        if (r.ok) return base;
+      } catch (_) {}
+    }
+    // Ingen ping funka – bare prøv første og la feil boble opp
+    return endpointCandidates[0];
+  }
+
+  function demoData(from, to) {
+    // Generer 8 demoposter med beløp +- for å vise at UI virker.
+    const base = new Date(from);
+    const items = Array.from({length: 8}).map((_, i) => {
+      const d = new Date(base); d.setDate(d.getDate() + i*3);
+      const dd = toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
+      const amt = Math.round((Math.random()*4000+500) * (Math.random() > 0.2 ? 1 : -1)) / 1;
+      return { id: 1000 + i, date: dd, amount: amt };
+    });
+    return { postings: items, count: items.length, totalBeerSales: items.reduce((a,b)=>a+Math.abs(b.amount),0) };
+  }
+
+  function render(data, from, to, isDemo=false) {
+    const postings = Array.isArray(data.postings) ? data.postings : [];
+    tbody.innerHTML = '';
+    let sum = typeof data.totalBeerSales === 'number' ? data.totalBeerSales : 0;
+    if (!sum) sum = postings.reduce((acc, p) => acc + Math.abs(Number(p.amount || 0)), 0);
+
+    for (const p of postings) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.id ?? ''}</td>
+        <td>${p.date ?? ''}</td>
+        <td style="text-align:right">${nbMoney.format(Number(p.amount || 0))}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+    lastData = { from, to, postings };
+    const count = typeof data.count === 'number' ? data.count : postings.length;
+    outEl.textContent = `${count} transaksjoner — Sum: ${nbMoney.format(sum)} NOK${isDemo ? ' (demo)' : ''}`;
+  }
+
+  async function loadData(evt) {
+    // Hold Alt/Option ved klikk => demo-modus (uten backend)
+    const useDemo = !!(evt && evt.altKey);
+
     let from = normalizeDateString(startEl.value) || fmtDate(ytdStart);
     let to   = normalizeDateString(endEl.value)   || fmtDate(now);
-
-    // Bytt om hvis bruker har satt fra > til
     if (from > to) [from, to] = [to, from];
 
-    setBusy(true, 'Henter …');
-    const url = `/.netlify/functions/tripletex?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+    setBusy(true, useDemo ? 'Viser demodata …' : 'Henter …');
+    console.log('[Tripletex] from:', from, 'to:', to, 'demo:', useDemo);
 
     try {
+      if (useDemo) {
+        const data = demoData(from, to);
+        render(data, from, to, true);
+        return;
+      }
+
+      const base = await resolveEndpoint();
+      const url = `${base}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
       const res = await fetch(url, { headers: { 'accept': 'application/json' } });
+
       if (!res.ok) {
         const text = await res.text().catch(() => '');
         console.error('Tripletex HTTP-feil', res.status, res.statusText, text);
-        throw new Error(`HTTP ${res.status}`);
+        outEl.textContent = `Kunne ikke hente data (HTTP ${res.status}). Sjekk at funksjonen finnes og tokens/CompanyId er satt. Se Console → Network.`;
+        lastData = { from: null, to: null, postings: [] };
+        return;
       }
+
       const data = await res.json();
+      render(data, from, to, false);
 
-      const postings = Array.isArray(data.postings) ? data.postings : [];
-      tbody.innerHTML = '';
-
-      let sum = typeof data.totalBeerSales === 'number' ? data.totalBeerSales : 0;
-      if (!sum) sum = postings.reduce((acc, p) => acc + Math.abs(Number(p.amount || 0)), 0);
-
-      for (const p of postings) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${p.id ?? ''}</td>
-          <td>${p.date ?? ''}</td>
-          <td style="text-align:right">${nbMoney.format(Number(p.amount || 0))}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-
-      lastData = { from, to, postings };
-      const count = typeof data.count === 'number' ? data.count : postings.length;
-      outEl.textContent = `${count} transaksjoner — Sum: ${nbMoney.format(sum)} NOK`;
     } catch (err) {
       console.error('Tripletex fetch error', err);
-      outEl.textContent = 'Kunne ikke hente data. Prøv igjen senere.';
+      outEl.textContent = 'Kunne ikke hente data (nettverk/JS-feil). Åpne Console for detaljer.';
       lastData = { from: null, to: null, postings: [] };
     } finally {
       setBusy(false);
