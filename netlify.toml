@@ -1,20 +1,14 @@
 [build]
-  functions = "netlify/functions"
-  publish   = "."
-
-[dev]
-  command   = "netlify dev"
-  port      = 8888
-
-[functions]
-  node_bundler = "esbuild"
-
-[functions.tripletex]
-  node_bundler = "esbuild"
-
-[build]
   command = "npm run build || echo 'no build'"
   publish = "."
 
+[dev]
+  command = "netlify dev"
+  port = 8888
+
 [functions]
   directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[functions."tripletex"]
+  node_bundler = "esbuild"
