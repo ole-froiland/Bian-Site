@@ -14,20 +14,42 @@
     return;
   }
 
-  const fmtDate = (d) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${dd}`;
-  };
+  // ---- HJELPERE ----
+  const toYMD = (y, m, d) => `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+  // Tåler både "DD.MM.YYYY" og "YYYY-MM-DD". Returnerer "YYYY-MM-DD" eller null hvis ugyldig.
+  function normalizeDateString(raw) {
+    if (!raw) return null;
+    const s = String(raw).trim();
+
+    // YYYY-MM-DD
+    const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m1) return toYMD(m1[1], m1[2], m1[3]);
+
+    // DD.MM.YYYY
+    const m2 = s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (m2) return toYMD(m2[3], m2[2], m2[1]);
+
+    // Prøv Date()
+    const d = new Date(s);
+    if (!Number.isNaN(d.getTime())) return toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
+
+    return null;
+  }
+
+  const fmtDate = (d) => toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
   const nbMoney = new Intl.NumberFormat('nb-NO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  // ---- STATE ----
   let lastData = { from: null, to: null, postings: [] };
 
+  // Default: YTD
   const now = new Date();
   const ytdStart = new Date(now.getFullYear(), 0, 1);
-  if (!startEl.value) startEl.value = fmtDate(ytdStart);
-  if (!endEl.value)   endEl.value   = fmtDate(now);
+
+  // Hvis feltene allerede har DD.MM.YYYY, behold dem visuelt – men normaliser ved bruk.
+  if (!startEl.value) startEl.value = '01.01.' + now.getFullYear(); // matcher visuell stil
+  if (!endEl.value)   endEl.value   = toYMD(now.getFullYear(), now.getMonth()+1, now.getDate()); // ok om denne vises som YYYY-MM-DD
   outEl.textContent = '–';
   csvBtn.disabled = true;
 
@@ -38,8 +60,11 @@
   }
 
   async function loadData() {
-    let from = startEl.value || fmtDate(ytdStart);
-    let to   = endEl.value   || fmtDate(now);
+    // Normaliser input → YYYY-MM-DD
+    let from = normalizeDateString(startEl.value) || fmtDate(ytdStart);
+    let to   = normalizeDateString(endEl.value)   || fmtDate(now);
+
+    // Bytt om hvis bruker har satt fra > til
     if (from > to) [from, to] = [to, from];
 
     setBusy(true, 'Henter …');
@@ -47,7 +72,11 @@
 
     try {
       const res = await fetch(url, { headers: { 'accept': 'application/json' } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        console.error('Tripletex HTTP-feil', res.status, res.statusText, text);
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json();
 
       const postings = Array.isArray(data.postings) ? data.postings : [];
