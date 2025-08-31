@@ -9,8 +9,26 @@ TRIPLETEX_CONSUMER_TOKEN=...
 TRIPLETEX_EMPLOYEE_TOKEN=...
 ```
 
-Run locally with Netlify:
+### Local development
 
+1. Copy `.env.example` to `.env` and fill in your real tokens.
+2. Start the dev server:
+
+   ```bash
+   npx netlify dev
+   ```
+
+### Production on Netlify
+
+Set the variables in your Netlify site:
+
+```bash
+npx netlify env:set TRIPLETEX_CONSUMER_TOKEN <your-consumer-token>
+npx netlify env:set TRIPLETEX_EMPLOYEE_TOKEN <your-employee-token>
 ```
-netlify dev
+
+You can verify the values with:
+
+```bash
+npx netlify env:list
 ```
