@@ -33,3 +33,11 @@ You can verify the values with:
 ```bash
 npx netlify env:list
 ```
+
+## Tripletex beer sales
+**Local dev**
+```bash
+npm install
+cp .env.example .env   # fill tokens
+netlify dev
+```

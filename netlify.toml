@@ -11,3 +11,10 @@
 
 [functions.tripletex]
   node_bundler = "esbuild"
+
+[build]
+  command = "npm run build || echo 'no build'"
+  publish = "."
+
+[functions]
+  directory = "netlify/functions"
