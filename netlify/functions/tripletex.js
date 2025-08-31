@@ -1,9 +1,25 @@
 // Netlify Function: Tripletex proxy + debug
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
-const ok  = (body) => ({ statusCode: 200, headers: JSON_HEADERS, body: JSON.stringify(body) });
-const err = (status, code, message, extra = {}) => ({
-  statusCode: status, headers: JSON_HEADERS, body: JSON.stringify({ error: code, message, ...extra })
-});
+const ok  = (b) => ({ statusCode: 200, headers: JSON_HEADERS, body: JSON.stringify(b) });
+const err = (status, code, message, extra = {}) =>
+  ({ statusCode: status, headers: JSON_HEADERS, body: JSON.stringify({ error: code, message, ...extra }) });
+
+// --- FALLBACK KONFIG ---
+const FALLBACK = {
+  baseUrl: 'https://api-test.tripletex.tech',
+  consumer: 'eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ==',
+  employee: 'eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ==',
+  account3003Id: 289896744
+};
+
+function cfg() {
+  const baseUrl  = (process.env.TRIPLETEX_BASE_URL || FALLBACK.baseUrl).replace(/\/+$/,'');
+  const consumer = process.env.TRIPLETEX_CONSUMER_TOKEN || FALLBACK.consumer;
+  const employee = process.env.TRIPLETEX_EMPLOYEE_TOKEN || FALLBACK.employee;
+  const companyId = process.env.TRIPLETEX_COMPANY_ID || null;
+  const usedFallback = !process.env.TRIPLETEX_CONSUMER_TOKEN || !process.env.TRIPLETEX_EMPLOYEE_TOKEN;
+  return { baseUrl, consumer, employee, companyId, usedFallback };
+}
 
 const toYMD = (y,m,d) => `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 function normDate(s){
@@ -13,11 +29,6 @@ function normDate(s){
   m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);    if(m) return `${m[3]}-${m[2]}-${m[1]}`;
   const d = new Date(s); if(!Number.isNaN(d.getTime())) return toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
   return null;
-}
-
-function need(name){
-  const v = process.env[name]; if(!v) throw new Error(`MISSING_ENV:${name}`);
-  return v;
 }
 
 async function createSession(base, consumer, employee, companyId){
@@ -44,28 +55,39 @@ async function createSession(base, consumer, employee, companyId){
   return token;
 }
 
-async function fetchLedger(base, session, from, to, accountId=289896744){
-  let page=0, pageSize=1000, out=[];
+async function fetchLedger(base, session, from, to){
   const root = base.replace(/\/+$/, '');
-  while(true){
-    const url = `${root}/v2/ledger/posting?fromDate=${from}&toDate=${to}&accountId=${accountId}&page=${page}&count=${pageSize}`;
-    const r = await fetch(url, { headers:{ 'Accept':'application/json','Authorization':`Bearer ${session}` }});
-    const txt = await r.text();
-    if(r.status===429){ await new Promise(r=>setTimeout(r,800)); continue; }
-    if(!r.ok) throw new Error(`LEDGER_FAIL:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
-    let j={}; try{ j=JSON.parse(txt);}catch{}
-    const arr = j.values || j.data || j.postings || [];
-    out.push(...arr.map(x=>({
-      id: x.id ?? x.voucherId ?? x.number ?? null,
-      date: x.date || x.voucherDate || x.transactionDate || null,
-      amount: Number(x.amount || x.amountNok || x.value || 0)
-    })));
-    if(arr.length < pageSize) break;
-    const total = j.fullResultSize || j.totalCount || j.total || null;
-    if(total && out.length >= total) break;
-    page++; await new Promise(r=>setTimeout(r,120));
+  const run = async (paramKey, paramVal) => {
+    let page=0, pageSize=1000, out=[];
+    while(true){
+      const url = `${root}/v2/ledger/posting?fromDate=${from}&toDate=${to}&${paramKey}=${paramVal}&page=${page}&count=${pageSize}`;
+      const r = await fetch(url, { headers:{ 'Accept':'application/json','Authorization':`Bearer ${session}` }});
+      const txt = await r.text();
+      if(r.status===429){ await new Promise(r=>setTimeout(r,800)); continue; }
+      if(!r.ok) throw new Error(`LEDGER_FAIL:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
+      let j={}; try{ j=JSON.parse(txt);}catch{}
+      const arr = j.values || j.data || j.postings || [];
+      out.push(...arr.map(x=>({
+        id: x.id ?? x.voucherId ?? x.number ?? null,
+        date: x.date || x.voucherDate || x.transactionDate || null,
+        amount: Number(x.amount || x.amountNok || x.value || 0)
+      })));
+      if(arr.length < pageSize) break;
+      const total = j.fullResultSize || j.totalCount || j.total || null;
+      if(total && out.length >= total) break;
+      page++; await new Promise(r=>setTimeout(r,120));
+    }
+    return out;
+  };
+
+  try{
+    const first = await run('accountNumber', 3003);
+    if(first.length>0) return first;
+    console.warn('accountNumber 3003 gave no results, using accountId fallback');
+  }catch(e){
+    console.warn('accountNumber lookup failed, using accountId fallback');
   }
-  return out;
+  return await run('accountId', FALLBACK.account3003Id);
 }
 
 exports.handler = async (event) => {
@@ -73,8 +95,8 @@ exports.handler = async (event) => {
     if(event.httpMethod!=='GET') return err(405,'METHOD_NOT_ALLOWED','Use GET');
 
     const q = event.queryStringParameters || {};
-    const baseUrl  = (process.env.TRIPLETEX_BASE_URL || 'https://api-test.tripletex.tech').replace(/\/+$/, '');
-    const companyId = process.env.TRIPLETEX_COMPANY_ID || null;
+    const { baseUrl, consumer, employee, companyId, usedFallback } = cfg();
+    if(usedFallback) console.warn('Using fallback Tripletex credentials');
 
     if(q.ping) return ok({ ok:true, service:'tripletex-proxy' });
 
@@ -83,22 +105,17 @@ exports.handler = async (event) => {
         baseUrl,
         has_TRIPLETEX_CONSUMER_TOKEN: !!process.env.TRIPLETEX_CONSUMER_TOKEN,
         has_TRIPLETEX_EMPLOYEE_TOKEN: !!process.env.TRIPLETEX_EMPLOYEE_TOKEN,
-        has_TRIPLETEX_COMPANY_ID: !!process.env.TRIPLETEX_COMPANY_ID
+        has_TRIPLETEX_COMPANY_ID: !!process.env.TRIPLETEX_COMPANY_ID,
+        usedFallback
       });
     }
 
     if(q.sessionTest){
       try{
-        const consumer = need('TRIPLETEX_CONSUMER_TOKEN');
-        const employee = need('TRIPLETEX_EMPLOYEE_TOKEN');
         const token = await createSession(baseUrl, consumer, employee, companyId);
         return ok({ success:true, sessionTokenPreview: token.slice(0,8)+'…' });
       }catch(e){
-        const msg = String(e.message||e);
-        if(msg.startsWith('MISSING_ENV:')){
-          return err(500,'MISSING_ENV',`Missing environment variable: ${msg.split(':')[1]}`);
-        }
-        return err(502,'SESSION_FAIL', msg);
+        return err(502,'SESSION_FAIL', String(e.message||e));
       }
     }
 
@@ -126,14 +143,6 @@ exports.handler = async (event) => {
     }
     if(from>to) [from,to]=[to,from];
 
-    let consumer, employee;
-    try{
-      consumer = need('TRIPLETEX_CONSUMER_TOKEN');
-      employee = need('TRIPLETEX_EMPLOYEE_TOKEN');
-    }catch(e){
-      return err(500,'MISSING_ENV', `Missing environment variable: ${String(e.message).split(':')[1]}`);
-    }
-
     let session;
     try{
       session = await createSession(baseUrl, consumer, employee, companyId);
@@ -143,7 +152,7 @@ exports.handler = async (event) => {
 
     let postings;
     try{
-      postings = await fetchLedger(baseUrl, session, from, to, 289896744);
+      postings = await fetchLedger(baseUrl, session, from, to);
     }catch(e){
       return err(502,'LEDGER_FAIL', String(e.message||e));
     }
