@@ -9,9 +9,10 @@ const FALLBACK = {
   baseUrl: process.env.TRIPLETEX_BASE_URL || 'https://api-test.tripletex.tech',
   consumer: process.env.TRIPLETEX_CONSUMER_TOKEN || 'eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ==',
   employee: process.env.TRIPLETEX_EMPLOYEE_TOKEN || 'eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ==',
-  companyId: process.env.TRIPLETEX_COMPANY_ID || null,
-  account3003Id: 289896744
+  companyId: process.env.TRIPLETEX_COMPANY_ID || null
 };
+
+const ACCOUNT_ID_3003 = 289896744;
 
 const isTest = FALLBACK.baseUrl.includes('api-test.tripletex.tech');
 
@@ -79,21 +80,17 @@ async function fetchLedger(from, to) {
     return JSON.parse(txt);
   }
 
-  // prøv accountNumber=3003 først
   const qsBase = `dateFrom=${from}&dateTo=${to}&page=0&count=1000`;
-  let j;
-  try {
-    j = await get(`${base}/v2/ledger/posting?${qsBase}&accountNumber=3003`);
-  } catch {
-    // fallback: bruk accountId for 3003
-    j = await get(`${base}/v2/ledger/posting?${qsBase}&accountId=${FALLBACK.account3003Id}`);
-  }
+  const url = `${base}/v2/ledger/posting?${qsBase}&accountId=${ACCOUNT_ID_3003}`;
+  const j = await get(url);
 
   const arr = j.values || j.data || j.postings || [];
-  return arr.map(x => ({
+  const filtered = arr.filter(x => (x.account?.id ?? x.accountId ?? null) === ACCOUNT_ID_3003);
+  return filtered.map(x => ({
     id: x.id ?? x.voucherId ?? x.number ?? null,
     date: x.date || x.voucherDate || x.transactionDate || null,
-    amount: Number(x.amount || x.amountNok || x.value || 0)
+    amount: Number(x.amount || x.amountNok || x.value || 0),
+    accountId: x.account?.id ?? x.accountId ?? null
   }));
 }
 
@@ -134,7 +131,12 @@ exports.handler = async (event) => {
       const items = Array.from({length:8}).map((_,i)=>{
         const d=new Date(base); d.setDate(d.getDate()+i*3);
         const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0');
-        return { id:1000+i,date:`${d.getFullYear()}-${mm}-${dd}`, amount: Math.round((Math.random()*4000+500)*(Math.random()>0.2?1:-1)) };
+        return {
+          id:1000+i,
+          date:`${d.getFullYear()}-${mm}-${dd}`,
+          amount: Math.round((Math.random()*4000+500)*(Math.random()>0.2?1:-1)),
+          accountId: ACCOUNT_ID_3003
+        };
       });
       const total = items.reduce((a,b)=>a+Math.abs(b.amount),0);
       return ok({ dateFrom:from, dateTo:to, count:items.length, totalBeerSales:total, postings:items });

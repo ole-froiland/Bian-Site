@@ -8,6 +8,8 @@
   const table    = section.querySelector('table');
   const tbody    = table ? table.querySelector('tbody') : null;
 
+  const ACCOUNT_ID_3003 = 289896744;
+
   if (!startEl || !endEl || !fetchBtn || !csvBtn || !outEl || !tbody) {
     console.warn('Tripletex-dashboard: Mangler forventede DOM-elementer.');
     return;
@@ -75,13 +77,14 @@
       const d = new Date(base); d.setDate(d.getDate() + i*3);
       const dd = toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
       const amt = Math.round((Math.random()*4000+500) * (Math.random() > 0.2 ? 1 : -1)) / 1;
-      return { id: 1000 + i, date: dd, amount: amt };
+      return { id: 1000 + i, date: dd, amount: amt, accountId: ACCOUNT_ID_3003 };
     });
     return { postings: items, count: items.length, totalBeerSales: items.reduce((a,b)=>a+Math.abs(b.amount),0) };
   }
 
   function render(data, from, to, isDemo=false) {
-    const postings = Array.isArray(data.postings) ? data.postings : [];
+    const raw = Array.isArray(data.postings) ? data.postings : [];
+    const postings = raw.filter(p => (p.account?.id ?? p.accountId ?? null) === ACCOUNT_ID_3003);
     tbody.innerHTML = '';
     let sum = typeof data.totalBeerSales === 'number' ? data.totalBeerSales : 0;
     if (!sum) sum = postings.reduce((acc, p) => acc + Math.abs(Number(p.amount || 0)), 0);
@@ -127,7 +130,8 @@
       }
 
       // render
-      const postings = Array.isArray(data.postings)? data.postings : [];
+      const raw = Array.isArray(data.postings)? data.postings : [];
+      const postings = raw.filter(p => (p.account?.id ?? p.accountId ?? null) === ACCOUNT_ID_3003);
       tbody.innerHTML = '';
       let sum = typeof data.totalBeerSales==='number' ? data.totalBeerSales
                 : postings.reduce((a,p)=>a+Math.abs(Number(p.amount||0)),0);
