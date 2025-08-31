@@ -100,43 +100,53 @@
     outEl.textContent = `${count} transaksjoner — Sum: ${nbMoney.format(sum)} NOK${isDemo ? ' (demo)' : ''}`;
   }
 
-  async function loadData(evt) {
-    // Hold Alt/Option ved klikk => demo-modus (uten backend)
+  async function loadData(evt){
     const useDemo = !!(evt && evt.altKey);
-
     let from = normalizeDateString(startEl.value) || fmtDate(ytdStart);
     let to   = normalizeDateString(endEl.value)   || fmtDate(now);
-    if (from > to) [from, to] = [to, from];
+    if(from > to) [from,to] = [to,from];
 
     setBusy(true, useDemo ? 'Viser demodata …' : 'Henter …');
-    console.log('[Tripletex] from:', from, 'to:', to, 'demo:', useDemo);
+    try{
+      const base = '/.netlify/functions/tripletex';
+      const url  = useDemo
+        ? `${base}?demo=1&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+        : `${base}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
 
-    try {
-      if (useDemo) {
-        const data = demoData(from, to);
-        render(data, from, to, true);
+      const res = await fetch(url, { headers:{ 'accept':'application/json' } });
+      const text = await res.text();
+      let data = {};
+      try{ data = JSON.parse(text); } catch {}
+
+      if(!res.ok){
+        console.error('Tripletex API error', res.status, data || text);
+        const msg = data?.message || data?.error || text || 'Ukjent feil';
+        outEl.textContent = `Feil (HTTP ${res.status}) — ${msg}`;
+        lastData = { from:null, to:null, postings:[] };
         return;
       }
 
-      const base = await resolveEndpoint();
-      const url = `${base}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
-      const res = await fetch(url, { headers: { 'accept': 'application/json' } });
-
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        console.error('Tripletex HTTP-feil', res.status, res.statusText, text);
-        outEl.textContent = `Kunne ikke hente data (HTTP ${res.status}). Sjekk at funksjonen finnes og tokens/CompanyId er satt. Se Console → Network.`;
-        lastData = { from: null, to: null, postings: [] };
-        return;
+      // render
+      const postings = Array.isArray(data.postings)? data.postings : [];
+      tbody.innerHTML = '';
+      let sum = typeof data.totalBeerSales==='number' ? data.totalBeerSales
+                : postings.reduce((a,p)=>a+Math.abs(Number(p.amount||0)),0);
+      for(const p of postings){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.id ?? ''}</td>
+          <td>${p.date ?? ''}</td>
+          <td style="text-align:right">${nbMoney.format(Number(p.amount||0))}</td>
+        `;
+        tbody.appendChild(tr);
       }
-
-      const data = await res.json();
-      render(data, from, to, false);
-
-    } catch (err) {
-      console.error('Tripletex fetch error', err);
-      outEl.textContent = 'Kunne ikke hente data (nettverk/JS-feil). Åpne Console for detaljer.';
-      lastData = { from: null, to: null, postings: [] };
+      lastData = { from, to, postings };
+      const count = typeof data.count==='number' ? data.count : postings.length;
+      outEl.textContent = `${count} transaksjoner — Sum: ${nbMoney.format(sum)} NOK${useDemo?' (demo)':''}`;
+    } catch (e){
+      console.error(e);
+      outEl.textContent = 'Kunne ikke hente data (nettverksfeil). Sjekk Console.';
+      lastData = { from:null, to:null, postings:[] };
     } finally {
       setBusy(false);
     }
