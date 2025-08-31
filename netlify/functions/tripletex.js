@@ -44,11 +44,11 @@ async function createSession(base, consumer, employee, companyId){
   return token;
 }
 
-async function fetchLedger(base, session, from, to, accountNumber=3003){
+async function fetchLedger(base, session, from, to, accountId=289896744){
   let page=0, pageSize=1000, out=[];
   const root = base.replace(/\/+$/, '');
   while(true){
-    const url = `${root}/v2/ledger/posting?fromDate=${from}&toDate=${to}&accountNumber=${accountNumber}&page=${page}&count=${pageSize}`;
+    const url = `${root}/v2/ledger/posting?fromDate=${from}&toDate=${to}&accountId=${accountId}&page=${page}&count=${pageSize}`;
     const r = await fetch(url, { headers:{ 'Accept':'application/json','Authorization':`Bearer ${session}` }});
     const txt = await r.text();
     if(r.status===429){ await new Promise(r=>setTimeout(r,800)); continue; }
@@ -73,7 +73,7 @@ exports.handler = async (event) => {
     if(event.httpMethod!=='GET') return err(405,'METHOD_NOT_ALLOWED','Use GET');
 
     const q = event.queryStringParameters || {};
-    const baseUrl  = (process.env.TRIPLETEX_BASE_URL || 'https://tripletex.no').replace(/\/+$/, '');
+    const baseUrl  = (process.env.TRIPLETEX_BASE_URL || 'https://api-test.tripletex.tech').replace(/\/+$/, '');
     const companyId = process.env.TRIPLETEX_COMPANY_ID || null;
 
     if(q.ping) return ok({ ok:true, service:'tripletex-proxy' });
@@ -143,7 +143,7 @@ exports.handler = async (event) => {
 
     let postings;
     try{
-      postings = await fetchLedger(baseUrl, session, from, to, 3003);
+      postings = await fetchLedger(baseUrl, session, from, to, 289896744);
     }catch(e){
       return err(502,'LEDGER_FAIL', String(e.message||e));
     }

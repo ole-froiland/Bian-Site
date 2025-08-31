@@ -5,9 +5,11 @@
 Set the following environment variables in a local `.env` file or in Netlify's environment settings before running the site:
 
 ```
-TRIPLETEX_CONSUMER_TOKEN=...
-TRIPLETEX_EMPLOYEE_TOKEN=...
+TRIPLETEX_CONSUMER_TOKEN=eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ==
+TRIPLETEX_EMPLOYEE_TOKEN=eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ==
 ```
+
+Ledger lookups for account **3003** use `accountId=289896744` against Tripletex.
 
 ### Local development
 
@@ -24,8 +26,8 @@ This command automatically loads the `.env` file when running locally.
 Set the variables in your Netlify site:
 
 ```bash
-npx netlify env:set TRIPLETEX_CONSUMER_TOKEN "eyJ0b2tl..."
-npx netlify env:set TRIPLETEX_EMPLOYEE_TOKEN "eyJ0b2tl..."
+npx netlify env:set TRIPLETEX_CONSUMER_TOKEN "eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ=="
+npx netlify env:set TRIPLETEX_EMPLOYEE_TOKEN "eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ=="
 ```
 
 You can verify the values with:
@@ -38,6 +40,6 @@ npx netlify env:list
 **Local dev**
 ```bash
 npm install
-cp .env.example .env   # fill tokens
+cp .env.example .env
 netlify dev
 ```
