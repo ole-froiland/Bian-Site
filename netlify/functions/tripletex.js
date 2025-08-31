@@ -1,6 +1,6 @@
-try {
-  require('dotenv').config();
-} catch {}
+if (process.env.NETLIFY_DEV || process.env.NETLIFY_LOCAL) {
+  try { require('dotenv').config(); } catch {}
+}
 
 const API_BASE = 'https://api-test.tripletex.tech/v2';
 let sessionCache = { token: null, expires: 0 };
