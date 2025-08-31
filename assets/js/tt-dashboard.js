@@ -7,9 +7,6 @@
   const outEl    = section.querySelector('[data-tt="out"]') || section.querySelector('p[data-tt="out"]');
   const table    = section.querySelector('table');
   const tbody    = table ? table.querySelector('tbody') : null;
-  const startBtn = document.getElementById('monthStartBtn');
-  const endBtn   = document.getElementById('monthEndBtn');
-
   const ACCOUNT_ID_3003 = 289896744;
 
   if (!startEl || !endEl || !fetchBtn || !csvBtn || !outEl || !tbody) {
@@ -18,65 +15,25 @@
   }
 
   // ---------- helpers ----------
-  const toYMD = (y, m, d) =>
-    `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-
   const nbMoney = new Intl.NumberFormat('nb-NO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function normalizeDateString(s){ return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : ''; }
 
   // ---------- state ----------
   let lastData = { from: null, to: null, postings: [] };
 
-  const months = ['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'];
-
-  function updateRange(){
+  function onDateChange(){
     const ok = !!(startEl.value && endEl.value);
     fetchBtn.disabled = !ok;
     csvBtn.disabled = !ok;
+    if(ok) loadData();
   }
 
-  function openMonthMenu(btn, input){
-    const existing = document.getElementById('month-menu');
-    if(existing) existing.remove();
-    const menu = document.createElement('div');
-    menu.id = 'month-menu';
-    menu.style.position = 'absolute';
-    menu.style.background = '#fff';
-    menu.style.border = '1px solid #c4b5fd';
-    menu.style.padding = '4px';
-    menu.style.display = 'grid';
-    menu.style.gridTemplateColumns = 'repeat(3,1fr)';
-    months.forEach((name, idx) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = name;
-      b.addEventListener('click', () => {
-        const year = new Date().getFullYear();
-        input.value = `${year}-${String(idx+1).padStart(2,'0')}`;
-        btn.textContent = `${btn === startBtn ? 'Start: ' : 'Slutt: '}${name}`;
-        menu.remove();
-        updateRange();
-      });
-      menu.appendChild(b);
-    });
-    const rect = btn.getBoundingClientRect();
-    menu.style.left = `${rect.left + window.scrollX}px`;
-    menu.style.top  = `${rect.bottom + window.scrollY}px`;
-    menu.style.zIndex = 1000;
-    document.body.appendChild(menu);
-    const close = (e) => {
-      if(!menu.contains(e.target) && e.target !== btn){
-        menu.remove();
-        document.removeEventListener('click', close);
-      }
-    };
-    setTimeout(() => document.addEventListener('click', close), 0);
-  }
-
-  startBtn.addEventListener('click', () => openMonthMenu(startBtn, startEl));
-  endBtn.addEventListener('click', () => openMonthMenu(endBtn, endEl));
+  startEl.addEventListener('change', onDateChange);
+  endEl.addEventListener('change', onDateChange);
 
   outEl.textContent = '–';
-  updateRange();
+  fetchBtn.disabled = true;
+  csvBtn.disabled = true;
 
   function setBusy(isBusy, msg) {
     fetchBtn.disabled = isBusy;
@@ -102,30 +59,23 @@
     return endpointCandidates[0];
   }
 
-  function computeRange(){
-    if(!startEl.value || !endEl.value) return null;
-    const [sy, sm] = startEl.value.split('-').map(Number);
-    const [ey, em] = endEl.value.split('-').map(Number);
-    let fromDate = new Date(sy, sm-1, 1);
-    let toDate   = new Date(ey, em, 0);
-    if(startEl.value > endEl.value) [fromDate, toDate] = [toDate, fromDate];
-    const from = toYMD(fromDate.getFullYear(), fromDate.getMonth()+1, fromDate.getDate());
-    const to   = toYMD(toDate.getFullYear(),   toDate.getMonth()+1,   toDate.getDate());
-    return { from, to };
-  }
-
   async function loadData(evt){
     const useDemo = !!(evt && evt.altKey);
-    const range = computeRange();
-    if(!range) return;
-    const {from, to} = range;
+    let from = normalizeDateString(startEl.value);
+    let to   = normalizeDateString(endEl.value);
+    if(!from || !to){
+      outEl.textContent = 'Velg Start og Slutt dato';
+      return;
+    }
+    if(from > to) [from, to] = [to, from];
 
     setBusy(true, useDemo ? 'Viser demodata …' : 'Henter …');
     try{
       const base = await resolveEndpoint();
-      const url  = useDemo
-        ? `${base}?demo=1&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
-        : `${base}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+      const url  = new URL(base, window.location.origin);
+      if(useDemo) url.searchParams.set('demo','1');
+      url.searchParams.set('from', from);
+      url.searchParams.set('to',   to);
 
       const res = await fetch(url, { headers:{ 'accept':'application/json' } });
       const text = await res.text();
@@ -181,8 +131,8 @@
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     }).join(',')).join('\n');
 
-    const fromTag = (lastData.from || '').replaceAll('-', '');
-    const toTag   = (lastData.to   || '').replaceAll('-', '');
+    const fromTag = (startEl.value || '').replaceAll('-', '');
+    const toTag   = (endEl.value   || '').replaceAll('-', '');
     const filename = `tripletex_salg_${fromTag}_${toTag}.csv`;
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
