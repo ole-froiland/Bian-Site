@@ -122,7 +122,7 @@
 
     setBusy(true, useDemo ? 'Viser demodata …' : 'Henter …');
     try{
-      const base = '/.netlify/functions/tripletex';
+      const base = await resolveEndpoint();
       const url  = useDemo
         ? `${base}?demo=1&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
         : `${base}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
