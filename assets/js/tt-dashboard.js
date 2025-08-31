@@ -1,12 +1,16 @@
 (() => {
-  const section = document.querySelector('[data-tt-section="tripletex"]') || document;
-  const startEl = section.querySelector('#start-date') || section.querySelector('input[name="start"]');
-  const endEl   = section.querySelector('#end-date')   || section.querySelector('input[name="end"]');
+  const section = document.getElementById('tripletex-sales');
+  const startEl = document.getElementById('start-date');
+  const endEl   = document.getElementById('end-date');
   const fetchBtn = section.querySelector('[data-tt="fetch"]');
   const csvBtn   = section.querySelector('[data-tt="csv"]');
   const outEl    = section.querySelector('[data-tt="out"]') || section.querySelector('p[data-tt="out"]');
   const table    = section.querySelector('table');
   const tbody    = table ? table.querySelector('tbody') : null;
+  const startBtn = document.getElementById('monthStartBtn');
+  const endBtn   = document.getElementById('monthEndBtn');
+  const startLbl = document.getElementById('startLabel');
+  const endLbl   = document.getElementById('endLabel');
 
   const ACCOUNT_ID_3003 = 289896744;
 
@@ -38,13 +42,34 @@
   // ---------- state ----------
   let lastData = { from: null, to: null, postings: [] };
 
-  // Defaults (visuelt kan feltene være DD.MM)
-  const now = new Date();
-  const ytdStart = new Date(now.getFullYear(), 0, 1);
-  if (!startEl.value) startEl.value = `01.01.${now.getFullYear()}`;
-  if (!endEl.value)   endEl.value   = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
+  // Defaults
+  const today = new Date();
+  const ytdStart = new Date(today.getFullYear(), 0, 1);
+  startEl.value = normalizeDateString(fmtDate(ytdStart));
+  endEl.value   = normalizeDateString(fmtDate(today));
+  startLbl.textContent = startEl.value;
+  endLbl.textContent   = endEl.value;
   outEl.textContent = '–';
-  csvBtn.disabled = true;
+  function hasRange(){ return !!(startEl.value && endEl.value); }
+  fetchBtn.disabled = !hasRange();
+  csvBtn.disabled   = !hasRange();
+  ['change','input'].forEach(ev => {
+    startEl.addEventListener(ev, () => { fetchBtn.disabled = csvBtn.disabled = !hasRange(); });
+    endEl.addEventListener(ev,   () => { fetchBtn.disabled = csvBtn.disabled = !hasRange(); });
+  });
+
+  function openPicker(input, label){
+    if (input.showPicker) { input.showPicker(); }
+    else {
+      const v = prompt('Velg dato (YYYY-MM-DD):', input.value || '');
+      if (v) input.value = normalizeDateString(v);
+    }
+    setTimeout(() => { label.textContent = input.value || '—'; }, 0);
+  }
+  startBtn.addEventListener('click', () => openPicker(startEl, startLbl));
+  endBtn.addEventListener('click',   () => openPicker(endEl, endLbl));
+  startEl.addEventListener('change', () => startLbl.textContent = startEl.value || '—');
+  endEl.addEventListener('change',   () => endLbl.textContent   = endEl.value   || '—');
 
   function setBusy(isBusy, msg) {
     fetchBtn.disabled = isBusy;
@@ -106,7 +131,7 @@
   async function loadData(evt){
     const useDemo = !!(evt && evt.altKey);
     let from = normalizeDateString(startEl.value) || fmtDate(ytdStart);
-    let to   = normalizeDateString(endEl.value)   || fmtDate(now);
+    let to   = normalizeDateString(endEl.value)   || fmtDate(today);
     if(from > to) [from,to] = [to,from];
 
     setBusy(true, useDemo ? 'Viser demodata …' : 'Henter …');
