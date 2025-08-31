@@ -4,22 +4,16 @@ const ok  = (b) => ({ statusCode: 200, headers: JSON_HEADERS, body: JSON.stringi
 const err = (status, code, message, extra = {}) =>
   ({ statusCode: status, headers: JSON_HEADERS, body: JSON.stringify({ error: code, message, ...extra }) });
 
-// --- FALLBACK KONFIG ---
+// --- config/fallback (behold dine tokens hvis du har env vars) ---
 const FALLBACK = {
-  baseUrl: 'https://api-test.tripletex.tech',
-  consumer: 'eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ==',
-  employee: 'eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ==',
+  baseUrl: process.env.TRIPLETEX_BASE_URL || 'https://api-test.tripletex.tech',
+  consumer: process.env.TRIPLETEX_CONSUMER_TOKEN || 'eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ==',
+  employee: process.env.TRIPLETEX_EMPLOYEE_TOKEN || 'eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ==',
+  companyId: process.env.TRIPLETEX_COMPANY_ID || null,
   account3003Id: 289896744
 };
 
-function cfg() {
-  const baseUrl  = (process.env.TRIPLETEX_BASE_URL || FALLBACK.baseUrl).replace(/\/+$/,'');
-  const consumer = process.env.TRIPLETEX_CONSUMER_TOKEN || FALLBACK.consumer;
-  const employee = process.env.TRIPLETEX_EMPLOYEE_TOKEN || FALLBACK.employee;
-  const companyId = process.env.TRIPLETEX_COMPANY_ID || null;
-  const usedFallback = !process.env.TRIPLETEX_CONSUMER_TOKEN || !process.env.TRIPLETEX_EMPLOYEE_TOKEN;
-  return { baseUrl, consumer, employee, companyId, usedFallback };
-}
+const isTest = FALLBACK.baseUrl.includes('api-test.tripletex.tech');
 
 const toYMD = (y,m,d) => `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 function normDate(s){
@@ -31,63 +25,76 @@ function normDate(s){
   return null;
 }
 
-async function createSession(base, consumer, employee, companyId){
-  const basic = Buffer.from(`${consumer}:${employee}`).toString('base64');
-  const url = `${base.replace(/\/+$/, '')}/v2/token/session/:create`;
-  const r = await fetch(url, {
-    method:'POST',
-    headers:{
+// Lager session-token: PUT+query for TEST, POST+JSON for PROD
+async function createSession() {
+  const base = FALLBACK.baseUrl.replace(/\/+$/,'');
+  if (isTest) {
+    const params = new URLSearchParams({
+      consumerToken: FALLBACK.consumer,
+      employeeToken: FALLBACK.employee,
+      expirationDate: new Date(Date.now()+86400e3).toISOString()
+    });
+    const url = `${base}/v2/token/session/:create?${params.toString()}`;
+    const r = await fetch(url, { method: 'PUT', headers: { 'Accept':'application/json' }});
+    const txt = await r.text();
+    if (!r.ok) throw new Error(`SESSION_FAIL:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
+    const j = JSON.parse(txt);
+    const tok = j?.value?.token || j.token || j.value;
+    if (!tok) throw new Error(`SESSION_FAIL:NO_TOKEN ${txt.slice(0,300)}`);
+    return tok;
+  } else {
+    const url = `${base}/v2/token/session/:create`;
+    const basic = Buffer.from(`${FALLBACK.consumer}:${FALLBACK.employee}`).toString('base64');
+    const headers = {
       'Authorization': `Basic ${basic}`,
       'Accept':'application/json',
       'Content-Type':'application/json',
-      'consumerToken': consumer,
-      'employeeToken': employee,
-      ...(companyId ? { 'companyId': String(companyId) } : {})
-    },
-    body: JSON.stringify({})
-  });
-  const txt = await r.text();
-  if(!r.ok) throw new Error(`SESSION_FAIL:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
-  let j = {};
-  try { j = JSON.parse(txt); } catch {}
-  const token = j.value || j.token || j.sessionToken || j?.value?.token;
-  if(!token) throw new Error(`SESSION_FAIL:NO_TOKEN ${txt.slice(0,300)}`);
-  return token;
+      'consumerToken': FALLBACK.consumer,
+      'employeeToken': FALLBACK.employee,
+      ...(FALLBACK.companyId ? { 'companyId': String(FALLBACK.companyId) } : {})
+    };
+    const r = await fetch(url, { method:'POST', headers, body: JSON.stringify({}) });
+    const txt = await r.text();
+    if (!r.ok) throw new Error(`SESSION_FAIL:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
+    const j = JSON.parse(txt);
+    const tok = j.value || j.token || j.sessionToken || j?.value?.token;
+    if (!tok) throw new Error(`SESSION_FAIL:NO_TOKEN ${txt.slice(0,300)}`);
+    return tok;
+  }
 }
 
-async function fetchLedger(base, session, from, to){
-  const root = base.replace(/\/+$/, '');
-  const run = async (paramKey, paramVal) => {
-    let page=0, pageSize=1000, out=[];
-    while(true){
-      const url = `${root}/v2/ledger/posting?fromDate=${from}&toDate=${to}&${paramKey}=${paramVal}&page=${page}&count=${pageSize}`;
-      const r = await fetch(url, { headers:{ 'Accept':'application/json','Authorization':`Bearer ${session}` }});
-      const txt = await r.text();
-      if(r.status===429){ await new Promise(r=>setTimeout(r,800)); continue; }
-      if(!r.ok) throw new Error(`LEDGER_FAIL:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
-      let j={}; try{ j=JSON.parse(txt);}catch{}
-      const arr = j.values || j.data || j.postings || [];
-      out.push(...arr.map(x=>({
-        id: x.id ?? x.voucherId ?? x.number ?? null,
-        date: x.date || x.voucherDate || x.transactionDate || null,
-        amount: Number(x.amount || x.amountNok || x.value || 0)
-      })));
-      if(arr.length < pageSize) break;
-      const total = j.fullResultSize || j.totalCount || j.total || null;
-      if(total && out.length >= total) break;
-      page++; await new Promise(r=>setTimeout(r,120));
-    }
-    return out;
-  };
+// Felles fetch for ledger/posting – velg auth etter miljø
+async function fetchLedger(from, to) {
+  const base = FALLBACK.baseUrl.replace(/\/+$/,'');
+  const token = await createSession();
 
-  try{
-    const first = await run('accountNumber', 3003);
-    if(first.length>0) return first;
-    console.warn('accountNumber 3003 gave no results, using accountId fallback');
-  }catch(e){
-    console.warn('accountNumber lookup failed, using accountId fallback');
+  const authHeader = isTest
+    ? { 'Authorization': `Basic ${Buffer.from('0:'+token).toString('base64')}` }
+    : { 'Authorization': `Bearer ${token}` };
+
+  async function get(url) {
+    const r = await fetch(url, { headers: { 'Accept':'application/json', ...authHeader } });
+    const txt = await r.text();
+    if (!r.ok) throw new Error(`LEDGER_FAIL:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
+    return JSON.parse(txt);
   }
-  return await run('accountId', FALLBACK.account3003Id);
+
+  // prøv accountNumber=3003 først
+  const qsBase = `dateFrom=${from}&dateTo=${to}&page=0&count=1000`;
+  let j;
+  try {
+    j = await get(`${base}/v2/ledger/posting?${qsBase}&accountNumber=3003`);
+  } catch {
+    // fallback: bruk accountId for 3003
+    j = await get(`${base}/v2/ledger/posting?${qsBase}&accountId=${FALLBACK.account3003Id}`);
+  }
+
+  const arr = j.values || j.data || j.postings || [];
+  return arr.map(x => ({
+    id: x.id ?? x.voucherId ?? x.number ?? null,
+    date: x.date || x.voucherDate || x.transactionDate || null,
+    amount: Number(x.amount || x.amountNok || x.value || 0)
+  }));
 }
 
 exports.handler = async (event) => {
@@ -95,14 +102,14 @@ exports.handler = async (event) => {
     if(event.httpMethod!=='GET') return err(405,'METHOD_NOT_ALLOWED','Use GET');
 
     const q = event.queryStringParameters || {};
-    const { baseUrl, consumer, employee, companyId, usedFallback } = cfg();
+    const usedFallback = !process.env.TRIPLETEX_CONSUMER_TOKEN || !process.env.TRIPLETEX_EMPLOYEE_TOKEN;
     if(usedFallback) console.warn('Using fallback Tripletex credentials');
 
     if(q.ping) return ok({ ok:true, service:'tripletex-proxy' });
 
     if(q.env){
       return ok({
-        baseUrl,
+        baseUrl: FALLBACK.baseUrl,
         has_TRIPLETEX_CONSUMER_TOKEN: !!process.env.TRIPLETEX_CONSUMER_TOKEN,
         has_TRIPLETEX_EMPLOYEE_TOKEN: !!process.env.TRIPLETEX_EMPLOYEE_TOKEN,
         has_TRIPLETEX_COMPANY_ID: !!process.env.TRIPLETEX_COMPANY_ID,
@@ -112,7 +119,7 @@ exports.handler = async (event) => {
 
     if(q.sessionTest){
       try{
-        const token = await createSession(baseUrl, consumer, employee, companyId);
+        const token = await createSession();
         return ok({ success:true, sessionTokenPreview: token.slice(0,8)+'…' });
       }catch(e){
         return err(502,'SESSION_FAIL', String(e.message||e));
@@ -143,16 +150,9 @@ exports.handler = async (event) => {
     }
     if(from>to) [from,to]=[to,from];
 
-    let session;
-    try{
-      session = await createSession(baseUrl, consumer, employee, companyId);
-    }catch(e){
-      return err(502,'SESSION_FAIL', String(e.message||e));
-    }
-
     let postings;
     try{
-      postings = await fetchLedger(baseUrl, session, from, to);
+      postings = await fetchLedger(from, to);
     }catch(e){
       return err(502,'LEDGER_FAIL', String(e.message||e));
     }
