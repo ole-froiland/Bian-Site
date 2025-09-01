@@ -1,7 +1,7 @@
 (() => {
   const section = document.getElementById('tripletex-sales');
-  const startEl = document.getElementById('start-date');
-  const endEl   = document.getElementById('end-date');
+  const startEl = document.getElementById('start-month');
+  const endEl   = document.getElementById('end-month');
   const fetchBtn = section.querySelector('[data-tt="fetch"]');
   const csvBtn   = section.querySelector('[data-tt="csv"]');
   const outEl    = section.querySelector('[data-tt="out"]') || section.querySelector('p[data-tt="out"]');
@@ -21,19 +21,48 @@
   // ---------- state ----------
   let lastData = { from: null, to: null, postings: [] };
 
+  const year = new Date().getFullYear();
+  let startISO = '';
+  let endISO   = '';
+
+  function daysInMonth(y, m){
+    return new Date(y, m + 1, 0).getDate();
+  }
+
   function onDateChange(){
-    const ok = !!(startEl.value && endEl.value);
+    const ok = !!(startISO && endISO);
     fetchBtn.disabled = !ok;
     csvBtn.disabled = !ok;
     if(ok) loadData();
   }
 
-  startEl.addEventListener('change', onDateChange);
-  endEl.addEventListener('change', onDateChange);
+  function updateRange(){
+    let s = parseInt(startEl.value, 10);
+    let e = parseInt(endEl.value, 10);
+    if (s > e) {
+      e = s;
+      endEl.value = String(e);
+    }
+    startISO = `${year}-${String(s + 1).padStart(2,'0')}-01`;
+    const last = daysInMonth(year, e);
+    endISO = `${year}-${String(e + 1).padStart(2,'0')}-${String(last).padStart(2,'0')}`;
+    startEl.dataset.iso = startISO;
+    endEl.dataset.iso = endISO;
+    window.ttDateRange = { start: startISO, end: endISO };
+    onDateChange();
+  }
+
+  startEl.addEventListener('change', updateRange);
+  endEl.addEventListener('change', updateRange);
 
   outEl.textContent = '–';
   fetchBtn.disabled = true;
   csvBtn.disabled = true;
+
+  const currentMonth = new Date().getMonth();
+  startEl.value = String(currentMonth);
+  endEl.value = String(currentMonth);
+  updateRange();
 
   function setBusy(isBusy, msg) {
     fetchBtn.disabled = isBusy;
@@ -61,8 +90,8 @@
 
   async function loadData(evt){
     const useDemo = !!(evt && evt.altKey);
-    let from = normalizeDateString(startEl.value);
-    let to   = normalizeDateString(endEl.value);
+    let from = normalizeDateString(startISO);
+    let to   = normalizeDateString(endISO);
     if(!from || !to){
       outEl.textContent = 'Velg Start og Slutt dato';
       return;
@@ -131,8 +160,8 @@
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     }).join(',')).join('\n');
 
-    const fromTag = (startEl.value || '').replaceAll('-', '');
-    const toTag   = (endEl.value   || '').replaceAll('-', '');
+    const fromTag = (startISO || '').replaceAll('-', '');
+    const toTag   = (endISO   || '').replaceAll('-', '');
     const filename = `tripletex_salg_${fromTag}_${toTag}.csv`;
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
