@@ -5,11 +5,9 @@
   const fetchBtn = section.querySelector('[data-tt="fetch"]');
   const csvBtn   = section.querySelector('[data-tt="csv"]');
   const outEl    = section.querySelector('[data-tt="out"]') || section.querySelector('p[data-tt="out"]');
-  const table    = section.querySelector('table');
-  const tbody    = table ? table.querySelector('tbody') : null;
   const ACCOUNT_ID_3003 = 289896744;
 
-  if (!startEl || !endEl || !fetchBtn || !csvBtn || !outEl || !tbody) {
+  if (!startEl || !endEl || !fetchBtn || !csvBtn || !outEl) {
     console.warn('Tripletex-dashboard: Mangler forventede DOM-elementer.');
     return;
   }
@@ -122,21 +120,12 @@
       // render
       const raw = Array.isArray(data.postings)? data.postings : [];
       const postings = raw.filter(p => (p.account?.id ?? p.accountId ?? null) === ACCOUNT_ID_3003);
-      tbody.innerHTML = '';
       let sum = typeof data.totalBeerSales==='number' ? data.totalBeerSales
-                : postings.reduce((a,p)=>a+Math.abs(Number(p.amount||0)),0);
-      for(const p of postings){
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${p.id ?? ''}</td>
-          <td>${p.date ?? ''}</td>
-          <td style="text-align:right">${nbMoney.format(Number(p.amount||0))}</td>
-        `;
-        tbody.appendChild(tr);
-      }
+                : postings.reduce((a,p)=>a+Number(p.amount||0),0);
       lastData = { from, to, postings };
-      const count = typeof data.count==='number' ? data.count : postings.length;
-      outEl.textContent = `${count} transaksjoner — Sum: ${nbMoney.format(sum)} NOK${useDemo?' (demo)':''}`;
+      const formatted = nbMoney.format(sum).replace(/\u00A0/g, ' ');
+      outEl.textContent = `3003 – Salg Øl: ${formatted} NOK${useDemo?' (demo)':''}`;
+      outEl.style.color = sum >= 0 ? 'green' : 'red';
     } catch (e){
       console.error(e);
       outEl.textContent = 'Kunne ikke hente data (nettverksfeil). Sjekk Console.';
