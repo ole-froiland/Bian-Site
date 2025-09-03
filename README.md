@@ -43,3 +43,29 @@ npm install
 cp .env.example .env
 netlify dev
 ```
+
+## Lightspeed (Gastrofix) integration
+
+Add these variables to `.env` (placeholders) and set real values in Netlify:
+
+```
+LIGHTSPEED_GASTROFIX_BASE_URL=https://no.gastrofix.com/api/
+LIGHTSPEED_X_TOKEN=<your-x-token>
+LIGHTSPEED_BUSINESS_ID=<your-business-id>
+LIGHTSPEED_OPERATOR=<optional-operator-id>
+```
+
+The Netlify Function `/.netlify/functions/lightspeed` exposes:
+- `GET ?ping=1` health check
+- `GET ?env=1` env flags (no secrets)
+- `GET ?from=YYYY-MM-DD&to=YYYY-MM-DD&limit=3&metric=revenue` returns `{ top: [ { name, qty, revenue } ] }`
+
+In the dashboard, use the “Lightspeed – Topp 3 produkter” card and click Hent after choosing months.
+
+### Local testing via Netlify dev
+
+```bash
+netlify dev
+# then in another terminal
+curl "http://localhost:8888/.netlify/functions/lightspeed?from=2024-08-01&to=2024-08-31&limit=3" | jq
+```
