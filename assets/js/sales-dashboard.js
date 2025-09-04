@@ -1,39 +1,20 @@
 (() => {
-<<<<<<< ours
   const HOST = 'https://no.gastrofix.com';
   const TOKEN = '37746338eb32703a2d7f343348787bdca3d7674e';
   const BU = '41258';
-  const START = '2025-07-01';
-  const END = '2025-07-07';
 
-  const topOut = document.querySelector('[data-sales="top-out"]');
-  const bottomOut = document.querySelector('[data-sales="bottom-out"]');
+  const topOutEls = Array.from(document.querySelectorAll('[data-sales="top-out"]'));
+  const bottomOutEls = Array.from(document.querySelectorAll('[data-sales="bottom-out"]'));
+  const startInput = document.querySelector('[data-sales="start"]');
+  const endInput = document.querySelector('[data-sales="end"]');
 
-  async function fetchData(){
+  async function fetchData(start, end){
     const headers = { 'X-Token': TOKEN, 'X-Business-Units': BU };
     const periodsRes = await fetch(`${HOST}/api/transaction/v3.0/business_periods`, { headers });
     const periodsData = await periodsRes.json();
     const periodIds = (periodsData.businessPeriods || [])
-      .filter(p => p.businessDay >= START && p.businessDay <= END)
+      .filter(p => p.businessDay >= start && p.businessDay <= end)
       .map(p => p.periodId);
-=======
-    const HOST = 'https://no.gastrofix.com';
-    const TOKEN = '37746338eb32703a2d7f343348787bdca3d7674e';
-    const BU = '41258';
-
-    const topOutEls = Array.from(document.querySelectorAll('[data-sales="top-out"]'));
-    const bottomOutEls = Array.from(document.querySelectorAll('[data-sales="bottom-out"]'));
-    const startInput = document.querySelector('[data-sales="start"]');
-    const endInput = document.querySelector('[data-sales="end"]');
-
-    async function fetchData(start, end){
-      const headers = { 'X-Token': TOKEN, 'X-Business-Units': BU };
-      const periodsRes = await fetch(`${HOST}/api/transaction/v3.0/business_periods`, { headers });
-      const periodsData = await periodsRes.json();
-      const periodIds = (periodsData.businessPeriods || [])
-        .filter(p => p.businessDay >= start && p.businessDay <= end)
-        .map(p => p.periodId);
->>>>>>> theirs
 
     let items = [];
     for(const pid of periodIds){
@@ -78,19 +59,6 @@
     el.innerHTML = rows;
   }
 
-<<<<<<< ours
-  async function load(){
-    if(topOut) topOut.textContent = 'Henter …';
-    if(bottomOut) bottomOut.textContent = 'Henter …';
-    try{
-      const { top, bottom } = await fetchData();
-      render(top, topOut);
-      render(bottom, bottomOut);
-    }catch(err){
-      console.error(err);
-      if(topOut) topOut.textContent = 'Feil ved henting';
-      if(bottomOut) bottomOut.textContent = 'Feil ved henting';
-=======
   function setText(els, text){
     els.forEach(el => el.textContent = text);
   }
@@ -113,7 +81,6 @@
       console.error(err);
       setText(topOutEls, 'Feil ved henting');
       setText(bottomOutEls, 'Feil ved henting');
->>>>>>> theirs
     }
   }
 
@@ -121,3 +88,4 @@
     btn.addEventListener('click', load);
   });
 })();
+
