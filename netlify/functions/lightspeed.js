@@ -55,6 +55,18 @@ async function fetchJson(url, headers){
   return j;
 }
 
+function headerVariants(baseHeaders, tokenOverride){
+  const token = tokenOverride || CFG.xToken;
+  const variants = [];
+  // X-Token
+  variants.push({ ...baseHeaders, ...(token ? { 'X-Token': token } : {}) });
+  // Authorization: Bearer
+  variants.push({ ...baseHeaders, ...(token ? { 'Authorization': `Bearer ${token}` } : {}) });
+  // X-Api-Key (some deployments)
+  variants.push({ ...baseHeaders, ...(token ? { 'X-Api-Key': token } : {}) });
+  return variants;
+}
+
 // Try two common param shapes for receipts endpoints
 function buildReceiptsUrl(endpoint, from, to, page=0, size=200){
   const base = new URL(endpoint, CFG.baseUrl);
@@ -89,7 +101,7 @@ function buildReceiptsUrlLimitOffset(endpoint, from, to, offset=0, limit=200){
 async function fetchReceiptsRange({ from, to, endpoint }){
   const provided = (endpoint || DEFAULT_RECEIPTS_ENDPOINT).replace(/^\/+|\/+$/g,'');
   const candidates = [provided, ...RECEIPTS_ENDPOINT_CANDIDATES.filter(e => e !== provided)];
-  const headers = authHeaders();
+  const baseHeaders = authHeaders();
   let lastErr = null;
 
   for (const ep of candidates) {
@@ -100,13 +112,11 @@ async function fetchReceiptsRange({ from, to, endpoint }){
     for (let i = 0; i < 20; i++) {
       let data = null;
       let ok = false;
-      try { data = await fetchJson(buildReceiptsUrl(ep, from, to, page, size), headers); ok = true; }
-      catch (e1) {
-        try { data = await fetchJson(buildReceiptsUrlAlt(ep, from, to, page, size), headers); ok = true; }
-        catch (e2) {
-          try { data = await fetchJson(buildReceiptsUrlLimitOffset(ep, from, to, page*size, size), headers); ok = true; }
-          catch (e3) { lastErr = e3; success = false; break; }
-        }
+      // Try each header variant across param styles
+      for (const hdr of headerVariants(baseHeaders)) {
+        try { data = await fetchJson(buildReceiptsUrl(ep, from, to, page, size), hdr); ok = true; break; } catch (e1) { lastErr = e1; }
+        try { data = await fetchJson(buildReceiptsUrlAlt(ep, from, to, page, size), hdr); ok = true; break; } catch (e2) { lastErr = e2; }
+        try { data = await fetchJson(buildReceiptsUrlLimitOffset(ep, from, to, page*size, size), hdr); ok = true; break; } catch (e3) { lastErr = e3; }
       }
       if (!ok) { success = false; break; }
 
@@ -194,6 +204,8 @@ exports.handler = async (event) => {
 
     const endpoint = (q.endpoint || '').trim() || DEFAULT_RECEIPTS_ENDPOINT;
     const metric = (q.metric === 'qty') ? 'qty' : 'revenue';
+    // Allow operator override via query for troubleshooting
+    if (q.operator) CFG.operator = String(q.operator);
 
     // Dates
     let from = normDate(q.from || q.start);

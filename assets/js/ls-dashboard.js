@@ -3,6 +3,12 @@
   if (!section) return;
   const fetchBtn = section.querySelector('[data-ls="fetch"]');
   const outEl = section.querySelector('[data-ls="out"]');
+  const cfgBtn = section.querySelector('[data-ls="cfg"]');
+  const cfgPanel = section.querySelector('[data-ls="cfgpanel"]');
+  const endpointInput = section.querySelector('[data-ls="endpoint"]');
+  const operatorInput = section.querySelector('[data-ls="operator"]');
+  const saveCfgBtn = section.querySelector('[data-ls="savecfg"]');
+  const closeCfgBtn = section.querySelector('[data-ls="closecfg"]');
 
   const endpointCandidates = [
     '/.netlify/functions/lightspeed',
@@ -27,6 +33,23 @@
     if (msg !== undefined) outEl.textContent = msg;
   }
 
+  // Config panel behavior
+  function loadCfg(){
+    const ep = localStorage.getItem('lightspeed.endpoint') || '';
+    const op = localStorage.getItem('lightspeed.operator') || '';
+    if(endpointInput) endpointInput.value = ep;
+    if(operatorInput) operatorInput.value = op;
+  }
+  function saveCfg(){
+    const ep = (endpointInput?.value || '').trim();
+    const op = (operatorInput?.value || '').trim();
+    if(ep) localStorage.setItem('lightspeed.endpoint', ep); else localStorage.removeItem('lightspeed.endpoint');
+    if(op) localStorage.setItem('lightspeed.operator', op); else localStorage.removeItem('lightspeed.operator');
+  }
+  cfgBtn?.addEventListener('click', ()=>{ loadCfg(); cfgPanel.hidden = !cfgPanel.hidden; });
+  closeCfgBtn?.addEventListener('click', ()=>{ cfgPanel.hidden = true; });
+  saveCfgBtn?.addEventListener('click', ()=>{ saveCfg(); cfgPanel.hidden = true; });
+
   async function loadTop(){
     let { start, end } = (window.ttDateRange || {});
     const from = normalizeDateString(start);
@@ -43,6 +66,11 @@
       u.searchParams.set('to', to);
       u.searchParams.set('limit', '3');
       u.searchParams.set('metric', 'revenue');
+      const epOverride = localStorage.getItem('lightspeed.endpoint');
+      const opOverride = localStorage.getItem('lightspeed.operator');
+      if(epOverride) u.searchParams.set('endpoint', epOverride);
+      if(opOverride) u.searchParams.set('operator', opOverride);
+
       const res = await fetch(u, { headers:{ 'accept':'application/json' } });
       const text = await res.text();
       let data = {};

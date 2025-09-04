@@ -413,10 +413,26 @@
           <h3 style="margin:0">Lightspeed – Topp 3 produkter</h3>
           <div style="display:flex;gap:8px;align-items:center">
             <button class="btn sm" data-ls="fetch" type="button">Hent</button>
+            <button class="btn sm ghost" data-ls="cfg" type="button" title="Konfigurer">⚙︎</button>
           </div>
         </header>
         <div data-ls="out" style="margin:10px 0; font-feature-settings:'tnum' 1;">
           <em>Velg måned(er) og trykk Hent</em>
+        </div>
+        <div data-ls="cfgpanel" hidden style="margin-top:8px; border:1px dashed var(--brand-outline); padding:10px; border-radius:8px; display:grid; gap:8px;">
+          <label style="display:grid; gap:4px">
+            <span style="font-weight:600">Endpoint</span>
+            <input type="text" data-ls="endpoint" placeholder="reports/v3.0/receipts" style="padding:8px; border:1px solid var(--brand-outline); border-radius:8px; background:var(--surface); color:inherit;">
+          </label>
+          <label style="display:grid; gap:4px">
+            <span style="font-weight:600">Operator (valgfritt)</span>
+            <input type="text" data-ls="operator" placeholder="Operatør-ID eller navn" style="padding:8px; border:1px solid var(--brand-outline); border-radius:8px; background:var(--surface); color:inherit;">
+          </label>
+          <div style="display:flex; gap:8px;">
+            <button class="btn sm" data-ls="savecfg" type="button">Lagre</button>
+            <button class="btn sm ghost" data-ls="closecfg" type="button">Lukk</button>
+          </div>
+          <small style="opacity:.8">Tips: Hvis du får “not a valid API service”, prøv endpoint som <code>accounting/v3.0/receipts</code> eller <code>reporting/v3.0/receipts</code>.</small>
         </div>
       </section>
     </article>
