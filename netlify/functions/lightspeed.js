@@ -18,6 +18,13 @@ const CFG = {
 };
 
 const DEFAULT_RECEIPTS_ENDPOINT = 'reports/v3.0/receipts';
+const RECEIPTS_ENDPOINT_CANDIDATES = [
+  'reports/v3.0/receipts',
+  'accounting/v3.0/receipts',
+  'reporting/v3.0/receipts',
+  'reports/v2/receipts',
+  'reports/receipts'
+];
 
 function normDate(s){
   if(!s) return null;
@@ -69,47 +76,60 @@ function buildReceiptsUrlAlt(endpoint, from, to, page=0, size=200){
   return base.toString();
 }
 
+// Some APIs prefer limit/offset
+function buildReceiptsUrlLimitOffset(endpoint, from, to, offset=0, limit=200){
+  const base = new URL(endpoint, CFG.baseUrl);
+  base.searchParams.set('from', from);
+  base.searchParams.set('to', to);
+  base.searchParams.set('offset', String(offset));
+  base.searchParams.set('limit', String(limit));
+  return base.toString();
+}
+
 async function fetchReceiptsRange({ from, to, endpoint }){
-  const ep = (endpoint || DEFAULT_RECEIPTS_ENDPOINT).replace(/^\/+|\/+$/g,'');
+  const provided = (endpoint || DEFAULT_RECEIPTS_ENDPOINT).replace(/^\/+|\/+$/g,'');
+  const candidates = [provided, ...RECEIPTS_ENDPOINT_CANDIDATES.filter(e => e !== provided)];
   const headers = authHeaders();
-  const items = [];
-  let page = 0;
-  const size = 200;
-  for(let i=0;i<20;i++){
-    let url = buildReceiptsUrl(ep, from, to, page, size);
-    let data, ok = false, lastErr = null;
-    try{
-      data = await fetchJson(url, headers);
-      ok = true;
-    }catch(e1){
-      lastErr = e1;
-      try{
-        url = buildReceiptsUrlAlt(ep, from, to, page, size);
-        data = await fetchJson(url, headers);
-        ok = true;
-      }catch(e2){
-        lastErr = e2;
+  let lastErr = null;
+
+  for (const ep of candidates) {
+    const items = [];
+    let page = 0;
+    const size = 200;
+    let success = true;
+    for (let i = 0; i < 20; i++) {
+      let data = null;
+      let ok = false;
+      try { data = await fetchJson(buildReceiptsUrl(ep, from, to, page, size), headers); ok = true; }
+      catch (e1) {
+        try { data = await fetchJson(buildReceiptsUrlAlt(ep, from, to, page, size), headers); ok = true; }
+        catch (e2) {
+          try { data = await fetchJson(buildReceiptsUrlLimitOffset(ep, from, to, page*size, size), headers); ok = true; }
+          catch (e3) { lastErr = e3; success = false; break; }
+        }
       }
-    }
-    if(!ok){
-      // Stop early on first page to surface better error; otherwise break pagination
-      if(page===0) throw lastErr || new Error('Failed to fetch receipts');
-      break;
+      if (!ok) { success = false; break; }
+
+      const arr = Array.isArray(data?.data) ? data.data
+                : Array.isArray(data?.values) ? data.values
+                : Array.isArray(data?.receipts) ? data.receipts
+                : Array.isArray(data?.items) ? data.items
+                : Array.isArray(data) ? data
+                : [];
+      items.push(...arr);
+
+      const total = (data?.totalElements ?? data?.total ?? null);
+      const hasMore = arr.length === size || (typeof total === 'number' && (page+1)*size < total);
+      if(!hasMore) break;
+      page++;
     }
 
-    const arr = Array.isArray(data?.data) ? data.data
-              : Array.isArray(data?.values) ? data.values
-              : Array.isArray(data?.receipts) ? data.receipts
-              : Array.isArray(data) ? data
-              : [];
-    items.push(...arr);
-
-    const total = (data?.totalElements ?? data?.total ?? null);
-    const hasMore = arr.length === size || (typeof total === 'number' && (page+1)*size < total);
-    if(!hasMore) break;
-    page++;
+    if (success && items.length >= 0) {
+      return items;
+    }
   }
-  return items;
+
+  throw lastErr || new Error('Failed to fetch receipts from all known endpoints');
 }
 
 // Extract line items from a Lightspeed Restaurant/Gastrofix receipt object
@@ -212,7 +232,10 @@ exports.handler = async (event) => {
       receipts = await fetchReceiptsRange({ from, to, endpoint });
     }catch(e){
       const status = e?.status || 502;
-      return err(status, 'RECEIPTS_FAIL', String(e.message||e), { details: e?.body });
+      return err(status, 'RECEIPTS_FAIL', String(e.message||e), {
+        details: e?.body,
+        triedEndpoints: [endpoint || DEFAULT_RECEIPTS_ENDPOINT, ...RECEIPTS_ENDPOINT_CANDIDATES]
+      });
     }
 
     const top = aggregateTopProducts(receipts, metric);
@@ -222,4 +245,3 @@ exports.handler = async (event) => {
     return err(500,'UNEXPECTED', String(e.message||e));
   }
 };
-

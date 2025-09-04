@@ -69,3 +69,21 @@ netlify dev
 # then in another terminal
 curl "http://localhost:8888/.netlify/functions/lightspeed?from=2024-08-01&to=2024-08-31&limit=3" | jq
 ```
+
+### CLI usage (terminal)
+
+Run via local Netlify function (recommended for no secrets in CLI):
+
+```bash
+netlify dev &
+node scripts/lightspeed-top.js --from 2024-08-01 --to 2024-08-31 --limit 3 --use-function
+```
+
+Or call Lightspeed directly (requires env vars locally):
+
+```bash
+export LIGHTSPEED_GASTROFIX_BASE_URL=https://no.gastrofix.com/api/
+export LIGHTSPEED_X_TOKEN=... # your token
+export LIGHTSPEED_BUSINESS_ID=... # your business id
+node scripts/lightspeed-top.js --from 2024-08-01 --to 2024-08-31 --limit 3
+```

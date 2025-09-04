@@ -50,7 +50,8 @@
       if(!res.ok){
         console.error('Lightspeed API error', res.status, data || text);
         const msg = data?.message || data?.error || text || 'Ukjent feil';
-        outEl.textContent = `Feil (HTTP ${res.status}) — ${msg}`;
+        const extra = data?.triedEndpoints ? `\nPrøvde endepunkter: ${data.triedEndpoints.join(', ')}` : '';
+        outEl.textContent = `Feil (HTTP ${res.status}) — ${msg}${extra}`;
         return;
       }
       const top = Array.isArray(data.top) ? data.top : [];
@@ -82,4 +83,3 @@
 
   fetchBtn.addEventListener('click', loadTop);
 })();
-
