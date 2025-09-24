@@ -74,11 +74,15 @@
     .tab-button:hover{border-color:var(--accent);background:var(--surface-raised);transform:translateY(-1px);}
     .tab-button.active{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 12px 24px rgba(56,189,248,0.24);}
     .tab-icon-row{margin-top:10px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;justify-items:center;}
-    .tab-icon{width:52px;height:52px;border-radius:18px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;color:var(--accent);transition:transform 0.22s ease,border-color 0.25s ease,background 0.25s ease;}
+    .tab-icon{width:52px;height:52px;border-radius:18px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;color:var(--accent);box-shadow:0 10px 18px rgba(8,15,35,0.24);transition:transform 0.22s ease,border-color 0.25s ease,background 0.25s ease,box-shadow 0.3s ease;}
     .tab-icon svg{width:26px;height:26px;stroke:currentColor;stroke-width:1.8;fill:none;}
+    .tab-icon.active{background:var(--surface-raised);border-color:currentColor;transform:translateY(-2px);box-shadow:0 18px 34px rgba(8,15,35,0.4);}
     .tab-icon--kpi{color:var(--accent-strong);}
     .tab-icon--oversikt{color:var(--positive);}
     .tab-icon--ai{color:var(--neutral);}
+    .tab-icon--kpi.active{background:rgba(56,189,248,0.18);}
+    .tab-icon--oversikt.active{background:rgba(52,211,153,0.18);}
+    .tab-icon--ai.active{background:rgba(251,191,36,0.18);}
     .tab-icon:hover{transform:translateY(-1px);border-color:currentColor;background:var(--surface-raised);}
     main{width:100%;padding:clamp(24px,6vw,48px) 0 clamp(56px,10vw,96px);}
     .tab-panel{display:none;gap:clamp(18px,4vw,32px);}
@@ -161,13 +165,13 @@
       <button class="tab-button" id="tab-ai" type="button" role="tab" aria-selected="false" aria-controls="ai-tips" data-tab-target="ai-tips" tabindex="-1">AI-tips</button>
     </div>
     <div class="shell tab-icon-row" aria-hidden="true">
-      <div class="tab-icon tab-icon--kpi">
+      <div class="tab-icon tab-icon--kpi active" data-tab-icon="kpi">
         <svg viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 18h16" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 12l4-4 3 3 7-7" />
         </svg>
       </div>
-      <div class="tab-icon tab-icon--oversikt">
+      <div class="tab-icon tab-icon--oversikt" data-tab-icon="oversikt">
         <svg viewBox="0 0 24 24">
           <rect x="4" y="4" width="7" height="7" rx="1.4" />
           <rect x="13" y="4" width="7" height="7" rx="1.4" />
@@ -175,7 +179,7 @@
           <rect x="13" y="13" width="7" height="7" rx="1.4" />
         </svg>
       </div>
-      <div class="tab-icon tab-icon--ai">
+      <div class="tab-icon tab-icon--ai" data-tab-icon="ai-tips">
         <svg viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4a5 5 0 00-3 9.02V15a2 2 0 002 2h2a2 2 0 002-2v-1.98A5 5 0 0012 4z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M10 19h4m-3 3h2" />
@@ -347,6 +351,7 @@
     (function() {
       const buttons = Array.from(document.querySelectorAll('.tab-button'));
       const panels = Array.from(document.querySelectorAll('.tab-panel'));
+      const icons = Array.from(document.querySelectorAll('.tab-icon'));
 
       function activateTab(targetId) {
         buttons.forEach((btn) => {
@@ -360,6 +365,11 @@
           const isMatch = panel.id === targetId;
           panel.classList.toggle('active', isMatch);
           panel.toggleAttribute('hidden', !isMatch);
+        });
+
+        icons.forEach((icon) => {
+          const matches = icon.dataset.tabIcon === targetId;
+          icon.classList.toggle('active', matches);
         });
       }
 
