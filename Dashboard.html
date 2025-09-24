@@ -1,554 +1,404 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="no">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="color-scheme" content="light dark">
-  <title>Dashboard — Scope</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Scope Dashboard</title>
   <style>
-    :root{
-      --brand-600:#7d79f9; --brand-700:#6c63d9;
-      --brand-gradient:linear-gradient(90deg,#7d79f9,#c864aa);
-      --brand-outline:color-mix(in srgb,var(--brand-600),#fff 40%);
-      --ink-900:#0b1220; --ink-800:#111827; --ink-700:#1f2937; --ink-600:#374151; --ink-500:#4b5563;
-      --surface:#ffffff; --muted:#f9fafb; --border:#e5e7eb; --card-border:#c4b5fd;
-      --radius:16px; --shadow:0 10px 28px rgba(2,6,23,.06); --ring:0 0 0 3px rgba(125,121,249,0.6);
-      --track-light:#e5e7eb; --track-dark:#374151;
-      --card-radius:16px; --card-shadow:0 10px 28px rgba(2,6,23,.06);
-      --appbar-h:72px;
-    }
-    *,*::before,*::after{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif;background:var(--muted);color:var(--ink-900);line-height:1.7;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-    a{color:inherit;text-decoration:none}
-    button{font-family:inherit}
-    button:focus-visible,a:focus-visible{outline:none;box-shadow:var(--ring)}
-
-    header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
-    body[data-theme="dark"] header{background:rgba(17,24,39,.96);border-bottom-color:var(--border)}
-    .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-block:14px;padding-inline-end:clamp(28px,6vw,96px)}
-    .brand{display:flex;gap:.6rem;align-items:center;font-weight:800;color:var(--ink-900);text-decoration:none}
-    .brand .logo{inline-size:40px;block-size:40px;border-radius:12px;background:#fff;border:2px solid var(--brand-600);display:grid;place-items:center;box-shadow:var(--shadow)}
-    .brand span{font-size:18px}
-    .appbar-center{justify-self:center;font-weight:800;color:var(--ink-900)}
-    .nav-right{display:flex;align-items:center;gap:12px;contain:layout paint}
-    .nav-right>*{display:flex;align-items:center}
-    .nav-actions{display:flex;align-items:center;gap:12px;white-space:nowrap}
-    #lang-toggle,.theme-switch{height:32px}
-    .theme-switch{min-width:56px}
-
-    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 10px;height:32px;font-weight:700;background:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:52px;font-size:14px;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background-color .20s ease,border-color .20s ease,color .20s ease;will-change:background-color,border-color,color;backface-visibility:hidden;transform:translateZ(0)}
-    .chip:focus-visible{outline:none;box-shadow:var(--ring)}
-    .chip:hover{background:var(--muted)}
-    body:not([data-theme="dark"]) .chip{color:#0b1220}
-    body[data-theme="dark"] .chip{background:var(--surface);border-color:var(--brand-outline);color:#f3f5fa}
-
-    .hamburger{
-      background:transparent;border:1px solid var(--brand-outline);
-      width:36px;height:36px;border-radius:999px;line-height:1;
-      display:inline-flex;align-items:center;justify-content:center;
-      font-size:18px;color:var(--ink-900);cursor:pointer;
-    }
-    .hamburger:focus-visible{outline:none;box-shadow:var(--ring)}
-
-    .theme-switch{position:relative;display:inline-flex;width:56px;height:32px}
-    .theme-switch input{opacity:0;width:0;height:0}
-    .theme-switch .slider{position:relative;cursor:pointer;display:block;width:100%;height:100%;background:var(--track-light);transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,.15);border:1px solid var(--brand-outline);padding:3px;backface-visibility:hidden;transform:translateZ(0)}
-    .theme-switch input:focus-visible + .slider{box-shadow:var(--ring)}
-    body[data-theme="dark"] .theme-switch .slider{background:var(--track-dark);box-shadow:0 1px 2px rgba(255,255,255,.3)}
-    .theme-switch .thumb{position:absolute;top:50%;left:3px;width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;border:1px solid var(--brand-outline);box-shadow:0 2px 4px rgba(0,0,0,.2);transform:translateY(-50%) translateZ(0);backface-visibility:hidden}
-    .theme-switch input:checked + .slider{background:var(--brand-600)}
-    .theme-switch input:checked + .slider .thumb{left:calc(100% - 3px);transform:translate(-100%,-50%) translateZ(0)}
-    .theme-switch .icon{width:16px;height:16px;stroke-width:2}
-    .theme-switch .icon.sun{stroke:#FDB813;fill:none}
-    .theme-switch .icon.moon{fill:#20354a;stroke:none;display:none}
-    .theme-switch input:checked + .slider .icon.sun{display:none}
-    .theme-switch input:checked + .slider .icon.moon{display:block}
-
-    .theme-changing .chip,
-    .theme-changing .theme-switch .slider,
-    .theme-changing .theme-switch .thumb{transition-duration:.10s}
-
-    .mobile-toggle{display:none;background:none;border:1px solid var(--border);border-radius:999px;padding:10px 14px}
-    .mobile-toggle:focus-visible{outline:none;box-shadow:var(--ring)}
-    @media (max-width:820px){
-      .mobile-toggle{display:inline-flex}
-    }
-
-    body[data-theme="dark"]{--ink-900:#f9fafb;--ink-800:#e5e7eb;--ink-700:#d1d5db;--ink-600:#9ca3af;--ink-500:#6b7280;--surface:#111827;--muted:#1f2937;--border:#374151;background:#0b1220;color:var(--ink-900)}
-
-    /* Drawer */
-    #drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(2px);z-index:40}
-    .drawer{position:fixed;top:0;right:0;height:100%;width:280px;max-width:80%;background:var(--surface);border-left:1px solid var(--card-border);box-shadow:-4px 0 18px rgba(0,0,0,.1);transform:translateX(100%);transition:transform .3s;z-index:50;padding:20px;display:flex;flex-direction:column;gap:20px}
-    .drawer.open{transform:translateX(0)}
-    .drawer a{padding:10px 0;font-weight:600}
-    /* Layout */
-
-    :root{
-      --brand-1: #8e2de2;  /* purple */
-      --brand-2: #ff66c7;  /* pink   */
-      --surface: #ffffff;
-      --border: #e8e8f2;
-      --shadow: 0 10px 28px rgba(2,6,23,.06);
-    }
-
-    .container{ max-width: 1400px; margin-inline: auto; padding-inline: clamp(16px,4vw,40px); }
-
-    .cards{
-      margin-top: 20px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap: clamp(16px, 2.4vw, 26px);
-      padding-bottom: 32px;
-    }
-
-    /* Gradient border (no weird masks): use border-image */
-    .card.big{
-      background: var(--surface);
-      border: 2px solid transparent;
-      border-radius: 20px;
-      border-image: linear-gradient(135deg, var(--brand-1), var(--brand-2)) 1;
-      min-height: clamp(320px, 52vh, 560px);
-      box-shadow: var(--shadow);
-    }
-
-    /* Dark mode parity */
-    body[data-theme="dark"] .card.big{
-      background: var(--surface);
-      box-shadow: 0 10px 28px rgba(0,0,0,.28);
-    }
-
-    /* Responsive: 3 -> 2 -> 1 columns */
-    @media (max-width: 1200px){
-      .cards{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-    }
-    @media (max-width: 760px){
-      .cards{ grid-template-columns: 1fr; }
-    }
-    :root{
-      --brand-1:#8e2de2; /* purple */
-      --brand-2:#ff66c7; /* pink */
-      --surface:#ffffff;
-      --border:#e8e8f2;
-      --ink-900:#0b1220;
-      --shadow:0 10px 28px rgba(2,6,23,.06);
-    }
-
-    .container{ max-width:1400px; margin-inline:auto; padding-inline:clamp(16px,4vw,40px); }
-
-    .cards{
-      margin-top:16px;
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:clamp(16px,2.4vw,26px);
-      padding-bottom:24px;
-    }
-
-    /* gradient border + rounded corners + fills remaining height */
-    .card.big{
-      background:var(--surface);
-      border:2px solid transparent;
-      border-radius:24px;
-      border-image:linear-gradient(135deg,var(--brand-1),var(--brand-2)) 1;
-      overflow:hidden;
-      box-shadow:var(--shadow);
-
-      /* “helt ned”: viewport minus header & topp-margin */
-      min-height:clamp(520px, calc(100vh - 160px), 1000px);
-      display:flex;
-      flex-direction:column;
-    }
-
-    /* space for future content */
-    .card.big > *:not(.card-header){ padding:18px; }
-
-    /* dark mode */
-    body[data-theme="dark"] .card.big{
-      background:#111827;
-      box-shadow:0 10px 28px rgba(0,0,0,.28);
-    }
-
-    /* responsive: 3 -> 2 -> 1 columns */
-    @media (max-width:1200px){ .cards{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    @media (max-width:760px){ .cards{ grid-template-columns:1fr; } }
-
-    /* Dashboard card tweaks */
-    .card.big{
-      border-radius:24px;         /* round corners */
-      overflow:hidden;            /* clip header to radius */
-    }
-
-    /* Header layout */
-    .card-header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:16px 18px 10px;
-    }
-    .card-header h3{
+    *,*::before,*::after{box-sizing:border-box;}
+    body{
       margin:0;
-      font-size:20px;
-      font-weight:700;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      line-height:1.55;
+      letter-spacing:0.01em;
+      transition:background 0.3s ease,color 0.3s ease;
+      --bg:#0f172a;
+      --surface:#111827;
+      --surface-raised:#1e293b;
+      --border:rgba(148,163,184,0.28);
+      --text:#e2e8f0;
+      --text-strong:#f8fafc;
+      --muted:#94a3b8;
+      --accent:#38bdf8;
+      --accent-strong:#0ea5e9;
+      --accent-soft:rgba(56,189,248,0.18);
+      --positive:#34d399;
+      --neutral:#fbbf24;
+      --attention:#f87171;
+      --card-radius:18px;
+      color:var(--text);
+      background:var(--bg);
+      min-height:100vh;
+      color-scheme:dark;
     }
-    .card-actions{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
+    body[data-theme="light"]{
+      --bg:#f1f5f9;
+      --surface:#ffffff;
+      --surface-raised:#e2e8f0;
+      --border:rgba(15,23,42,0.12);
+      --text:#0f172a;
+      --text-strong:#0f172a;
+      --muted:#64748b;
+      --accent:#0284c7;
+      --accent-strong:#0ea5e9;
+      --accent-soft:rgba(2,132,199,0.14);
+      color-scheme:light;
     }
-
-    /* Button base */
-    .btn{font-weight:600;line-height:1;cursor:pointer;transition:.2s ease}
-    .btn-pill{border-radius:9999px;padding:10px 18px;font-size:16px}
-    .btn-outline{
-      background:transparent;
-      border:2px solid var(--brand-300,#bfa7ff);
-      color:var(--ink-900,#0b1220);
-      box-shadow:0 0 0 0 rgba(0,0,0,0);
+    h1,h2,h3,h4{margin:0;font-weight:600;color:var(--text-strong);}
+    p{margin:0;}
+    button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;}
+    button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+    .shell{width:100%;max-width:1120px;margin:0 auto;padding-inline:clamp(16px,6vw,56px);}
+    .top-bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 18px 28px rgba(15,23,42,0.24);}
+    .top-bar__inner{display:flex;align-items:center;gap:clamp(12px,3vw,32px);min-height:74px;}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:700;color:var(--text-strong);}
+    .logo{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:var(--surface-raised);border:1px solid var(--border);font-weight:700;letter-spacing:0.08em;}
+    .brand-name{font-size:1.05rem;}
+    .brand-title{flex:1;text-align:center;font-size:clamp(1.05rem,3vw,1.35rem);font-weight:600;}
+    .nav-actions{display:flex;align-items:center;gap:14px;}
+    .pill{padding:0 18px;height:36px;border-radius:999px;border:1px solid var(--border);background:var(--surface-raised);font-weight:600;transition:background 0.25s ease,border-color 0.25s ease,transform 0.25s ease;}
+    .pill:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);}
+    .theme-toggle{width:56px;height:32px;border-radius:999px;border:1px solid var(--border);background:var(--surface-raised);position:relative;padding:0;transition:border-color 0.25s ease,background 0.25s ease;}
+    .theme-toggle::before{content:"";position:absolute;inset:5px;border-radius:999px;background:rgba(148,163,184,0.28);transition:background 0.25s ease;}
+    .theme-toggle::after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:var(--text-strong);box-shadow:0 2px 10px rgba(2,6,23,0.45);transform:translateX(-12px);transition:transform 0.25s ease,background 0.25s ease,box-shadow 0.25s ease;}
+    body[data-theme="light"] .theme-toggle{background:var(--surface);border-color:rgba(15,23,42,0.12);}
+    body[data-theme="light"] .theme-toggle::before{background:rgba(148,163,184,0.2);}
+    body[data-theme="light"] .theme-toggle::after{transform:translateX(12px);background:#0f172a;box-shadow:0 2px 12px rgba(15,23,42,0.18);}
+    .hamburger{width:44px;height:44px;border-radius:14px;border:1px solid var(--border);background:var(--surface-raised);display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 12px;transition:background 0.25s ease,border-color 0.25s ease,transform 0.25s ease;}
+    .hamburger span{display:block;width:18px;height:2px;border-radius:999px;background:var(--text-strong);transition:background 0.25s ease;}
+    .hamburger:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);}
+    .sub-nav{background:var(--bg);padding:clamp(18px,4vw,28px) 0 0;}
+    .tablist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+    .tab-button{padding:18px 20px;border-radius:16px;border:1px solid var(--border);background:var(--surface);font-size:1rem;font-weight:600;letter-spacing:0.02em;transition:background 0.25s ease,border-color 0.25s ease,box-shadow 0.25s ease,transform 0.25s ease;}
+    .tab-button:hover{border-color:var(--accent);background:var(--surface-raised);transform:translateY(-1px);}
+    .tab-button.active{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 12px 24px rgba(56,189,248,0.24);}
+    .tab-icon-row{margin-top:10px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;justify-items:center;}
+    .tab-icon{width:52px;height:52px;border-radius:18px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;color:var(--accent);transition:transform 0.22s ease,border-color 0.25s ease,background 0.25s ease;}
+    .tab-icon svg{width:26px;height:26px;stroke:currentColor;stroke-width:1.8;fill:none;}
+    .tab-icon--kpi{color:var(--accent-strong);}
+    .tab-icon--oversikt{color:var(--positive);}
+    .tab-icon--ai{color:var(--neutral);}
+    .tab-icon:hover{transform:translateY(-1px);border-color:currentColor;background:var(--surface-raised);}
+    main{width:100%;padding:clamp(24px,6vw,48px) 0 clamp(56px,10vw,96px);}
+    .tab-panel{display:none;gap:clamp(18px,4vw,32px);}
+    .tab-panel.active{display:grid;}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-radius);padding:clamp(18px,3vw,28px);box-shadow:0 24px 40px rgba(8,15,35,0.32);}
+    .card header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:clamp(14px,2vw,20px);}
+    .stats-grid{display:grid;gap:clamp(16px,3vw,24px);grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
+    .stat-number{font-size:clamp(1.8rem,4vw,2.7rem);font-weight:700;color:var(--text-strong);margin-top:4px;}
+    .stat-sub{margin-top:10px;font-size:0.95rem;color:var(--accent);}
+    .table-scroll{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;font-size:0.95rem;min-width:280px;}
+    thead th{text-align:left;font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding-bottom:10px;}
+    tbody tr{border-top:1px solid var(--border);transition:background 0.25s ease;}
+    tbody tr:first-child{border-top:none;}
+    tbody tr:hover{background:rgba(148,163,184,0.08);}
+    td,th{padding:12px 0;}
+    td:last-child,th:last-child{text-align:right;}
+    .chart-card .bar-chart{position:relative;display:grid;grid-template-columns:repeat(14,minmax(0,1fr));align-items:end;gap:10px;height:220px;margin-top:18px;padding-bottom:26px;}
+    .bar{position:relative;height:calc(var(--value)*1%);min-height:12px;border-radius:10px 10px 6px 6px;background:linear-gradient(180deg,var(--accent),var(--accent-strong));box-shadow:0 12px 30px rgba(14,165,233,0.25);transition:transform 0.25s ease;}
+    .bar:hover{transform:translateY(-4px);}
+    .bar span{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;}
+    .tips-list{list-style:none;margin:0;padding:0;display:grid;gap:clamp(14px,3vw,20px);}
+    .tips-list li{display:flex;flex-direction:column;gap:12px;padding:clamp(14px,3vw,22px);border-radius:14px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.16);}
+    body[data-theme="light"] .tips-list li{background:rgba(148,163,184,0.12);}
+    .tip-body{font-size:1rem;color:var(--text);}
+    .tip-tags{display:flex;flex-wrap:wrap;gap:8px;}
+    .chip{display:inline-flex;align-items:center;justify-content:center;padding:0 14px;height:30px;border-radius:999px;font-size:0.85rem;font-weight:600;border:1px solid transparent;letter-spacing:0.02em;}
+    .chip.positive{color:var(--positive);background:rgba(52,211,153,0.18);border-color:rgba(52,211,153,0.24);}
+    .chip.neutral{color:var(--neutral);background:rgba(251,191,36,0.18);border-color:rgba(251,191,36,0.3);}
+    .chip.attention{color:var(--attention);background:rgba(248,113,113,0.18);border-color:rgba(248,113,113,0.3);}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+    @media (max-width:960px){
+      .brand-title{font-size:1.15rem;}
+      .tablist{grid-template-columns:repeat(3,minmax(0,1fr));}
     }
-    .btn-outline:hover{
-      background:rgba(143,45,226,.06);
-      transform:translateY(-1px);
+    @media (max-width:760px){
+      .top-bar__inner{flex-wrap:wrap;justify-content:space-between;}
+      .brand{order:1;}
+      .brand-title{order:2;flex-basis:100%;text-align:center;}
+      .nav-actions{order:3;width:100%;justify-content:center;gap:12px;}
+      .sub-nav{padding-top:18px;}
+      .tablist{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
     }
-    .btn-outline:focus-visible{
-      outline:none;
-      box-shadow:0 0 0 3px rgba(179,144,255,.35);
+    @media (max-width:520px){
+      .shell{padding-inline:16px;}
+      .top-bar__inner{gap:18px;}
+      .nav-actions{flex-wrap:wrap;}
+      .tablist{grid-template-columns:1fr;}
+      .tab-button{text-align:center;}
+      .tips-list li{padding:18px;}
     }
-    [data-theme="dark"] .btn-outline{
-      border-color:var(--brand-400,#c38cff);
-      color:var(--ink-100,#f5f7ff);
+    @media (prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important;}
     }
-    [data-theme="dark"] .btn-outline:hover{
-      background:rgba(195,140,255,.10);
-    }
-
-    :root{
-      --card-radius: 24px;              /* adjust if you want softer/harder corners */
-    }
-
-    .card.big{
-      position: relative;
-      border: 1px solid transparent;    /* needed for the gradient border trick */
-      border-radius: var(--card-radius);
-      border-image: none;
-      background:
-        linear-gradient(var(--surface), var(--surface)) padding-box,         /* inner fill */
-        var(--brand-gradient) border-box;                                    /* outer gradient */
-      box-shadow: 0 10px 28px rgba(2,6,23,.06);
-      overflow: hidden;                           /* clip content & shadows to radius */
-      isolation: isolate;                         /* safer with shadows/filters */
-    }
-
-    /* If there is an inner content wrapper, keep the same radius */
-    .card.big .card-inner,
-    .card.big .card-body{
-      border-radius: inherit;
-      background: transparent;
-    }
-
-    /* Hover state keeps radius */
-    .card.big:hover{
-      box-shadow: 0 12px 34px rgba(2,6,23,.10);
-      transform: translateY(-1px);
-    }
-
-    /* KILL any old gradient border implementations that break corners */
-    .card.big::before,
-    .card.big::after{
-      content: none !important;
-      display: none !important;
-    }
-
-    /* If some previous rule forces a different radius, neutralize it */
-    .card,
-    .panel,
-    .board-card{
-      border-radius: var(--card-radius);
-    }
-
-    /* Dark mode divider/header inside the card should also follow radius if needed */
-    body[data-theme="dark"] .card.big{
-      background:
-        linear-gradient(var(--surface), var(--surface)) padding-box,
-        var(--brand-gradient) border-box;
-    }
-    /* Popover shell */
-    .month-popover{
-      position:absolute; z-index:1000; min-width:260px;
-      background:var(--surface); color:var(--ink-900);
-      border:1px solid var(--brand-outline); border-radius:14px;
-      box-shadow:0 12px 28px rgba(2,6,23,.18); padding:10px;
-      animation:mpo .12s ease;
-    }
-    @keyframes mpo{from{opacity:.0; transform:translateY(-6px)} to{opacity:1; transform:none}}
-    body[data-theme="dark"] .month-popover{
-      background:var(--surface); border-color:var(--brand-outline);
-    }
-    .month-popover .mpo-head{
-      display:flex; align-items:center; justify-content:space-between; gap:8px;
-      padding:6px 6px 8px; border-bottom:1px solid var(--border);
-    }
-    .mpo-head .mpo-nav{display:flex; gap:6px}
-    .mpo-head .icon-btn{
-      appearance:none; border:1px solid var(--brand-outline); background:transparent;
-      width:28px; height:28px; border-radius:999px; display:grid; place-items:center;
-      cursor:pointer;
-    }
-    .mpo-grid{
-      display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 4px 4px;
-    }
-    .mpo-grid button{
-      appearance:none; cursor:pointer; border:1px solid var(--brand-outline);
-      background:transparent; color:inherit; border-radius:12px;
-      padding:10px 8px; font-weight:700;
-    }
-    .mpo-grid button:hover{background:var(--muted)}
-    .mpo-grid button[aria-pressed="true"]{
-      background:var(--brand-gradient); border-color:transparent; color:#fff;
-    }
-    .mpo-foot{padding:8px 6px 4px; color:var(--ink-600); font-size:12px; min-height:18px}
-
-    .btn.sm{padding:6px 12px;font-size:14px;border:1px solid var(--brand-outline);border-radius:8px;background:var(--surface)}
-    .btn.sm.ghost{background:transparent}
   </style>
-  <!-- Inline SVGs for Scope logo -->
-  <svg width="0" height="0" style="position:absolute">
-    <defs>
-      <symbol id="icon-scope" viewBox="0 0 40 40">
-        <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="3"/>
-        <circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="3"/>
-        <circle cx="20" cy="20" r="6" fill="none" stroke="currentColor" stroke-width="3"/>
-        <circle cx="20" cy="20" r="2.2" fill="currentColor"/>
-      </symbol>
-    </defs>
-  </svg>
-  <script>
-    (function(){
-      try{
-        const authed = localStorage.getItem('scope.authed') === '1';
-        const user = (localStorage.getItem('scope.user')||'').toLowerCase();
-        if(!authed || user!=='test@gressholmen.no'){
-          window.location.replace('login.html');
-        }
-      }catch(e){ window.location.replace('login.html'); }
-    })();
-  </script>
 </head>
-<body>
-  <header>
-    <div class="container nav" role="navigation" aria-label="Toppmeny">
-      <a class="brand" href="/" aria-label="Scope">
-        <div class="logo" style="color:var(--brand-600)"><svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true"><use href="#icon-scope"/></svg></div>
-        <span>Scope</span>
-      </a>
-
-      <div class="appbar-center"><span id="company-name">Gressholmen Kro</span></div>
-
+<body data-theme="dark">
+  <header class="top-bar">
+    <div class="shell top-bar__inner">
+      <div class="brand">
+        <span class="logo">S</span>
+        <span class="brand-name">Scope</span>
+      </div>
+      <div class="brand-title">Gressholmen Kro</div>
       <div class="nav-actions">
-        <button id="lang-toggle" class="chip">NO</button>
-        <label class="theme-switch">
-          <input type="checkbox" id="theme-toggle" aria-label="Tema">
-          <span class="slider">
-            <span class="thumb">
-              <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="5"/>
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
-              </svg>
-            </span>
-          </span>
-        </label>
-        <button id="menu-toggle" class="hamburger" aria-label="Meny" type="button">☰</button>
+        <button type="button" class="pill" aria-label="Bytt til engelsk">EN</button>
+        <button type="button" class="theme-toggle" aria-pressed="true" aria-label="Bytt tema"></button>
+        <button type="button" class="hamburger" aria-label="Åpne meny">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
       </div>
     </div>
-    </header>
-
-  <section class="cards container" aria-label="Hovedpanel">
-    <article class="card big" aria-label="KPI-er">
-      <div class="card-header">
-        <h3>KPI-er</h3>
-        <div class="card-actions">
-          <select id="start-month" class="chip" aria-label="Start">
-            <option value="0">Jan</option>
-            <option value="1">Feb</option>
-            <option value="2">Mar</option>
-            <option value="3">Apr</option>
-            <option value="4">May</option>
-            <option value="5">Jun</option>
-            <option value="6">Jul</option>
-            <option value="7">Aug</option>
-            <option value="8">Sep</option>
-            <option value="9">Oct</option>
-            <option value="10">Nov</option>
-            <option value="11">Dec</option>
-          </select>
-          <select id="end-month" class="chip" aria-label="End">
-            <option value="0">Jan</option>
-            <option value="1">Feb</option>
-            <option value="2">Mar</option>
-            <option value="3">Apr</option>
-            <option value="4">May</option>
-            <option value="5">Jun</option>
-            <option value="6">Jul</option>
-            <option value="7">Aug</option>
-            <option value="8">Sep</option>
-            <option value="9">Oct</option>
-            <option value="10">Nov</option>
-            <option value="11">Dec</option>
-          </select>
-        </div>
+  </header>
+  <nav class="sub-nav">
+    <div class="shell tablist" role="tablist" aria-label="Dashboard faner">
+      <button class="tab-button active" id="tab-kpi" type="button" role="tab" aria-selected="true" aria-controls="kpi" data-tab-target="kpi" tabindex="0">KPI-er</button>
+      <button class="tab-button" id="tab-oversikt" type="button" role="tab" aria-selected="false" aria-controls="oversikt" data-tab-target="oversikt" tabindex="-1">Oversikt</button>
+      <button class="tab-button" id="tab-ai" type="button" role="tab" aria-selected="false" aria-controls="ai-tips" data-tab-target="ai-tips" tabindex="-1">AI-tips</button>
+    </div>
+    <div class="shell tab-icon-row" aria-hidden="true">
+      <div class="tab-icon tab-icon--kpi">
+        <svg viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 18h16" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12l4-4 3 3 7-7" />
+        </svg>
       </div>
-      <section class="card" id="tripletex-sales" style="border-radius:16px; border:1px solid #c4b5fd; padding:16px; box-shadow:0 10px 28px rgba(2,6,23,.06);">
-        <header style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <h3 style="margin:0">3003 – Salg Øl</h3>
-          <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn sm" data-tt="fetch" type="button">Hent</button>
-            <button class="btn sm" data-tt="csv" type="button">CSV</button>
-          </div>
-        </header>
-        <p data-tt="out" style="margin:10px 0">–</p>
-      </section>
-      <div style="margin-top:14px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <label style="display:flex; flex-direction:column; gap:4px;">
-          <span style="font-weight:600">Start</span>
-          <input type="date" data-sales="start" style="padding:8px; border:1px solid var(--brand-outline); border-radius:8px; background:var(--surface); color:inherit;">
-        </label>
-        <label style="display:flex; flex-direction:column; gap:4px;">
-          <span style="font-weight:600">Slutt</span>
-          <input type="date" data-sales="end" style="padding:8px; border:1px solid var(--brand-outline); border-radius:8px; background:var(--surface); color:inherit;">
-        </label>
+      <div class="tab-icon tab-icon--oversikt">
+        <svg viewBox="0 0 24 24">
+          <rect x="4" y="4" width="7" height="7" rx="1.4" />
+          <rect x="13" y="4" width="7" height="7" rx="1.4" />
+          <rect x="4" y="13" width="7" height="7" rx="1.4" />
+          <rect x="13" y="13" width="7" height="7" rx="1.4" />
+        </svg>
       </div>
-      <section class="card" id="sales-top-products" style="margin-top:14px; border-radius:16px; border:1px solid #c4b5fd; padding:16px; box-shadow:0 10px 28px rgba(2,6,23,.06);">
-        <header style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <h3 style="margin:0">Mest solgte produkter</h3>
-          <button class="btn sm" data-sales="fetch" type="button">Hent</button>
-        </header>
-        <div data-sales="top-out" style="margin:10px 0; font-feature-settings:'tnum' 1;">
-          <em>Trykk Hent for å laste</em>
-        </div>
-      </section>
-      <section class="card" id="sales-least-products" style="margin-top:14px; border-radius:16px; border:1px solid #c4b5fd; padding:16px; box-shadow:0 10px 28px rgba(2,6,23,.06);">
-        <header style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <h3 style="margin:0">Minst solgte produkter</h3>
-          <button class="btn sm" data-sales="fetch" type="button">Hent</button>
-        </header>
-        <div data-sales="bottom-out" style="margin:10px 0; font-feature-settings:'tnum' 1;">
-          <em>Trykk Hent for å laste</em>
-        </div>
-      </section>
-      <section class="card" id="sales-top-products" style="margin-top:14px; border-radius:16px; border:1px solid #c4b5fd; padding:16px; box-shadow:0 10px 28px rgba(2,6,23,.06);">
-        <header style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <h3 style="margin:0">Mest solgte produkter</h3>
-          <button class="btn sm" data-sales="fetch" type="button">Hent</button>
-        </header>
-        <div data-sales="top-out" style="margin:10px 0; font-feature-settings:'tnum' 1;">
-          <em>Trykk Hent for å laste</em>
-        </div>
-      </section>
-      <section class="card" id="sales-least-products" style="margin-top:14px; border-radius:16px; border:1px solid #c4b5fd; padding:16px; box-shadow:0 10px 28px rgba(2,6,23,.06);">
-        <header style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <h3 style="margin:0">Minst solgte produkter</h3>
-          <button class="btn sm" data-sales="fetch" type="button">Hent</button>
-        </header>
-        <div data-sales="bottom-out" style="margin:10px 0; font-feature-settings:'tnum' 1;">
-          <em>Trykk Hent for å laste</em>
-        </div>
-      </section>
-    </article>
-    <article class="card big" aria-label="Oversikt">
-      <div class="card-header"><h3>Oversikt</h3></div>
-    </article>
-    <article class="card big ai-tips" aria-label="AI-tips">
-      <div class="card-header">
-        <h3>AI-tips</h3>
+      <div class="tab-icon tab-icon--ai">
+        <svg viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4a5 5 0 00-3 9.02V15a2 2 0 002 2h2a2 2 0 002-2v-1.98A5 5 0 0012 4z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19h4m-3 3h2" />
+        </svg>
       </div>
-    </article>
-  </section>
-<<<<<<< ours
-  <script defer src="/assets/js/tt-dashboard.js"></script>
-  <script defer src="/assets/js/ls-dashboard.js"></script>
-  <script defer src="/assets/js/sales-dashboard.js"></script>
-=======
-    <script defer src="/assets/js/tt-dashboard.js"></script>
-    <script defer src="/assets/js/sales-dashboard.js"></script>
->>>>>>> theirs
-
-  <div id="drawer-backdrop" hidden></div>
-  <aside id="side-drawer" class="drawer" hidden>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="#">Reports</a>
-    <a href="#">Inventory</a>
-    <a href="#">Settings</a>
-    <a href="#" id="logout">Log out</a>
-  </aside>
-  <div id="month-portals"></div>
+    </div>
+  </nav>
+  <main class="shell">
+    <section class="tab-panel active" id="kpi" role="tabpanel" aria-labelledby="tab-kpi" tabindex="0">
+      <div class="stats-grid">
+        <article class="card stat">
+          <h2>Daglig omsetning</h2>
+          <p class="stat-number">134&nbsp;560 kr</p>
+          <p class="stat-sub">+12% siden i går</p>
+        </article>
+        <article class="card stat">
+          <h2>Gjennomsnittlig besøk</h2>
+          <p class="stat-number">286 gjester</p>
+          <p class="stat-sub">+8% siste uke</p>
+        </article>
+        <article class="card stat">
+          <h2>Snittordre</h2>
+          <p class="stat-number">472 kr</p>
+          <p class="stat-sub">+5% siste 14 dager</p>
+        </article>
+      </div>
+      <article class="card table-card">
+        <header>
+          <h2>Topp 3 produkter</h2>
+        </header>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Produkt</th>
+                <th>Solgt</th>
+                <th>Andel</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Grillet kveite</td>
+                <td>184</td>
+                <td>32%</td>
+              </tr>
+              <tr>
+                <td>Fersk blåskjell</td>
+                <td>156</td>
+                <td>27%</td>
+              </tr>
+              <tr>
+                <td>Bryggens burger</td>
+                <td>142</td>
+                <td>24%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+    <section class="tab-panel" id="oversikt" role="tabpanel" aria-labelledby="tab-oversikt" tabindex="0" hidden>
+      <article class="card chart-card">
+        <header>
+          <h2>Omsetning (14 dager)</h2>
+        </header>
+        <div class="bar-chart" role="img" aria-label="Placeholder søylegraf for fjorten dager med omsetning">
+          <div class="bar" style="--value:72" title="Dag 1: 72%"><span>ma</span></div>
+          <div class="bar" style="--value:54" title="Dag 2: 54%"><span>ti</span></div>
+          <div class="bar" style="--value:88" title="Dag 3: 88%"><span>on</span></div>
+          <div class="bar" style="--value:47" title="Dag 4: 47%"><span>to</span></div>
+          <div class="bar" style="--value:63" title="Dag 5: 63%"><span>fr</span></div>
+          <div class="bar" style="--value:92" title="Dag 6: 92%"><span>lø</span></div>
+          <div class="bar" style="--value:68" title="Dag 7: 68%"><span>sø</span></div>
+          <div class="bar" style="--value:75" title="Dag 8: 75%"><span>ma</span></div>
+          <div class="bar" style="--value:58" title="Dag 9: 58%"><span>ti</span></div>
+          <div class="bar" style="--value:84" title="Dag 10: 84%"><span>on</span></div>
+          <div class="bar" style="--value:49" title="Dag 11: 49%"><span>to</span></div>
+          <div class="bar" style="--value:66" title="Dag 12: 66%"><span>fr</span></div>
+          <div class="bar" style="--value:97" title="Dag 13: 97%"><span>lø</span></div>
+          <div class="bar" style="--value:71" title="Dag 14: 71%"><span>sø</span></div>
+        </div>
+      </article>
+      <article class="card table-card">
+        <header>
+          <h2>Omsetning per dag</h2>
+        </header>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Dato</th>
+                <th>Omsetning</th>
+                <th>Gjester</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>12. mai</td>
+                <td>128&nbsp;900 kr</td>
+                <td>302</td>
+              </tr>
+              <tr>
+                <td>11. mai</td>
+                <td>142&nbsp;100 kr</td>
+                <td>318</td>
+              </tr>
+              <tr>
+                <td>10. mai</td>
+                <td>119&nbsp;450 kr</td>
+                <td>276</td>
+              </tr>
+              <tr>
+                <td>9. mai</td>
+                <td>105&nbsp;780 kr</td>
+                <td>244</td>
+              </tr>
+              <tr>
+                <td>8. mai</td>
+                <td>131&nbsp;060 kr</td>
+                <td>289</td>
+              </tr>
+              <tr>
+                <td>7. mai</td>
+                <td>138&nbsp;500 kr</td>
+                <td>310</td>
+              </tr>
+              <tr>
+                <td>6. mai</td>
+                <td>114&nbsp;230 kr</td>
+                <td>268</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+    <section class="tab-panel" id="ai-tips" role="tabpanel" aria-labelledby="tab-ai" tabindex="0" hidden>
+      <article class="card tips-card">
+        <header>
+          <h2>AI-tips</h2>
+        </header>
+        <ul class="tips-list">
+          <li>
+            <div class="tip-body">Bruk AI til å teste alternative menybeskrivelser og fremhev råvarer for å øke bestillinger på premium-retter.</div>
+            <div class="tip-tags">
+              <span class="chip positive">Potensial: Høy</span>
+              <span class="chip neutral">Effekt: Middels</span>
+            </div>
+          </li>
+          <li>
+            <div class="tip-body">Analyser værvarsel og bookingdata for å justere bemanningen automatisk før helgetopper.</div>
+            <div class="tip-tags">
+              <span class="chip positive">Potensial: Middels</span>
+              <span class="chip attention">Effekt: Høy</span>
+            </div>
+          </li>
+          <li>
+            <div class="tip-body">La AI foreslå mersalgsforslag til servitørene basert på gjestenes historikk og favoritter.</div>
+            <div class="tip-tags">
+              <span class="chip positive">Potensial: Høy</span>
+              <span class="chip neutral">Effekt: Lav</span>
+            </div>
+          </li>
+        </ul>
+      </article>
+    </section>
+  </main>
   <script>
-    function applyTheme(theme){
-      document.body.setAttribute('data-theme', theme);
-      const toggle=document.querySelector('#theme-toggle');
-      if(toggle) toggle.checked = (theme === 'dark');
-      document.body.classList.add('theme-changing');
-      requestAnimationFrame(()=> setTimeout(()=> {
-        document.body.classList.remove('theme-changing');
-      }, 160));
-    }
-    (function(){
-      const btn = document.getElementById('lang-toggle');
-      if(btn){
-        const saved = localStorage.getItem('scope.lang') || 'no';
-        if (typeof applyLang === 'function') applyLang(saved); else document.documentElement.lang = saved;
-        btn.textContent = (saved==='no' ? 'EN' : 'NO');
-        btn.addEventListener('click', ()=>{
-          const current = document.documentElement.lang === 'en' ? 'en' : 'no';
-          const next = current === 'en' ? 'no' : 'en';
-          localStorage.setItem('scope.lang', next);
-          if (typeof applyLang === 'function') applyLang(next); else document.documentElement.lang = next;
-          btn.textContent = (next==='no' ? 'EN' : 'NO');
+    (function() {
+      const buttons = Array.from(document.querySelectorAll('.tab-button'));
+      const panels = Array.from(document.querySelectorAll('.tab-panel'));
+
+      function activateTab(targetId) {
+        buttons.forEach((btn) => {
+          const isActive = btn.dataset.tabTarget === targetId;
+          btn.classList.toggle('active', isActive);
+          btn.setAttribute('aria-selected', String(isActive));
+          btn.setAttribute('tabindex', isActive ? '0' : '-1');
+        });
+
+        panels.forEach((panel) => {
+          const isMatch = panel.id === targetId;
+          panel.classList.toggle('active', isMatch);
+          panel.toggleAttribute('hidden', !isMatch);
         });
       }
-      const t = document.getElementById('theme-toggle');
-      if(t){
-        const savedTheme = localStorage.getItem('scope.theme') || 'light';
-        applyTheme(savedTheme);
-        t.checked = (savedTheme==='dark');
-        t.addEventListener('change', ()=>{
-          const theme = t.checked ? 'dark' : 'light';
-          localStorage.setItem('scope.theme', theme);
-          applyTheme(theme);
+
+      // simple tab controller for switching dashboard sections
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => activateTab(btn.dataset.tabTarget));
+        btn.addEventListener('keydown', (event) => {
+          const index = buttons.indexOf(btn);
+          if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+            event.preventDefault();
+            const direction = event.key === 'ArrowRight' ? 1 : -1;
+            const nextIndex = (index + direction + buttons.length) % buttons.length;
+            buttons[nextIndex].focus();
+          } else if (event.key === 'Home') {
+            event.preventDefault();
+            buttons[0].focus();
+          } else if (event.key === 'End') {
+            event.preventDefault();
+            buttons[buttons.length - 1].focus();
+          }
+        });
+      });
+
+      const defaultTab = buttons.find((btn) => btn.classList.contains('active'))?.dataset.tabTarget || buttons[0]?.dataset.tabTarget;
+      if (defaultTab) {
+        activateTab(defaultTab);
+      }
+
+      const themeToggle = document.querySelector('.theme-toggle');
+      if (themeToggle) {
+        const isDark = document.body.getAttribute('data-theme') !== 'light';
+        themeToggle.setAttribute('aria-pressed', String(isDark));
+        themeToggle.addEventListener('click', () => {
+          const currentlyDark = document.body.getAttribute('data-theme') !== 'light';
+          document.body.setAttribute('data-theme', currentlyDark ? 'light' : 'dark');
+          themeToggle.setAttribute('aria-pressed', String(!currentlyDark));
         });
       }
     })();
   </script>
-  <script>
-    const drawer=document.getElementById('side-drawer');
-    const backdrop=document.getElementById('drawer-backdrop');
-    const menuToggle=document.getElementById('menu-toggle');
-    menuToggle?.addEventListener('click',()=>{
-      const hidden=drawer.hasAttribute('hidden');
-      if(hidden){
-        drawer.hidden=false;
-        backdrop.hidden=false;
-        drawer.classList.add('open');
-      }else{
-        drawer.classList.remove('open');
-        drawer.hidden=true;
-        backdrop.hidden=true;
-      }
-      menuToggle.setAttribute('aria-expanded',String(hidden));
-    });
-    backdrop?.addEventListener('click',()=>{
-      drawer.classList.remove('open');
-      drawer.hidden=true;backdrop.hidden=true;
-      menuToggle.setAttribute('aria-expanded','false');
-    });
-    document.addEventListener('keydown',e=>{
-      if(e.key==='Escape'){
-        drawer.classList.remove('open');
-        drawer.hidden=true;backdrop.hidden=true;
-        menuToggle.setAttribute('aria-expanded','false');
-      }
-    });
-  </script>
-  <!-- Removed month picker script: now using native date inputs -->
 </body>
 </html>
