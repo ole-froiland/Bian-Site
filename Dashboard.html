@@ -61,10 +61,12 @@
     .pill:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);}
     .theme-toggle{width:56px;height:32px;border-radius:999px;border:1px solid var(--border);background:var(--surface-raised);position:relative;padding:0;transition:border-color 0.25s ease,background 0.25s ease;}
     .theme-toggle::before{content:"";position:absolute;inset:5px;border-radius:999px;background:rgba(148,163,184,0.28);transition:background 0.25s ease;}
-    .theme-toggle::after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:var(--text-strong);box-shadow:0 2px 10px rgba(2,6,23,0.45);transform:translateX(-12px);transition:transform 0.25s ease,background 0.25s ease,box-shadow 0.25s ease;}
+    /* Ensure knob stays inside the track */
+    .theme-toggle::after{content:"";position:absolute;top:50%;left:5px;width:22px;height:22px;border-radius:50%;background:var(--text-strong);box-shadow:0 2px 10px rgba(2,6,23,0.45);transform:translateY(-50%);transition:left 0.25s ease,transform 0.25s ease,background 0.25s ease,box-shadow 0.25s ease;}
     body[data-theme="light"] .theme-toggle{background:var(--surface);border-color:rgba(15,23,42,0.12);}
     body[data-theme="light"] .theme-toggle::before{background:rgba(148,163,184,0.2);}
-    body[data-theme="light"] .theme-toggle::after{transform:translateX(12px);background:#0f172a;box-shadow:0 2px 12px rgba(15,23,42,0.18);}
+    /* Move knob to right edge when light */
+    body[data-theme="light"] .theme-toggle::after{left:calc(100% - 5px);transform:translate(-100%, -50%);background:#0f172a;box-shadow:0 2px 12px rgba(15,23,42,0.18);}
     .hamburger{width:44px;height:44px;border-radius:14px;border:1px solid var(--border);background:var(--surface-raised);display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 12px;transition:background 0.25s ease,border-color 0.25s ease,transform 0.25s ease;}
     .hamburger span{display:block;width:18px;height:2px;border-radius:999px;background:var(--text-strong);transition:background 0.25s ease;}
     .hamburger:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);}
