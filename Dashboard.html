@@ -13,17 +13,17 @@
       line-height:1.55;
       letter-spacing:0.01em;
       transition:background 0.3s ease,color 0.3s ease;
-      /* Purple-leaning palette to align with landing page */
-      --bg:#0e0b2b;                /* deep indigo */
-      --surface:#16143a;           /* indigo surface */
-      --surface-raised:#1f1b4d;    /* raised surface */
-      --border:rgba(125,121,249,0.28); /* lilac border */
-      --text:#e9e7ff;              /* soft off‑white */
+      /* Calmer indigo/slate palette (less purple) */
+      --bg:#0b1020;                /* deep navy‑indigo */
+      --surface:#141a2a;           /* neutral slate surface */
+      --surface-raised:#1b2337;    /* raised surface */
+      --border:rgba(148,163,184,0.22); /* cool slate border */
+      --text:#e8ecf5;              /* soft off‑white */
       --text-strong:#ffffff;       /* strong text */
-      --muted:#b5b1e6;             /* muted lavender */
-      --accent:#7d79f9;            /* Scope brand */
-      --accent-strong:#6c63d9;     /* deeper brand */
-      --accent-soft:rgba(125,121,249,0.18); /* soft glow */
+      --muted:#9aa6bd;             /* muted slate */
+      --accent:#7d79f9;            /* subtle lilac accent */
+      --accent-strong:#6c63d9;     /* deeper accent */
+      --accent-soft:rgba(125,121,249,0.12); /* lighter glow */
       --positive:#34d399;
       --neutral:#fbbf24;
       --attention:#f87171;
@@ -34,16 +34,16 @@
       color-scheme:dark;
     }
     body[data-theme="light"]{
-      --bg:#f6f4ff;                /* lavender tint */
+      --bg:#f6f7fb;                /* cool neutral */
       --surface:#ffffff;
-      --surface-raised:#eee9ff;    /* light lilac */
-      --border:rgba(125,121,249,0.22);
-      --text:#1a1535;              /* indigo text */
-      --text-strong:#1a1535;
-      --muted:#6b6496;
+      --surface-raised:#eef2ff;    /* very light indigo */
+      --border:rgba(148,163,184,0.20);
+      --text:#121826;              /* neutral indigo */
+      --text-strong:#121826;
+      --muted:#6b7280;
       --accent:#7d79f9;
       --accent-strong:#6c63d9;
-      --accent-soft:rgba(125,121,249,0.14);
+      --accent-soft:rgba(125,121,249,0.10);
       color-scheme:light;
     }
     h1,h2,h3,h4{margin:0;font-weight:600;color:var(--text-strong);}
@@ -51,7 +51,7 @@
     button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;}
     button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
     .shell{width:100%;max-width:1120px;margin:0 auto;padding-inline:clamp(16px,6vw,56px);}
-    .top-bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 18px 28px rgba(125,121,249,0.24);} 
+    .top-bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 18px 28px rgba(15,23,42,0.22);} 
     .top-bar__inner{display:flex;align-items:center;gap:clamp(12px,3vw,32px);min-height:74px;}
     .brand{display:flex;align-items:center;gap:12px;font-weight:700;color:var(--text-strong);}
     .logo{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:var(--surface-raised);border:1px solid var(--border);font-weight:700;letter-spacing:0.08em;}
@@ -75,7 +75,7 @@
     .tablist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
     .tab-button{padding:18px 20px;border-radius:16px;border:1px solid var(--border);background:var(--surface);font-size:1rem;font-weight:600;letter-spacing:0.02em;transition:background 0.25s ease,border-color 0.25s ease,box-shadow 0.25s ease,transform 0.25s ease;}
     .tab-button:hover{border-color:var(--accent);background:var(--surface-raised);transform:translateY(-1px);}
-    .tab-button.active{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 12px 24px rgba(125,121,249,0.24);} 
+    .tab-button.active{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 12px 24px rgba(125,121,249,0.18);} 
     .tab-icon-row{margin-top:10px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;justify-items:center;}
     .tab-icon{width:52px;height:52px;border-radius:18px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;color:var(--accent);box-shadow:0 10px 18px rgba(8,15,35,0.24);transition:transform 0.22s ease,border-color 0.25s ease,background 0.25s ease,box-shadow 0.3s ease;}
     .tab-icon svg{width:26px;height:26px;stroke:currentColor;stroke-width:1.8;fill:none;}
