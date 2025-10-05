@@ -27,7 +27,8 @@
       --positive:#34d399;
       --neutral:#fbbf24;
       --attention:#f87171;
-      --brand-outline:rgba(125,121,249,0.35);
+      --brand-outline:color-mix(in srgb,var(--accent),#fff 40%);
+      --ring:0 0 0 3px rgba(125,121,249,0.55);
       --track-light:#e5e7eb;
       --track-dark:#374151;
       --card-radius:18px;
@@ -47,7 +48,7 @@
       --accent:#7d79f9;
       --accent-strong:#6c63d9;
       --accent-soft:rgba(125,121,249,0.10);
-      --brand-outline:rgba(125,121,249,0.45);
+      --brand-outline:color-mix(in srgb,var(--accent),#fff 45%);
       color-scheme:light;
     }
     h1,h2,h3,h4{margin:0;font-weight:600;color:var(--text-strong);}
@@ -61,35 +62,30 @@
     .logo{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:var(--surface-raised);border:1px solid var(--border);font-weight:700;letter-spacing:0.08em;}
     .brand-name{font-size:1.05rem;}
     .brand-title{flex:1;text-align:center;font-size:clamp(1.05rem,3vw,1.35rem);font-weight:600;}
-    .nav-actions{display:flex;align-items:center;gap:14px;}
-    .pill{padding:0 18px;height:36px;min-width:56px;border-radius:999px;border:1px solid var(--brand-outline);background:var(--surface-raised);font-weight:800;letter-spacing:0.04em;transition:background 0.25s ease,border-color 0.25s ease,transform 0.25s ease;}
-    .pill:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);}
-    /* Landing-page like theme switch */
-    .theme-switch{position:relative;display:inline-flex;width:56px;height:32px}
-    .theme-switch input{opacity:0;width:0;height:0}
-    .theme-switch .slider{position:relative;cursor:pointer;display:block;width:100%;height:100%;background:var(--track-light);transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,.15);border:1px solid var(--brand-outline);padding:3px;backface-visibility:hidden;transform:translateZ(0)}
-    body[data-theme="dark"] .theme-switch .slider{background:var(--track-dark);box-shadow:0 1px 2px rgba(255,255,255,.2)}
-    .theme-switch .thumb{position:absolute;top:50%;left:3px;width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;border:1px solid var(--brand-outline);box-shadow:0 6px 18px rgba(2,6,23,.35);transform:translateY(-50%) translateZ(0);backface-visibility:hidden}
-    .theme-switch input:checked + .slider .thumb{left:calc(100% - 3px);transform:translate(-100%,-50%) translateZ(0)}
-    .hamburger{width:44px;height:44px;border-radius:14px;border:1px solid var(--brand-outline);background:var(--surface-raised);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;transition:background 0.25s ease,border-color 0.25s ease,transform 0.25s ease;}
-    .hamburger span{display:block;width:6px;height:6px;border-radius:50%;background:var(--text-strong);opacity:0.95;transition:background 0.25s ease;}
-    .hamburger:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);}
+    .nav-actions{display:flex;align-items:center;gap:12px;}
+    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 16px;height:36px;min-width:52px;font-weight:700;background:var(--surface);color:inherit;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:15px;letter-spacing:.02em;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .2s ease;will-change:background-color,border-color,color;backface-visibility:hidden;transform:translateZ(0);}
+    .chip:focus-visible{outline:none;box-shadow:var(--ring);}
+    .chip:hover{transform:translateY(-1px);border-color:var(--accent);background:var(--accent-soft);} 
+    body[data-theme="dark"] .chip{background:var(--surface-raised);color:var(--text);border-color:rgba(125,121,249,0.45);} 
+    /* Landing-page style theme switch */
+    .theme-switch{position:relative;display:inline-flex;width:56px;height:32px;}
+    .theme-switch input{opacity:0;width:0;height:0;}
+    .theme-switch .slider{position:relative;cursor:pointer;display:block;width:100%;height:100%;background:var(--track-light);transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,.12);border:1px solid var(--brand-outline);padding:3px;backface-visibility:hidden;transform:translateZ(0);} 
+    .theme-switch input:focus-visible + .slider{box-shadow:var(--ring);} 
+    body[data-theme="dark"] .theme-switch .slider{background:var(--track-dark);box-shadow:0 1px 2px rgba(255,255,255,.18);} 
+    .theme-switch .thumb{position:absolute;top:50%;left:3px;width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;border:1px solid var(--brand-outline);box-shadow:0 2px 4px rgba(0,0,0,.18);transform:translateY(-50%) translateZ(0);backface-visibility:hidden;} 
+    .theme-switch .icon{width:16px;height:16px;stroke-width:2;} 
+    .theme-switch .icon.sun{stroke:#FDB813;fill:none;} 
+    .theme-switch .icon.moon{fill:#20354a;stroke:none;display:none;} 
+    .theme-switch input:checked + .slider{background:var(--accent);} 
+    .theme-switch input:checked + .slider .thumb{left:calc(100% - 3px);transform:translate(-100%,-50%) translateZ(0);} 
+    .theme-switch input:checked + .slider .icon.sun{display:none;} 
+    .theme-switch input:checked + .slider .icon.moon{display:block;} 
     .sub-nav{background:var(--bg);padding:clamp(18px,4vw,28px) 0 0;}
     .tablist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
     .tab-button{padding:18px 20px;border-radius:16px;border:1px solid var(--border);background:var(--surface);font-size:1rem;font-weight:600;letter-spacing:0.02em;transition:background 0.25s ease,border-color 0.25s ease,box-shadow 0.25s ease,transform 0.25s ease;}
     .tab-button:hover{border-color:var(--accent);background:var(--surface-raised);transform:translateY(-1px);}
     .tab-button.active{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 12px 24px rgba(125,121,249,0.18);} 
-    .tab-icon-row{margin-top:10px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;justify-items:center;}
-    .tab-icon{width:52px;height:52px;border-radius:18px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;color:var(--accent);box-shadow:0 10px 18px rgba(8,15,35,0.24);transition:transform 0.22s ease,border-color 0.25s ease,background 0.25s ease,box-shadow 0.3s ease;}
-    .tab-icon svg{width:26px;height:26px;stroke:currentColor;stroke-width:1.8;fill:none;}
-    .tab-icon.active{background:var(--surface-raised);border-color:currentColor;transform:translateY(-2px);box-shadow:0 18px 34px rgba(8,15,35,0.4);}
-    .tab-icon--kpi{color:var(--accent-strong);}
-    .tab-icon--oversikt{color:var(--positive);}
-    .tab-icon--ai{color:var(--neutral);}
-    .tab-icon--kpi.active{background:rgba(56,189,248,0.18);}
-    .tab-icon--oversikt.active{background:rgba(52,211,153,0.18);}
-    .tab-icon--ai.active{background:rgba(251,191,36,0.18);}
-    .tab-icon:hover{transform:translateY(-1px);border-color:currentColor;background:var(--surface-raised);}
     main{width:100%;padding:clamp(24px,6vw,48px) 0 clamp(56px,10vw,96px);}
     .tab-panel{display:none;gap:clamp(18px,4vw,32px);}
     .tab-panel.active{display:grid;}
@@ -154,18 +150,22 @@
       </div>
       <div class="brand-title">Gressholmen Kro</div>
       <div class="nav-actions">
-        <button type="button" class="pill" aria-label="Bytt til engelsk">EN</button>
+        <a href="login.html" class="chip" aria-label="Logg inn">Logg inn</a>
+        <button type="button" class="chip" aria-label="Bytt til engelsk">EN</button>
         <label class="theme-switch" aria-label="Bytt tema">
           <input type="checkbox" id="dash-theme-toggle" aria-label="Tema" />
           <span class="slider">
-            <span class="thumb"></span>
+            <span class="thumb">
+              <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="5" />
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+              </svg>
+            </span>
           </span>
         </label>
-        <button type="button" class="hamburger" aria-label="Åpne meny">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
       </div>
     </div>
   </header>
@@ -341,7 +341,6 @@
     (function() {
       const buttons = Array.from(document.querySelectorAll('.tab-button'));
       const panels = Array.from(document.querySelectorAll('.tab-panel'));
-      const icons = Array.from(document.querySelectorAll('.tab-icon'));
 
       function activateTab(targetId) {
         buttons.forEach((btn) => {
@@ -357,10 +356,6 @@
           panel.toggleAttribute('hidden', !isMatch);
         });
 
-        icons.forEach((icon) => {
-          const matches = icon.dataset.tabIcon === targetId;
-          icon.classList.toggle('active', matches);
-        });
       }
 
       // simple tab controller for switching dashboard sections
