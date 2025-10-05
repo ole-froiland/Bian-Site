@@ -27,6 +27,9 @@
       --positive:#34d399;
       --neutral:#fbbf24;
       --attention:#f87171;
+      --brand-outline:rgba(125,121,249,0.35);
+      --track-light:#e5e7eb;
+      --track-dark:#374151;
       --card-radius:18px;
       color:var(--text);
       background:var(--bg);
@@ -44,6 +47,7 @@
       --accent:#7d79f9;
       --accent-strong:#6c63d9;
       --accent-soft:rgba(125,121,249,0.10);
+      --brand-outline:rgba(125,121,249,0.45);
       color-scheme:light;
     }
     h1,h2,h3,h4{margin:0;font-weight:600;color:var(--text-strong);}
@@ -58,18 +62,17 @@
     .brand-name{font-size:1.05rem;}
     .brand-title{flex:1;text-align:center;font-size:clamp(1.05rem,3vw,1.35rem);font-weight:600;}
     .nav-actions{display:flex;align-items:center;gap:14px;}
-    .pill{padding:0 18px;height:36px;border-radius:999px;border:1px solid var(--border);background:var(--surface-raised);font-weight:600;transition:background 0.25s ease,border-color 0.25s ease,transform 0.25s ease;}
+    .pill{padding:0 18px;height:36px;min-width:56px;border-radius:999px;border:1px solid var(--brand-outline);background:var(--surface-raised);font-weight:800;letter-spacing:0.04em;transition:background 0.25s ease,border-color 0.25s ease,transform 0.25s ease;}
     .pill:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);}
-    .theme-toggle{width:56px;height:32px;border-radius:999px;border:1px solid var(--border);background:var(--surface-raised);position:relative;padding:0;transition:border-color 0.25s ease,background 0.25s ease;}
-    .theme-toggle::before{content:"";position:absolute;inset:5px;border-radius:999px;background:rgba(148,163,184,0.28);transition:background 0.25s ease;}
-    /* Ensure knob stays inside the track */
-    .theme-toggle::after{content:"";position:absolute;top:50%;left:5px;width:22px;height:22px;border-radius:50%;background:var(--text-strong);box-shadow:0 2px 10px rgba(2,6,23,0.45);transform:translateY(-50%);transition:left 0.25s ease,transform 0.25s ease,background 0.25s ease,box-shadow 0.25s ease;}
-    body[data-theme="light"] .theme-toggle{background:var(--surface);border-color:rgba(15,23,42,0.12);}
-    body[data-theme="light"] .theme-toggle::before{background:rgba(148,163,184,0.2);}
-    /* Move knob to right edge when light */
-    body[data-theme="light"] .theme-toggle::after{left:calc(100% - 5px);transform:translate(-100%, -50%);background:#0f172a;box-shadow:0 2px 12px rgba(15,23,42,0.18);}
-    .hamburger{width:44px;height:44px;border-radius:14px;border:1px solid var(--border);background:var(--surface-raised);display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 12px;transition:background 0.25s ease,border-color 0.25s ease,transform 0.25s ease;}
-    .hamburger span{display:block;width:18px;height:2px;border-radius:999px;background:var(--text-strong);transition:background 0.25s ease;}
+    /* Landing-page like theme switch */
+    .theme-switch{position:relative;display:inline-flex;width:56px;height:32px}
+    .theme-switch input{opacity:0;width:0;height:0}
+    .theme-switch .slider{position:relative;cursor:pointer;display:block;width:100%;height:100%;background:var(--track-light);transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,.15);border:1px solid var(--brand-outline);padding:3px;backface-visibility:hidden;transform:translateZ(0)}
+    body[data-theme="dark"] .theme-switch .slider{background:var(--track-dark);box-shadow:0 1px 2px rgba(255,255,255,.2)}
+    .theme-switch .thumb{position:absolute;top:50%;left:3px;width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;border:1px solid var(--brand-outline);box-shadow:0 6px 18px rgba(2,6,23,.35);transform:translateY(-50%) translateZ(0);backface-visibility:hidden}
+    .theme-switch input:checked + .slider .thumb{left:calc(100% - 3px);transform:translate(-100%,-50%) translateZ(0)}
+    .hamburger{width:44px;height:44px;border-radius:14px;border:1px solid var(--brand-outline);background:var(--surface-raised);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;transition:background 0.25s ease,border-color 0.25s ease,transform 0.25s ease;}
+    .hamburger span{display:block;width:6px;height:6px;border-radius:50%;background:var(--text-strong);opacity:0.95;transition:background 0.25s ease;}
     .hamburger:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);}
     .sub-nav{background:var(--bg);padding:clamp(18px,4vw,28px) 0 0;}
     .tablist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
@@ -152,7 +155,12 @@
       <div class="brand-title">Gressholmen Kro</div>
       <div class="nav-actions">
         <button type="button" class="pill" aria-label="Bytt til engelsk">EN</button>
-        <button type="button" class="theme-toggle" aria-pressed="true" aria-label="Bytt tema"></button>
+        <label class="theme-switch" aria-label="Bytt tema">
+          <input type="checkbox" id="dash-theme-toggle" aria-label="Tema" />
+          <span class="slider">
+            <span class="thumb"></span>
+          </span>
+        </label>
         <button type="button" class="hamburger" aria-label="Åpne meny">
           <span></span>
           <span></span>
@@ -380,14 +388,13 @@
         activateTab(defaultTab);
       }
 
-      const themeToggle = document.querySelector('.theme-toggle');
-      if (themeToggle) {
+      const themeToggleInput = document.querySelector('#dash-theme-toggle');
+      if (themeToggleInput) {
         const isDark = document.body.getAttribute('data-theme') !== 'light';
-        themeToggle.setAttribute('aria-pressed', String(isDark));
-        themeToggle.addEventListener('click', () => {
-          const currentlyDark = document.body.getAttribute('data-theme') !== 'light';
-          document.body.setAttribute('data-theme', currentlyDark ? 'light' : 'dark');
-          themeToggle.setAttribute('aria-pressed', String(!currentlyDark));
+        themeToggleInput.checked = isDark;
+        themeToggleInput.addEventListener('change', () => {
+          const toDark = themeToggleInput.checked;
+          document.body.setAttribute('data-theme', toDark ? 'dark' : 'light');
         });
       }
     })();
