@@ -13,16 +13,17 @@
       line-height:1.55;
       letter-spacing:0.01em;
       transition:background 0.3s ease,color 0.3s ease;
-      --bg:#0f172a;
-      --surface:#111827;
-      --surface-raised:#1e293b;
-      --border:rgba(148,163,184,0.28);
-      --text:#e2e8f0;
-      --text-strong:#f8fafc;
-      --muted:#94a3b8;
-      --accent:#38bdf8;
-      --accent-strong:#0ea5e9;
-      --accent-soft:rgba(56,189,248,0.18);
+      /* Purple-leaning palette to align with landing page */
+      --bg:#0e0b2b;                /* deep indigo */
+      --surface:#16143a;           /* indigo surface */
+      --surface-raised:#1f1b4d;    /* raised surface */
+      --border:rgba(125,121,249,0.28); /* lilac border */
+      --text:#e9e7ff;              /* soft off‑white */
+      --text-strong:#ffffff;       /* strong text */
+      --muted:#b5b1e6;             /* muted lavender */
+      --accent:#7d79f9;            /* Scope brand */
+      --accent-strong:#6c63d9;     /* deeper brand */
+      --accent-soft:rgba(125,121,249,0.18); /* soft glow */
       --positive:#34d399;
       --neutral:#fbbf24;
       --attention:#f87171;
@@ -33,16 +34,16 @@
       color-scheme:dark;
     }
     body[data-theme="light"]{
-      --bg:#f1f5f9;
+      --bg:#f6f4ff;                /* lavender tint */
       --surface:#ffffff;
-      --surface-raised:#e2e8f0;
-      --border:rgba(15,23,42,0.12);
-      --text:#0f172a;
-      --text-strong:#0f172a;
-      --muted:#64748b;
-      --accent:#0284c7;
-      --accent-strong:#0ea5e9;
-      --accent-soft:rgba(2,132,199,0.14);
+      --surface-raised:#eee9ff;    /* light lilac */
+      --border:rgba(125,121,249,0.22);
+      --text:#1a1535;              /* indigo text */
+      --text-strong:#1a1535;
+      --muted:#6b6496;
+      --accent:#7d79f9;
+      --accent-strong:#6c63d9;
+      --accent-soft:rgba(125,121,249,0.14);
       color-scheme:light;
     }
     h1,h2,h3,h4{margin:0;font-weight:600;color:var(--text-strong);}
@@ -50,7 +51,7 @@
     button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;}
     button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
     .shell{width:100%;max-width:1120px;margin:0 auto;padding-inline:clamp(16px,6vw,56px);}
-    .top-bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 18px 28px rgba(15,23,42,0.24);}
+    .top-bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 18px 28px rgba(125,121,249,0.24);} 
     .top-bar__inner{display:flex;align-items:center;gap:clamp(12px,3vw,32px);min-height:74px;}
     .brand{display:flex;align-items:center;gap:12px;font-weight:700;color:var(--text-strong);}
     .logo{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:var(--surface-raised);border:1px solid var(--border);font-weight:700;letter-spacing:0.08em;}
@@ -74,7 +75,7 @@
     .tablist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
     .tab-button{padding:18px 20px;border-radius:16px;border:1px solid var(--border);background:var(--surface);font-size:1rem;font-weight:600;letter-spacing:0.02em;transition:background 0.25s ease,border-color 0.25s ease,box-shadow 0.25s ease,transform 0.25s ease;}
     .tab-button:hover{border-color:var(--accent);background:var(--surface-raised);transform:translateY(-1px);}
-    .tab-button.active{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 12px 24px rgba(56,189,248,0.24);}
+    .tab-button.active{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 12px 24px rgba(125,121,249,0.24);} 
     .tab-icon-row{margin-top:10px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;justify-items:center;}
     .tab-icon{width:52px;height:52px;border-radius:18px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;color:var(--accent);box-shadow:0 10px 18px rgba(8,15,35,0.24);transition:transform 0.22s ease,border-color 0.25s ease,background 0.25s ease,box-shadow 0.3s ease;}
     .tab-icon svg{width:26px;height:26px;stroke:currentColor;stroke-width:1.8;fill:none;}
