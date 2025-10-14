@@ -26,6 +26,8 @@ const RECEIPTS_ENDPOINT_CANDIDATES = [
   'reports/receipts'
 ];
 
+const TRANSACTION_ENDPOINT = 'transaction/v3.0/transactions/';
+
 function normDate(s){
   if(!s) return null;
   s = String(s).trim();
@@ -189,6 +191,208 @@ function aggregateTopProducts(receipts, metric='revenue'){
   return arr;
 }
 
+async function fetchPeriodTransactions(periodId){
+  const path = `${TRANSACTION_ENDPOINT.replace(/\/+$/, '')}/${String(periodId).replace(/^\/+/, '')}`;
+  const url = new URL(path, CFG.baseUrl).toString();
+  const baseHeaders = authHeaders();
+  let lastErr = null;
+  for (const hdr of headerVariants(baseHeaders)) {
+    try {
+      return await fetchJson(url, hdr);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('Failed to fetch period transactions');
+}
+
+function summarizePeriodSalesFromData(data={}){
+  const transactions = Array.isArray(data?.transactions) ? data.transactions : [];
+
+  const voidedUuids = new Set();
+  for (const txn of transactions) {
+    const head = txn?.head || {};
+    const voidedUuid = head?.voidedTrUuid;
+    if (voidedUuid) voidedUuids.add(voidedUuid);
+  }
+
+  let totalRevenue = 0;
+  const items = Object.create(null);
+
+  for (const txn of transactions) {
+    const head = txn?.head || {};
+    const uuid = head?.uuid;
+    if (!uuid || head?.trainingFlag) continue;
+    if (voidedUuids.has(uuid)) continue;
+    if (head?.typeCode !== '00') continue;
+
+    const netTotal = transactionNetTotal(txn);
+    if (netTotal <= 0) continue;
+
+    const lineRecords = extractTransactionItems(txn);
+    if (!lineRecords.length) continue;
+
+    const baseTotal = lineRecords.reduce((sum, record) => sum + record.revenue, 0);
+    const scale = baseTotal > 0 ? netTotal / baseTotal : 0;
+
+    for (const record of lineRecords) {
+      const scaledRevenue = scale ? record.revenue * scale : 0;
+      if (scaledRevenue <= 0) continue;
+      const skuKey = String(record.sku);
+      if (!items[skuKey]) {
+        items[skuKey] = { sku: record.sku, name: record.name, revenue: 0, quantity: 0 };
+      }
+      const bucket = items[skuKey];
+      bucket.revenue += scaledRevenue;
+      bucket.quantity += record.quantity;
+      if (!bucket.name && record.name) bucket.name = record.name;
+    }
+
+    totalRevenue += netTotal;
+  }
+
+  return { totalRevenue, items };
+}
+
+function transactionNetTotal(transaction={}){
+  const lineItems = Array.isArray(transaction?.lineItems) ? transaction.lineItems : [];
+  let total = 0;
+  for (const line of lineItems) {
+    if (line?.typeCode !== '07') continue;
+    const netValue = line?.amounts?.taxSalesNetAmount;
+    if (netValue == null) continue;
+    const numeric = Number(netValue);
+    if (!Number.isFinite(numeric)) continue;
+    total += numeric / 1000.0;
+  }
+  return total;
+}
+
+function extractTransactionItems(transaction={}){
+  const lineItems = Array.isArray(transaction?.lineItems) ? transaction.lineItems : [];
+  const voidedSequences = collectVoidedSequences(lineItems);
+
+  const baseLines = new Map();
+  const taxPercentMap = new Map();
+
+  lineItems.forEach((line, index) => {
+    if (line?.typeCode !== '00') return;
+    let seq = line?.sequenceNumber;
+    if (seq == null) seq = index + 1;
+    const seqInt = parseInt(seq, 10);
+    if (!Number.isFinite(seqInt)) return;
+    if (voidedSequences.has(seqInt)) return;
+    const flags = line?.flags || {};
+    if (flags?.isVoidFlag) return;
+
+    const related = line?.related || {};
+    const sku = related?.itemSku;
+    const skuInt = parseInt(sku, 10);
+    if (!Number.isFinite(skuInt)) return;
+
+    const amounts = line?.amounts || {};
+    let qtyVal = amounts?.quantity;
+    if (!(typeof qtyVal === 'number')) qtyVal = amounts?.units;
+    const quantity = qtyFromThousandths(qtyVal);
+    const extras = line?.extras || {};
+    const name = extras?.itemName || extras?.itemShortName || `SKU ${skuInt}`;
+
+    baseLines.set(seqInt, {
+      sku: skuInt,
+      name,
+      quantity,
+      net: netRevenueFromAmounts(amounts),
+    });
+    taxPercentMap.set(seqInt, amounts?.taxPercent);
+  });
+
+  for (const line of lineItems) {
+    if (line?.typeCode !== '11') continue;
+    const extras = line?.extras || {};
+    const target = extras?.associatedLineItemSequenceNumber;
+    if (target == null) continue;
+    const targetSeq = parseInt(target, 10);
+    if (!Number.isFinite(targetSeq)) continue;
+    const baseInfo = baseLines.get(targetSeq);
+    if (!baseInfo) continue;
+    const amounts = line?.amounts || {};
+    const newAmount = amounts?.newAmount;
+    if (newAmount == null) continue;
+    const taxPercent = taxPercentMap.get(targetSeq);
+    if (taxPercent == null) continue;
+    baseInfo.net = netFromGross(newAmount, taxPercent);
+  }
+
+  const records = [];
+  for (const [, baseInfo] of baseLines.entries()) {
+    const netRevenue = Number(baseInfo?.net ?? 0);
+    if (!Number.isFinite(netRevenue) || netRevenue <= 0) continue;
+    const quantity = Number(baseInfo?.quantity ?? 0);
+    records.push({
+      sku: Number(baseInfo?.sku),
+      name: String(baseInfo?.name || ''),
+      revenue: netRevenue,
+      quantity,
+    });
+  }
+  return records;
+}
+
+function collectVoidedSequences(lineItems){
+  const voided = new Set();
+  for (const line of lineItems) {
+    const extras = line?.extras || {};
+    const targetSeq = extras?.voidedLineItemSequenceNumber;
+    if (targetSeq != null) {
+      const seqInt = parseInt(targetSeq, 10);
+      if (Number.isFinite(seqInt)) voided.add(seqInt);
+    }
+    const flags = line?.flags || {};
+    if (flags?.isVoidFlag) {
+      const seq = line?.sequenceNumber;
+      const seqInt = parseInt(seq, 10);
+      if (Number.isFinite(seqInt)) voided.add(seqInt);
+    }
+  }
+  return voided;
+}
+
+function netRevenueFromAmounts(amounts){
+  if (!amounts || typeof amounts !== 'object') return 0;
+  let value = amounts?.actualNetAmount;
+  if (value == null) {
+    const candidate = amounts?.regularNetAmount;
+    if (candidate == null) {
+      return netFromGross(amounts?.regularAmount, amounts?.taxPercent);
+    }
+    value = candidate;
+  }
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return netFromGross(amounts?.regularAmount, amounts?.taxPercent);
+  }
+  return numeric / 1000.0;
+}
+
+function netFromGross(value, taxPercent){
+  if (value == null) return 0;
+  const gross = Number(value);
+  if (!Number.isFinite(gross)) return 0;
+  const grossValue = gross / 1000.0;
+  let taxRate = 0;
+  if (taxPercent != null) {
+    const taxNumeric = Number(taxPercent);
+    taxRate = Number.isFinite(taxNumeric) ? taxNumeric / 100000.0 : 0;
+  }
+  return grossValue / (1 + taxRate);
+}
+
+function qtyFromThousandths(value){
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 0;
+  return num / 1000.0;
+}
+
 exports.handler = async (event) => {
   try{
     if(event.httpMethod !== 'GET') return err(405,'METHOD_NOT_ALLOWED','Use GET');
@@ -218,6 +422,38 @@ exports.handler = async (event) => {
       to = `${y}-${M}-${D}`;
     }
     if(from>to) [from,to]=[to,from];
+
+    // Period-level transaction summary
+    const periodId = q.periodId || q.period || null;
+    if (periodId) {
+      if(!CFG.xToken || !CFG.businessId){
+        return err(400,'CONFIG_MISSING','Missing Lightspeed env vars (X_TOKEN or BUSINESS_ID)');
+      }
+      let periodData;
+      try {
+        periodData = await fetchPeriodTransactions(periodId);
+      } catch (e) {
+        const status = e?.status || 502;
+        return err(status, 'PERIOD_FETCH_FAIL', String(e.message || e), { details: e?.body, periodId: String(periodId) });
+      }
+      const summary = summarizePeriodSalesFromData(periodData || {});
+      const itemsArray = Object.values(summary.items || {}).map(entry => ({
+        sku: entry.sku,
+        name: entry.name,
+        revenue: Number(entry.revenue || 0),
+        quantity: Number(entry.quantity || 0),
+      }));
+      itemsArray.sort((a,b)=> b.revenue - a.revenue);
+      const limit = Math.max(1, Math.min(50, Number(q.limit||3)|0));
+      return ok({
+        mode: 'period',
+        periodId: String(periodId),
+        totalRevenue: Number(summary.totalRevenue || 0),
+        itemCount: itemsArray.length,
+        items: itemsArray,
+        top: itemsArray.slice(0, limit)
+      });
+    }
 
     // Special: demo data
     if(q.demo==='1'){

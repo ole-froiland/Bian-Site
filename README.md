@@ -59,6 +59,7 @@ The Netlify Function `/.netlify/functions/lightspeed` exposes:
 - `GET ?ping=1` health check
 - `GET ?env=1` env flags (no secrets)
 - `GET ?from=YYYY-MM-DD&to=YYYY-MM-DD&limit=3&metric=revenue` returns `{ top: [ { name, qty, revenue } ] }`
+- `GET ?periodId=<period-id>&limit=5` returns `{ totalRevenue, items, top }` summarised from the transactions endpoint
 
 In the dashboard, use the “Lightspeed – Topp 3 produkter” card and click Hent after choosing months.
 
@@ -68,6 +69,8 @@ In the dashboard, use the “Lightspeed – Topp 3 produkter” card and click H
 netlify dev
 # then in another terminal
 curl "http://localhost:8888/.netlify/functions/lightspeed?from=2024-08-01&to=2024-08-31&limit=3" | jq
+# or fetch a single period summary
+curl "http://localhost:8888/.netlify/functions/lightspeed?periodId=123456&limit=5" | jq
 ```
 
 ### CLI usage (terminal)
@@ -77,6 +80,9 @@ Run via local Netlify function (recommended for no secrets in CLI):
 ```bash
 netlify dev &
 node scripts/lightspeed-top.js --from 2024-08-01 --to 2024-08-31 --limit 3 --use-function
+
+# fetch a specific Lightspeed periode via proxy (recommended)
+node scripts/lightspeed-top.js --period 123456 --limit 5 --use-function
 ```
 
 Or call Lightspeed directly (requires env vars locally):
@@ -86,4 +92,7 @@ export LIGHTSPEED_GASTROFIX_BASE_URL=https://no.gastrofix.com/api/
 export LIGHTSPEED_X_TOKEN=... # your token
 export LIGHTSPEED_BUSINESS_ID=... # your business id
 node scripts/lightspeed-top.js --from 2024-08-01 --to 2024-08-31 --limit 3
+
+# or, with direct API access, fetch a single periode
+node scripts/lightspeed-top.js --period 123456 --limit 5
 ```
