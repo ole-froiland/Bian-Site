@@ -191,6 +191,133 @@ function aggregateTopProducts(receipts, metric='revenue'){
   return arr;
 }
 
+function summarizeReceiptsByDay(receipts){
+  const map = new Map();
+  for(const receipt of receipts){
+    const dateObj = pickReceiptDate(receipt);
+    if(!dateObj) continue;
+    const key = formatDateKey(dateObj);
+    const revenue = receiptRevenue(receipt);
+    const guests = receiptGuestCount(receipt);
+    const bucket = map.get(key) || { date: key, revenue: 0, guests: 0, receipts: 0 };
+    bucket.revenue += revenue;
+    bucket.guests += guests;
+    bucket.receipts += 1;
+    map.set(key, bucket);
+  }
+  return Array.from(map.values()).sort((a,b)=> b.date.localeCompare(a.date));
+}
+
+function receiptRevenue(receipt){
+  const lines = extractLines(receipt);
+  let total = 0;
+  for(const line of lines){
+    const val = pickRevenue(line);
+    if(Number.isFinite(val)) total += val;
+  }
+  return total;
+}
+
+function receiptGuestCount(receipt){
+  const candidates = [
+    receipt?.guestCount,
+    receipt?.guests,
+    receipt?.guest_number,
+    receipt?.covers,
+    receipt?.customerCount,
+    receipt?.customers,
+    receipt?.persons,
+    receipt?.head?.guestCount,
+    receipt?.head?.covers
+  ];
+  for(const candidate of candidates){
+    const num = Number(candidate);
+    if(Number.isFinite(num) && num > 0) return num;
+  }
+  return 0;
+}
+
+function pickReceiptDate(receipt){
+  if(!receipt || typeof receipt !== 'object') return null;
+  const candidatePaths = [
+    'businessDay',
+    'businessDate',
+    'businessDateTime',
+    'businessDayDate',
+    'receiptBusinessDate',
+    'receiptBusinessDay',
+    'head.businessDay',
+    'head.businessDate',
+    'head.receiptBusinessDate',
+    'document.businessDate',
+    'date',
+    'createdAt',
+    'created',
+    'timestamp',
+    'timeStamp',
+    'issuedAt'
+  ];
+  for(const path of candidatePaths){
+    const value = extractPathValue(receipt, path);
+    const parsed = normalizeDateValue(value);
+    if(parsed) return parsed;
+  }
+  return null;
+}
+
+function extractPathValue(obj, path){
+  if(!obj) return undefined;
+  const parts = path.split('.');
+  let current = obj;
+  for(const part of parts){
+    if(current == null) return undefined;
+    current = current[part];
+  }
+  return current;
+}
+
+function normalizeDateValue(value){
+  if(!value) return null;
+  if(value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if(typeof value === 'string'){
+    const trimmed = value.trim();
+    if(!trimmed) return null;
+    if(/^\d{8}$/.test(trimmed)){ // e.g. 20240512
+      const year = trimmed.slice(0,4);
+      const month = trimmed.slice(4,6);
+      const day = trimmed.slice(6,8);
+      const iso = `${year}-${month}-${day}`;
+      const parsed = new Date(`${iso}T00:00:00`);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    const parsed = new Date(trimmed);
+    if(!Number.isNaN(parsed.getTime())) return parsed;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(trimmed)){
+      const parsedMidnight = new Date(`${trimmed}T00:00:00`);
+      return Number.isNaN(parsedMidnight.getTime()) ? null : parsedMidnight;
+    }
+  }
+  if(typeof value === 'number'){
+    if(!Number.isFinite(value)) return null;
+    if(value > 1e12) return new Date(value);
+    if(value > 1e9) return new Date(value * 1000);
+  }
+  if(typeof value === 'object'){
+    if('date' in value) return normalizeDateValue(value.date);
+    if('businessDate' in value) return normalizeDateValue(value.businessDate);
+    if('value' in value) return normalizeDateValue(value.value);
+    if('iso' in value) return normalizeDateValue(value.iso);
+  }
+  return null;
+}
+
+function formatDateKey(date){
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,'0');
+  const d = String(date.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
 async function fetchPeriodTransactions(periodId){
   const path = `${TRANSACTION_ENDPOINT.replace(/\/+$/, '')}/${String(periodId).replace(/^\/+/, '')}`;
   const url = new URL(path, CFG.baseUrl).toString();
@@ -457,17 +584,27 @@ exports.handler = async (event) => {
 
     // Special: demo data
     if(q.demo==='1'){
-      const demoReceipts = Array.from({length:5}).map((_,i)=>({
-        id:1000+i,
-        items:[
-          { productId: 1, productName:'Pils 0.5', quantity: Math.round(Math.random()*20+5), amount: Math.round(Math.random()*4000+500) },
-          { productId: 2, productName:'IPA 0.5',  quantity: Math.round(Math.random()*12+3), amount: Math.round(Math.random()*3000+300) },
-          { productId: 3, productName:'Cider',    quantity: Math.round(Math.random()*10+1), amount: Math.round(Math.random()*2000+200) },
-        ]
-      }));
+      const toDate = normDate(to) || normDate(new Date());
+      const baseDay = toDate ? new Date(`${toDate}T00:00:00`) : new Date();
+      const demoReceipts = Array.from({length:7}).map((_,i)=>{
+        const day = new Date(baseDay);
+        day.setDate(day.getDate()-i);
+        const iso = formatDateKey(day);
+        return {
+          id:1000+i,
+          businessDay: iso,
+          guestCount: Math.round(Math.random()*60+200),
+          items:[
+            { productId: 1, productName:'Pils 0.5', quantity: Math.round(Math.random()*20+5), amount: Math.round(Math.random()*4000+500) },
+            { productId: 2, productName:'IPA 0.5',  quantity: Math.round(Math.random()*12+3), amount: Math.round(Math.random()*3000+300) },
+            { productId: 3, productName:'Cider',    quantity: Math.round(Math.random()*10+1), amount: Math.round(Math.random()*2000+200) },
+          ]
+        };
+      });
       const top = aggregateTopProducts(demoReceipts, metric);
+      const daily = summarizeReceiptsByDay(demoReceipts);
       const limit = Math.max(1, Math.min(50, Number(q.limit||3)|0));
-      return ok({ from, to, endpoint, count: demoReceipts.length, top: top.slice(0,limit) });
+      return ok({ from, to, endpoint, count: demoReceipts.length, top: top.slice(0,limit), daily });
     }
 
     if(!CFG.xToken || !CFG.businessId){
@@ -488,7 +625,9 @@ exports.handler = async (event) => {
 
     const top = aggregateTopProducts(receipts, metric);
     const limit = Math.max(1, Math.min(50, Number(q.limit||3)|0));
-    return ok({ from, to, endpoint, count: receipts.length, top: top.slice(0,limit) });
+    const includeDaily = q.group === 'daily' || q.daily === '1';
+    const daily = includeDaily ? summarizeReceiptsByDay(receipts) : undefined;
+    return ok({ from, to, endpoint, count: receipts.length, top: top.slice(0,limit), daily });
   }catch(e){
     return err(500,'UNEXPECTED', String(e.message||e));
   }

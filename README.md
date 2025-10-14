@@ -59,6 +59,7 @@ The Netlify Function `/.netlify/functions/lightspeed` exposes:
 - `GET ?ping=1` health check
 - `GET ?env=1` env flags (no secrets)
 - `GET ?from=YYYY-MM-DD&to=YYYY-MM-DD&limit=3&metric=revenue` returns `{ top: [ { name, qty, revenue } ] }`
+- append `&group=daily` to include `{ daily: [ { date, revenue, guests } ] }`
 - `GET ?periodId=<period-id>&limit=5` returns `{ totalRevenue, items, top }` summarised from the transactions endpoint
 
 In the dashboard, use the “Lightspeed – Topp 3 produkter” card and click Hent after choosing months.
@@ -71,6 +72,8 @@ netlify dev
 curl "http://localhost:8888/.netlify/functions/lightspeed?from=2024-08-01&to=2024-08-31&limit=3" | jq
 # or fetch a single period summary
 curl "http://localhost:8888/.netlify/functions/lightspeed?periodId=123456&limit=5" | jq
+# fetch daily totals for the last week
+curl "http://localhost:8888/.netlify/functions/lightspeed?from=2024-05-01&to=2024-05-07&group=daily" | jq
 ```
 
 ### CLI usage (terminal)
@@ -83,6 +86,9 @@ node scripts/lightspeed-top.js --from 2024-08-01 --to 2024-08-31 --limit 3 --use
 
 # fetch a specific Lightspeed periode via proxy (recommended)
 node scripts/lightspeed-top.js --period 123456 --limit 5 --use-function
+
+# fetch daily totals through the proxy (JSON only)
+curl "http://localhost:8888/.netlify/functions/lightspeed?group=daily" | jq
 ```
 
 Or call Lightspeed directly (requires env vars locally):

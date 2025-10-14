@@ -303,38 +303,38 @@
                 <th>Gjester</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
+            <tbody id="daily-sales-body">
+              <tr class="demo-row">
                 <td>12. mai</td>
                 <td>128&nbsp;900 kr</td>
                 <td>302</td>
               </tr>
-              <tr>
+              <tr class="demo-row">
                 <td>11. mai</td>
                 <td>142&nbsp;100 kr</td>
                 <td>318</td>
               </tr>
-              <tr>
+              <tr class="demo-row">
                 <td>10. mai</td>
                 <td>119&nbsp;450 kr</td>
                 <td>276</td>
               </tr>
-              <tr>
+              <tr class="demo-row">
                 <td>9. mai</td>
                 <td>105&nbsp;780 kr</td>
                 <td>244</td>
               </tr>
-              <tr>
+              <tr class="demo-row">
                 <td>8. mai</td>
                 <td>131&nbsp;060 kr</td>
                 <td>289</td>
               </tr>
-              <tr>
+              <tr class="demo-row">
                 <td>7. mai</td>
                 <td>138&nbsp;500 kr</td>
                 <td>310</td>
               </tr>
-              <tr>
+              <tr class="demo-row">
                 <td>6. mai</td>
                 <td>114&nbsp;230 kr</td>
                 <td>268</td>
@@ -419,6 +419,71 @@
       const defaultTab = buttons.find((btn) => btn.classList.contains('active'))?.dataset.tabTarget || buttons[0]?.dataset.tabTarget;
       if (defaultTab) {
         activateTab(defaultTab);
+      }
+
+      const dailyTableBody = document.querySelector('#daily-sales-body');
+      if (dailyTableBody && typeof fetch === 'function') {
+        const fallbackHtml = dailyTableBody.innerHTML;
+        const loadingRow = document.createElement('tr');
+        loadingRow.innerHTML = '<td colspan="3">Henter omsetning …</td>';
+        dailyTableBody.innerHTML = '';
+        dailyTableBody.appendChild(loadingRow);
+
+        const moneyFmt = new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 });
+        const qtyFmt = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 });
+        const dateFmt = new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'short' });
+
+        const toISODate = (date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+
+        const today = new Date();
+        const to = toISODate(today);
+        const fromDate = new Date(today);
+        fromDate.setDate(fromDate.getDate() - 6);
+        const from = toISODate(fromDate);
+
+        const url = new URL('/.netlify/functions/lightspeed', window.location.origin);
+        url.searchParams.set('from', from);
+        url.searchParams.set('to', to);
+        url.searchParams.set('group', 'daily');
+        url.searchParams.set('limit', '7');
+
+        fetch(url.toString(), { headers: { accept: 'application/json' } })
+          .then((response) => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+          })
+          .then((data) => {
+            const days = Array.isArray(data?.daily) ? data.daily : [];
+            if (!days.length) throw new Error('NO_DAILY_DATA');
+            dailyTableBody.innerHTML = '';
+            days.slice(0, 7).forEach((entry) => {
+              const dateStr = typeof entry?.date === 'string' ? entry.date : null;
+              const displayDate = (() => {
+                if (!dateStr) return '–';
+                const parsed = new Date(`${dateStr}T00:00:00`);
+                if (Number.isNaN(parsed.getTime())) return dateStr;
+                return dateFmt.format(parsed);
+              })();
+              const revenue = Number(entry?.revenue || 0);
+              const guests = Number(entry?.guests || entry?.guestCount || 0);
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${displayDate}</td>
+                <td>${moneyFmt.format(revenue)}</td>
+                <td>${guests > 0 ? qtyFmt.format(guests) : '–'}</td>
+              `;
+              dailyTableBody.appendChild(row);
+            });
+          })
+          .catch((error) => {
+            console.error('Kunne ikke hente daglig omsetning:', error);
+            dailyTableBody.innerHTML = fallbackHtml || '<tr><td colspan="3">Ingen data tilgjengelig</td></tr>';
+          });
       }
 
       const themeToggleInput = document.querySelector('#dash-theme-toggle');
