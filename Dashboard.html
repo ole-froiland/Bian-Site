@@ -443,14 +443,49 @@
 
       const dailyTableBody = document.querySelector('#daily-sales-body');
       if (dailyTableBody && typeof fetch === 'function') {
-        const loadingRow = document.createElement('tr');
-        loadingRow.innerHTML = '<td colspan="3">Henter omsetning …</td>';
-        dailyTableBody.innerHTML = '';
-        dailyTableBody.appendChild(loadingRow);
-
+        const fallbackHtml = dailyTableBody.innerHTML;
         const moneyFmt = new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 });
         const qtyFmt = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 });
         const dateFmt = new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'short' });
+
+        const renderLoading = () => {
+          const loadingRow = document.createElement('tr');
+          loadingRow.innerHTML = '<td colspan="3">Henter omsetning …</td>';
+          dailyTableBody.innerHTML = '';
+          dailyTableBody.appendChild(loadingRow);
+        };
+
+        const renderRows = (days) => {
+          if (!Array.isArray(days) || !days.length) {
+            throw Object.assign(new Error('Ingen data'), { code: 'NO_DAILY_DATA' });
+          }
+          dailyTableBody.innerHTML = '';
+          days.slice(0, 7).forEach((entry) => {
+            const dateStr = typeof entry?.date === 'string' ? entry.date : null;
+            const displayDate = (() => {
+              if (!dateStr) return '–';
+              const parsed = new Date(`${dateStr}T00:00:00`);
+              if (Number.isNaN(parsed.getTime())) return dateStr;
+              return dateFmt.format(parsed);
+            })();
+            const revenue = Number(entry?.revenue || 0);
+            const guests = Number(entry?.guests || entry?.guestCount || 0);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${displayDate}</td>
+              <td>${moneyFmt.format(revenue)}</td>
+              <td>${guests > 0 ? qtyFmt.format(guests) : '–'}</td>
+            `;
+            dailyTableBody.appendChild(row);
+          });
+        };
+
+        const renderError = (message, { replace = false } = {}) => {
+          if (replace) dailyTableBody.innerHTML = '';
+          const row = document.createElement('tr');
+          row.innerHTML = `<td colspan="3">${message}</td>`;
+          dailyTableBody.appendChild(row);
+        };
 
         const toISODate = (date) => {
           const year = date.getFullYear();
@@ -470,47 +505,67 @@
             ? window.location.origin
             : 'http://localhost:8888'
         );
-        const url = new URL('/.netlify/functions/lightspeed', apiBase);
-        url.searchParams.set('from', from);
-        url.searchParams.set('to', to);
-        url.searchParams.set('group', 'daily');
-        url.searchParams.set('limit', '7');
 
-        fetch(url.toString(), { headers: { accept: 'application/json' } })
-          .then((response) => {
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            return response.json();
-          })
-          .then((data) => {
-            const days = Array.isArray(data?.daily) ? data.daily : [];
-            if (!days.length) throw new Error('NO_DAILY_DATA');
-            dailyTableBody.innerHTML = '';
-            days.slice(0, 7).forEach((entry) => {
-              const dateStr = typeof entry?.date === 'string' ? entry.date : null;
-              const displayDate = (() => {
-                if (!dateStr) return '–';
-                const parsed = new Date(`${dateStr}T00:00:00`);
-                if (Number.isNaN(parsed.getTime())) return dateStr;
-                return dateFmt.format(parsed);
-              })();
-              const revenue = Number(entry?.revenue || 0);
-              const guests = Number(entry?.guests || entry?.guestCount || 0);
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                <td>${displayDate}</td>
-                <td>${moneyFmt.format(revenue)}</td>
-                <td>${guests > 0 ? qtyFmt.format(guests) : '–'}</td>
-              `;
-              dailyTableBody.appendChild(row);
+        const fetchDaily = ({ demo = false } = {}) => {
+          const url = new URL('/.netlify/functions/lightspeed', apiBase);
+          url.searchParams.set('from', from);
+          url.searchParams.set('to', to);
+          url.searchParams.set('group', 'daily');
+          url.searchParams.set('limit', '7');
+          if (demo) url.searchParams.set('demo', '1');
+
+          return fetch(url.toString(), { headers: { accept: 'application/json' } })
+            .then(async (response) => {
+              const payload = await response.json().catch(() => null);
+              if (!response.ok) {
+                const error = new Error(`HTTP ${response.status}`);
+                error.status = response.status;
+                error.body = payload;
+                throw error;
+              }
+              return payload;
             });
-          })
-          .catch((error) => {
-            console.error('Kunne ikke hente daglig omsetning:', error);
-            const messageRow = document.createElement('tr');
-            messageRow.innerHTML = `<td colspan="3">Kunne ikke hente daglig omsetning. ${error?.message || ''}`.trim() + '</td>';
-            dailyTableBody.innerHTML = '';
-            dailyTableBody.appendChild(messageRow);
-          });
+        };
+
+        let attemptedDemoFallback = false;
+        renderLoading();
+
+        const load = (options = {}) => {
+          fetchDaily(options)
+            .then((data) => {
+              const days = Array.isArray(data?.daily) ? data.daily : [];
+              renderRows(days);
+            })
+            .catch((error) => {
+              console.error('Kunne ikke hente daglig omsetning:', error);
+              const shouldTryDemo = !attemptedDemoFallback && (
+                error?.status === 400 &&
+                (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL')
+              );
+              if (shouldTryDemo) {
+                attemptedDemoFallback = true;
+                renderLoading();
+                load({ demo: true });
+                return;
+              }
+              if (attemptedDemoFallback && options.demo) {
+                try {
+                  renderRows(error?.body?.daily || []);
+                  return;
+                } catch (_) {
+                  /* fall through */
+                }
+              }
+              dailyTableBody.innerHTML = fallbackHtml;
+              renderError(
+                (error?.body?.message) ? `Kunne ikke hente daglig omsetning: ${error.body.message}`
+                  : `Kunne ikke hente daglig omsetning. ${error?.message || ''}`,
+                { replace: false }
+              );
+            });
+        };
+
+        load();
       }
 
       const themeToggleInput = document.querySelector('#dash-theme-toggle');
