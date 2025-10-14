@@ -455,11 +455,16 @@
           dailyTableBody.appendChild(loadingRow);
         };
 
-        const renderRows = (days) => {
+        const renderRows = (days, { showDemoNotice = false } = {}) => {
           if (!Array.isArray(days) || !days.length) {
             throw Object.assign(new Error('Ingen data'), { code: 'NO_DAILY_DATA' });
           }
           dailyTableBody.innerHTML = '';
+          if (showDemoNotice) {
+            const notice = document.createElement('tr');
+            notice.innerHTML = '<td colspan="3">Viser demo-data. Sett Lightspeed-nøkler i Netlify for ekte tall.</td>';
+            dailyTableBody.appendChild(notice);
+          }
           days.slice(0, 7).forEach((entry) => {
             const dateStr = typeof entry?.date === 'string' ? entry.date : null;
             const displayDate = (() => {
@@ -534,7 +539,7 @@
           fetchDaily(options)
             .then((data) => {
               const days = Array.isArray(data?.daily) ? data.daily : [];
-              renderRows(days);
+              renderRows(days, { showDemoNotice: !!options.demo });
             })
             .catch((error) => {
               console.error('Kunne ikke hente daglig omsetning:', error);
@@ -550,7 +555,7 @@
               }
               if (attemptedDemoFallback && options.demo) {
                 try {
-                  renderRows(error?.body?.daily || []);
+                  renderRows(error?.body?.daily || [], { showDemoNotice: true });
                   return;
                 } catch (_) {
                   /* fall through */
