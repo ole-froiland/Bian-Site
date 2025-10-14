@@ -68,11 +68,13 @@
     .chip:hover{transform:translateY(-1px);border-color:var(--accent);background:var(--accent-soft);} 
     body[data-theme="dark"] .chip{background:var(--surface-raised);color:var(--text);border-color:rgba(125,121,249,0.45);} 
     .user-menu{position:relative;}
-    .user-menu__trigger{gap:10px;padding-inline:16px 20px;background:linear-gradient(145deg,rgba(125,121,249,0.28),rgba(125,121,249,0.16));color:var(--text-strong);box-shadow:0 6px 16px rgba(15,23,42,0.28);}
-    .user-menu__trigger:hover{background:linear-gradient(145deg,rgba(125,121,249,0.34),rgba(125,121,249,0.2));}
-    body[data-theme="light"] .user-menu__trigger{background:#ffffff;color:#121826;box-shadow:0 8px 16px rgba(31,41,55,0.08);} 
+    .user-menu__trigger{width:44px;height:44px;min-width:44px;padding:0;border-radius:16px;border:1px solid var(--brand-outline);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(15,23,42,0.24);transition:background .22s ease,border-color .22s ease,transform .22s ease;}
+    .user-menu__trigger:hover{transform:translateY(-1px);border-color:var(--accent);background:var(--accent-soft);}
+    body[data-theme="light"] .user-menu__trigger{background:#ffffff;box-shadow:0 12px 20px rgba(31,41,55,0.08);} 
     body[data-theme="light"] .user-menu__trigger:hover{background:#f4f5ff;}
-    .user-menu__avatar{inline-size:28px;block-size:28px;border-radius:999px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;letter-spacing:.06em;box-shadow:0 4px 10px rgba(125,121,249,0.45);}
+    .user-menu__icon{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;}
+    .user-menu__icon span{display:block;width:18px;height:2px;border-radius:999px;background:var(--text);transition:background .22s ease;}
+    .user-menu.open .user-menu__icon span{background:var(--accent-strong);}
     .user-menu__panel{position:absolute;top:calc(100% + 12px);right:0;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 40px rgba(12,18,32,0.24);padding:10px 0;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .18s ease,transform .18s ease,visibility .18s ease;z-index:30;}
     body[data-theme="dark"] .user-menu__panel{background:var(--surface-raised);}
     .user-menu.open .user-menu__panel{opacity:1;visibility:visible;transform:translateY(0);}
@@ -168,9 +170,13 @@
       <div class="brand-title">Gressholmen Kro</div>
       <div class="nav-actions">
         <div class="user-menu" data-menu>
-          <button type="button" id="user-menu-trigger" class="chip user-menu__trigger" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-panel">
-            <span class="user-menu__avatar" aria-hidden="true">SU</span>
-            <span>Din konto</span>
+          <button type="button" id="user-menu-trigger" class="chip user-menu__trigger" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-panel" aria-label="Konto og innstillinger">
+            <span class="sr-only">Din konto</span>
+            <span class="user-menu__icon" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
           </button>
           <div class="user-menu__panel" id="user-menu-panel" role="menu" aria-labelledby="user-menu-trigger" hidden>
             <div class="user-menu__section-title">Konto</div>
