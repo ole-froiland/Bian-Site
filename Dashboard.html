@@ -502,7 +502,7 @@
         const today = new Date();
         const to = toISODate(today);
         const fromDate = new Date(today);
-        fromDate.setDate(fromDate.getDate() - 6);
+        fromDate.setDate(fromDate.getDate() - 60); // look back ~2 months to capture older sales
         const from = toISODate(fromDate);
 
         const apiBase = window.DASHBOARD_API_BASE || (
@@ -516,7 +516,7 @@
           url.searchParams.set('from', from);
           url.searchParams.set('to', to);
           url.searchParams.set('group', 'daily');
-          url.searchParams.set('limit', '7');
+          url.searchParams.set('limit', '50');
           if (demo) url.searchParams.set('demo', '1');
 
           return fetch(url.toString(), { headers: { accept: 'application/json' } })
