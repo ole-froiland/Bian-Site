@@ -55,6 +55,18 @@ LIGHTSPEED_BUSINESS_ID=<your-business-id>
 LIGHTSPEED_OPERATOR=<optional-operator-id>
 ```
 
+> **Netlify setup**
+>
+> Set the following environment variables in your Netlify site (UI or `netlify env:set`). These values are read at runtime by the serverless function via `process.env`, so no local `.env` file is required in production:
+>
+> ```bash
+> netlify env:set LIGHTSPEED_X_TOKEN "3c8d63ffebb147adb2e0dc6e8b1bd90c306b17d3"
+> netlify env:set LIGHTSPEED_BUSINESS_ID "41258"
+> netlify env:set LIGHTSPEED_OPERATOR ""
+> ```
+>
+> Replace the token/IDs with your real credentials if they differ.
+
 The Netlify Function `/.netlify/functions/lightspeed` exposes:
 - `GET ?ping=1` health check
 - `GET ?env=1` env flags (no secrets)
@@ -102,3 +114,11 @@ node scripts/lightspeed-top.js --from 2024-08-01 --to 2024-08-31 --limit 3
 # or, with direct API access, fetch a single periode
 node scripts/lightspeed-top.js --period 123456 --limit 5
 ```
+
+### Frontend API base
+
+The dashboard sets `window.DASHBOARD_API_BASE` automatically:
+
+- On Netlify / production, it falls back to `window.location.origin` (e.g. `https://din-side.netlify.app`).
+- Locally (`localhost`/`127.0.0.1`), it targets `http://localhost:8888` so you can run `netlify dev` or a local functions proxy.
+- To override, set `data-api-base="https://your-domain"` on the `<html>` or `<body>` element, or inject `window.DASHBOARD_API_BASE` before `Dashboard.html` loads.

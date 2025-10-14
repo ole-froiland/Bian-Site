@@ -5,6 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="dark light" />
   <title>Scope Dashboard</title>
+  <script>
+    (function(){
+      if(!window.DASHBOARD_API_BASE){
+        const explicit = document.documentElement?.getAttribute('data-api-base') || document.body?.getAttribute('data-api-base');
+        if(explicit){
+          window.DASHBOARD_API_BASE = explicit;
+        }else{
+          const host = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '';
+          const isLocal = host === 'localhost' || host === '127.0.0.1';
+          if(isLocal){
+            window.DASHBOARD_API_BASE = 'http://localhost:8888';
+          }else if (typeof window !== 'undefined' && window.location && window.location.origin){
+            window.DASHBOARD_API_BASE = window.location.origin;
+          }else{
+            window.DASHBOARD_API_BASE = 'https://din-side.netlify.app';
+          }
+        }
+      }
+    })();
+  </script>
   <style>
     *,*::before,*::after{box-sizing:border-box;}
     body{
@@ -423,7 +443,6 @@
 
       const dailyTableBody = document.querySelector('#daily-sales-body');
       if (dailyTableBody && typeof fetch === 'function') {
-        const fallbackHtml = dailyTableBody.innerHTML;
         const loadingRow = document.createElement('tr');
         loadingRow.innerHTML = '<td colspan="3">Henter omsetning …</td>';
         dailyTableBody.innerHTML = '';
@@ -446,7 +465,12 @@
         fromDate.setDate(fromDate.getDate() - 6);
         const from = toISODate(fromDate);
 
-        const url = new URL('/.netlify/functions/lightspeed', window.location.origin);
+        const apiBase = window.DASHBOARD_API_BASE || (
+          (window.location.origin && window.location.origin !== 'null' && window.location.origin !== undefined)
+            ? window.location.origin
+            : 'http://localhost:8888'
+        );
+        const url = new URL('/.netlify/functions/lightspeed', apiBase);
         url.searchParams.set('from', from);
         url.searchParams.set('to', to);
         url.searchParams.set('group', 'daily');
@@ -482,7 +506,10 @@
           })
           .catch((error) => {
             console.error('Kunne ikke hente daglig omsetning:', error);
-            dailyTableBody.innerHTML = fallbackHtml || '<tr><td colspan="3">Ingen data tilgjengelig</td></tr>';
+            const messageRow = document.createElement('tr');
+            messageRow.innerHTML = `<td colspan="3">Kunne ikke hente daglig omsetning. ${error?.message || ''}`.trim() + '</td>';
+            dailyTableBody.innerHTML = '';
+            dailyTableBody.appendChild(messageRow);
           });
       }
 
