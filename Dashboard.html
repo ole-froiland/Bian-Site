@@ -13,7 +13,7 @@
           window.DASHBOARD_API_BASE = explicit;
         }else{
           const host = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '';
-          const isLocal = host === 'localhost' || host === '127.0.0.1';
+          const isLocal = ['localhost','127.0.0.1','0.0.0.0','::1'].includes(host);
           if(isLocal){
             window.DASHBOARD_API_BASE = 'http://localhost:8888';
           }else if (typeof window !== 'undefined' && window.location && window.location.origin){
@@ -310,6 +310,25 @@
           <div class="bar" style="--value:71" title="Dag 14: 71%"><span>sø</span></div>
         </div>
       </article>
+      <article class="card daily-summary-card">
+        <header>
+          <h2>Dagens omsetning</h2>
+          <div class="daily-summary__controls">
+            <label for="sales-day-picker" class="sr-only">Velg dato</label>
+            <input type="date" id="sales-day-picker" class="daily-summary__input" />
+          </div>
+        </header>
+        <div class="daily-summary">
+          <div>
+            <p class="daily-summary__headline" data-day-revenue>–</p>
+            <div class="daily-summary__meta">
+              <span data-day-guests>– gjester</span>
+              <span data-day-receipts>– kvitteringer</span>
+            </div>
+          </div>
+          <div class="daily-summary__status" data-day-status></div>
+        </div>
+      </article>
       <article class="card table-card">
         <header>
           <h2>Omsetning per dag</h2>
@@ -441,12 +460,123 @@
         activateTab(defaultTab);
       }
 
+      const moneyFmt = new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 });
+      const qtyFmt = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 });
+      const dateFmtShort = new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'short' });
+      const dateFmtLong = new Intl.DateTimeFormat('nb-NO', { weekday: 'short', day: 'numeric', month: 'short' });
+
+      const apiBase = window.DASHBOARD_API_BASE || (
+        (window.location && window.location.origin) ? window.location.origin : 'http://localhost:8888'
+      );
+
+      const toISODate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      const today = new Date();
+      const todayISO = toISODate(today);
+
+      const dayPicker = document.querySelector('#sales-day-picker');
+      const dayRevenueEl = document.querySelector('[data-day-revenue]');
+      const dayGuestsEl = document.querySelector('[data-day-guests]');
+      const dayReceiptsEl = document.querySelector('[data-day-receipts]');
+      const dayStatusEl = document.querySelector('[data-day-status]');
+
+      const renderDayStatus = (message, tone = 'muted') => {
+        if (!dayStatusEl) return;
+        dayStatusEl.textContent = message || '';
+        dayStatusEl.dataset.tone = tone;
+      };
+
+      const renderDayTotals = ({ date, revenue, guests, receipts }, { isDemo = false } = {}) => {
+        if (!dayRevenueEl) return;
+        const parsed = date ? new Date(`${date}T00:00:00`) : null;
+        const friendly = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : date || '–';
+        dayRevenueEl.textContent = moneyFmt.format(Number(revenue || 0));
+        dayGuestsEl.textContent = `${qtyFmt.format(Number(guests || 0))} gjester`;
+        dayReceiptsEl.textContent = `${qtyFmt.format(Number(receipts || 0))} kvitteringer`;
+        renderDayStatus(isDemo ? `Viser demo for ${friendly} (mangler Lightspeed-nøkler).` : `Tall for ${friendly}`);
+      };
+
+      const fetchDayTotals = (date, { demo = false } = {}) => {
+        const url = new URL('/.netlify/functions/lightspeed', apiBase);
+        url.searchParams.set('date', date);
+        if (demo) url.searchParams.set('demo', '1');
+        return fetch(url.toString(), { headers: { accept: 'application/json' } })
+          .then(async (response) => {
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) {
+              const error = new Error(`HTTP ${response.status}`);
+              error.status = response.status;
+              error.body = payload;
+              throw error;
+            }
+            return payload;
+          });
+      };
+
+      const loadDayTotals = (date) => {
+        if (!dayRevenueEl) return;
+        renderDayStatus('Henter omsetning ...');
+        dayRevenueEl.textContent = '–';
+        dayGuestsEl.textContent = '– gjester';
+        dayReceiptsEl.textContent = '– kvitteringer';
+
+        let attemptedDemo = false;
+
+        const attempt = (options = {}) => {
+          fetchDayTotals(date, options)
+            .then((data) => {
+              if (data?.dayTotal) {
+                renderDayTotals(data.dayTotal, { isDemo: !!options.demo });
+                return;
+              }
+              const daily = Array.isArray(data?.daily) ? data.daily : [];
+              const match = daily.find((d) => d.date === date);
+              if (match) {
+                renderDayTotals(match, { isDemo: !!options.demo });
+              } else if (daily.length) {
+                renderDayTotals(daily[0], { isDemo: !!options.demo });
+              } else {
+                renderDayStatus('Ingen omsetning funnet for valgt dato.');
+              }
+            })
+            .catch((error) => {
+              console.error('Kunne ikke hente dagsomsetning:', error);
+              const allowDemo = !attemptedDemo && error?.status === 400 &&
+                (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL');
+              if (allowDemo) {
+                attemptedDemo = true;
+                attempt({ demo: true });
+                return;
+              }
+              if (attemptedDemo && options.demo && error?.body?.dayTotal) {
+                renderDayTotals(error.body.dayTotal, { isDemo: true });
+                return;
+              }
+              renderDayStatus(error?.body?.message || error?.message || 'Feil ved henting av omsetning', 'error');
+            });
+        };
+
+        attempt();
+      };
+
+      if (dayPicker) {
+        dayPicker.max = todayISO;
+        if (!dayPicker.value) dayPicker.value = todayISO;
+        loadDayTotals(dayPicker.value);
+        dayPicker.addEventListener('change', () => {
+          const date = dayPicker.value || todayISO;
+          loadDayTotals(date);
+        });
+      }
+
       const dailyTableBody = document.querySelector('#daily-sales-body');
       if (dailyTableBody && typeof fetch === 'function') {
         const fallbackHtml = dailyTableBody.innerHTML;
-        const moneyFmt = new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 });
-        const qtyFmt = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 });
-        const dateFmt = new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'short' });
 
         const renderLoading = () => {
           const loadingRow = document.createElement('tr');
@@ -471,7 +601,7 @@
               if (!dateStr) return '–';
               const parsed = new Date(`${dateStr}T00:00:00`);
               if (Number.isNaN(parsed.getTime())) return dateStr;
-              return dateFmt.format(parsed);
+              return dateFmtShort.format(parsed);
             })();
             const revenue = Number(entry?.revenue || 0);
             const guests = Number(entry?.guests || entry?.guestCount || 0);
@@ -492,29 +622,14 @@
           dailyTableBody.appendChild(row);
         };
 
-        const toISODate = (date) => {
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}`;
-        };
-
-        const today = new Date();
-        const to = toISODate(today);
         const fromDate = new Date(today);
-        fromDate.setDate(fromDate.getDate() - 60); // look back ~2 months to capture older sales
+        fromDate.setDate(fromDate.getDate() - 60);
         const from = toISODate(fromDate);
-
-        const apiBase = window.DASHBOARD_API_BASE || (
-          (window.location.origin && window.location.origin !== 'null' && window.location.origin !== undefined)
-            ? window.location.origin
-            : 'http://localhost:8888'
-        );
 
         const fetchDaily = ({ demo = false } = {}) => {
           const url = new URL('/.netlify/functions/lightspeed', apiBase);
           url.searchParams.set('from', from);
-          url.searchParams.set('to', to);
+          url.searchParams.set('to', todayISO);
           url.searchParams.set('group', 'daily');
           url.searchParams.set('limit', '50');
           if (demo) url.searchParams.set('demo', '1');

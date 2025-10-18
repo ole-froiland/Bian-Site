@@ -12,8 +12,9 @@ const err = (status, code, message, extra = {}) =>
 
 const CFG = {
   baseUrl: (process.env.LIGHTSPEED_GASTROFIX_BASE_URL || 'https://no.gastrofix.com/api/').replace(/\/+$/,'') + '/',
-  xToken: process.env.LIGHTSPEED_X_TOKEN || '',
-  businessId: process.env.LIGHTSPEED_BUSINESS_ID || '',
+  xToken: process.env.LIGHTSPEED_X_TOKEN || '3c8d63ffebb147adb2e0dc6e8b1bd90c306b17d3',
+  businessId: process.env.LIGHTSPEED_BUSINESS_ID || '41258',
+  businessUnits: process.env.LIGHTSPEED_BUSINESS_UNITS || process.env.LIGHTSPEED_BUSINESS_ID || '41258',
   operator: process.env.LIGHTSPEED_OPERATOR || ''
 };
 
@@ -45,7 +46,11 @@ function authHeaders(){
   const h = { 'Accept':'application/json' };
   if(CFG.xToken) h['X-Token'] = CFG.xToken;
   if(CFG.businessId) h['X-Business-Id'] = CFG.businessId;
-  if(CFG.operator) h['X-Operator-Id'] = CFG.operator;
+  if(CFG.businessUnits) h['X-Business-Units'] = CFG.businessUnits;
+  if(CFG.operator){
+    h['X-Operator'] = CFG.operator;
+    h['X-Operator-Id'] = CFG.operator;
+  }
   return h;
 }
 
@@ -541,6 +546,11 @@ exports.handler = async (event) => {
     // Dates
     let from = normDate(q.from || q.start);
     let to   = normDate(q.to || q.end);
+    const singleDate = normDate(q.date || q.day || null);
+    if (singleDate) {
+      from = singleDate;
+      to = singleDate;
+    }
     if(!from || !to){
       const now = new Date();
       const y = now.getFullYear();
@@ -625,9 +635,14 @@ exports.handler = async (event) => {
 
     const top = aggregateTopProducts(receipts, metric);
     const limit = Math.max(1, Math.min(50, Number(q.limit||3)|0));
-    const includeDaily = q.group === 'daily' || q.daily === '1';
+    const includeDaily = singleDate || q.group === 'daily' || q.daily === '1';
     const daily = includeDaily ? summarizeReceiptsByDay(receipts) : undefined;
-    return ok({ from, to, endpoint, count: receipts.length, top: top.slice(0,limit), daily });
+    let dayTotal = null;
+    if (singleDate) {
+      const match = (daily || []).find((d) => d.date === singleDate);
+      dayTotal = match || { date: singleDate, revenue: 0, guests: 0, receipts: 0 };
+    }
+    return ok({ from, to, endpoint, count: receipts.length, top: top.slice(0,limit), daily, dayTotal });
   }catch(e){
     return err(500,'UNEXPECTED', String(e.message||e));
   }

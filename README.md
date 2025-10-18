@@ -115,6 +115,23 @@ node scripts/lightspeed-top.js --from 2024-08-01 --to 2024-08-31 --limit 3
 node scripts/lightspeed-top.js --period 123456 --limit 5
 ```
 
+### Automatisk provisioning av Netlify-miljø
+
+Kjør `scripts/provision-netlify-env.sh` én gang for å linke prosjektet mot Netlify, sette Lightspeed-variablene og trigge et produksjonsdeploy:
+
+```bash
+bash scripts/provision-netlify-env.sh
+```
+
+Du kan overstyre verdiene midlertidig ved å eksportere dem før scriptet kjøres:
+
+```bash
+export LIGHTSPEED_X_TOKEN=... 
+export LIGHTSPEED_BUSINESS_ID=...
+export LIGHTSPEED_OPERATOR=...
+bash scripts/provision-netlify-env.sh
+```
+
 ### Frontend API base
 
 The dashboard sets `window.DASHBOARD_API_BASE` automatically:

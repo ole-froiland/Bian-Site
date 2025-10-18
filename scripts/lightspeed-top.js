@@ -75,7 +75,10 @@ function authHeaders(){
   const h = { 'Accept':'application/json' };
   if(process.env.LIGHTSPEED_X_TOKEN) h['X-Token'] = process.env.LIGHTSPEED_X_TOKEN;
   if(process.env.LIGHTSPEED_BUSINESS_ID) h['X-Business-Id'] = process.env.LIGHTSPEED_BUSINESS_ID;
-  if(process.env.LIGHTSPEED_OPERATOR) h['X-Operator-Id'] = process.env.LIGHTSPEED_OPERATOR;
+  if(process.env.LIGHTSPEED_BUSINESS_UNITS || process.env.LIGHTSPEED_BUSINESS_ID){
+    h['X-Business-Units'] = process.env.LIGHTSPEED_BUSINESS_UNITS || process.env.LIGHTSPEED_BUSINESS_ID;
+  }
+  if(process.env.LIGHTSPEED_OPERATOR) h['X-Operator'] = process.env.LIGHTSPEED_OPERATOR;
   return h;
 }
 
