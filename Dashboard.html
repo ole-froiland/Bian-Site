@@ -670,6 +670,7 @@
           url.searchParams.set('to', todayISO);
           url.searchParams.set('group', 'daily');
           url.searchParams.set('limit', '50');
+          url.searchParams.set('window', '60');
           if (demo) url.searchParams.set('demo', '1');
 
           return fetch(url.toString(), { headers: { accept: 'application/json' } })

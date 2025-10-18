@@ -73,7 +73,7 @@ function buildApiUrl(path){
   return new URL(path.replace(/^\/+/, ''), CFG.baseUrl);
 }
 
-async function fetchTransactionsRange({ from, to, maxPeriods = 120 }){
+async function fetchTransactionsRange({ from, to, maxPeriods = 60, concurrency = 6 }){
   const baseHeaders = authHeaders();
   const headerOptions = headerVariants(baseHeaders);
   const periodsUrl = buildApiUrl(BUSINESS_PERIODS_ENDPOINT);
@@ -106,26 +106,33 @@ async function fetchTransactionsRange({ from, to, maxPeriods = 120 }){
   const limitedPeriods = filteredPeriods.slice(-maxPeriods);
   const transactions = [];
 
-  for (const period of limitedPeriods) {
-    const periodId = period?.periodId;
-    if (!periodId) continue;
-    const txUrl = buildApiUrl(`transaction/v3.0/transactions/${periodId}`);
-    let txData = null;
-    for (const hdr of headerOptions) {
-      try {
-        txData = await fetchJson(txUrl.toString(), hdr);
-        break;
-      } catch (error) {
-        lastErr = error;
+  for (let index = 0; index < limitedPeriods.length; index += concurrency) {
+    const chunk = limitedPeriods.slice(index, index + concurrency);
+    const chunkResults = await Promise.all(chunk.map(async (period) => {
+      const periodId = period?.periodId;
+      if (!periodId) return null;
+      const txUrl = buildApiUrl(`transaction/v3.0/transactions/${periodId}`);
+      let txData = null;
+      for (const hdr of headerOptions) {
+        try {
+          txData = await fetchJson(txUrl.toString(), hdr);
+          break;
+        } catch (error) {
+          lastErr = error;
+        }
       }
-    }
-    if (Array.isArray(txData?.transactions)) {
-      txData.transactions.forEach((tx) => {
-        if (!tx.head) tx.head = {};
-        if (!tx.head.businessDay && period.businessDay) tx.head.businessDay = period.businessDay;
-        transactions.push(tx);
-      });
-    }
+      if (txData && Array.isArray(txData.transactions)) {
+        txData.transactions.forEach((tx) => {
+          if (!tx.head) tx.head = {};
+          if (!tx.head.businessDay && period.businessDay) tx.head.businessDay = period.businessDay;
+        });
+        return txData.transactions;
+      }
+      return [];
+    }));
+    chunkResults.forEach((list) => {
+      if (Array.isArray(list)) transactions.push(...list);
+    });
   }
 
   if (!transactions.length && lastErr) {
@@ -645,7 +652,18 @@ exports.handler = async (event) => {
     // Fetch transactions and aggregate
     let transactions;
     try{
-      transactions = await fetchTransactionsRange({ from, to });
+      const fromDateObj = from ? normalizeDateValue(from) : null;
+      const toDateObj = to ? normalizeDateValue(to) : null;
+      const daySpan = (() => {
+        if (fromDateObj && toDateObj) {
+          const diff = Math.floor((toDateObj - fromDateObj) / 86400000) + 1;
+          if (Number.isFinite(diff) && diff > 0) return diff;
+        }
+        return 30;
+      })();
+      const requestedWindow = Number(q.window || q.days || q.maxPeriods || '') || null;
+      const maxPeriods = Math.max(14, Math.min(90, requestedWindow || daySpan));
+      transactions = await fetchTransactionsRange({ from, to, maxPeriods });
     }catch(e){
       const status = e?.status || 502;
       return err(status, 'TRANSACTIONS_FAIL', String(e.message||e), {
