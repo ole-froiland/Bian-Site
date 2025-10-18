@@ -144,10 +144,20 @@
     tbody tr:hover{background:rgba(148,163,184,0.08);}
     td,th{padding:12px 0;}
     td:last-child,th:last-child{text-align:right;}
-    .chart-card .bar-chart{position:relative;display:grid;grid-template-columns:repeat(14,minmax(0,1fr));align-items:end;gap:10px;height:220px;margin-top:18px;padding-bottom:26px;}
-    .bar{position:relative;height:calc(var(--value)*1%);min-height:12px;border-radius:10px 10px 6px 6px;background:linear-gradient(180deg,var(--accent),var(--accent-strong));box-shadow:0 12px 30px rgba(14,165,233,0.25);transition:transform 0.25s ease;}
-    .bar:hover{transform:translateY(-4px);}
-    .bar span{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;}
+    .chart-card .bar-chart{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(46px,1fr));gap:14px;align-items:end;height:240px;margin-top:18px;padding-bottom:18px;}
+    .chart-card .bar-chart[data-empty="1"]{display:flex;align-items:center;justify-content:center;height:auto;min-height:120px;flex-direction:column;gap:6px;}
+    .bar-chart__empty{font-size:0.9rem;color:var(--muted);text-align:center;}
+    .chart-card .bar-chart[data-demo="1"]::after{
+      content:'Viser demo-data. Sett Lightspeed-nøkler i Netlify for ekte tall.';
+      position:absolute;inset:auto 0 0;transform:translateY(18px);
+      font-size:0.7rem;color:var(--muted);text-align:center;
+    }
+    .bar-chart .bar{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;color:var(--muted);}
+    .bar-chart .bar__column{width:100%;height:calc(max(6px,var(--value,0) * 1%));border-radius:18px 18px 12px 12px;background:linear-gradient(180deg,var(--accent),var(--accent-strong));box-shadow:0 12px 30px rgba(14,165,233,0.25);transition:transform 0.25s ease;}
+    .bar-chart .bar__column:hover{transform:translateY(-4px);}
+    .bar-chart .bar__label{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;}
+    .bar-chart .bar__label strong{font-weight:700;}
+    .bar-chart .bar__label small{font-size:0.68rem;text-transform:none;letter-spacing:0.04em;color:var(--muted);}
     .tips-list{list-style:none;margin:0;padding:0;display:grid;gap:clamp(14px,3vw,20px);}
     .tips-list li{display:flex;flex-direction:column;gap:12px;padding:clamp(14px,3vw,22px);border-radius:14px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.16);}
     body[data-theme="light"] .tips-list li{background:rgba(148,163,184,0.12);}
@@ -293,22 +303,7 @@
         <header>
           <h2>Omsetning (14 dager)</h2>
         </header>
-        <div class="bar-chart" role="img" aria-label="Placeholder søylegraf for fjorten dager med omsetning">
-          <div class="bar" style="--value:72" title="Dag 1: 72%"><span>ma</span></div>
-          <div class="bar" style="--value:54" title="Dag 2: 54%"><span>ti</span></div>
-          <div class="bar" style="--value:88" title="Dag 3: 88%"><span>on</span></div>
-          <div class="bar" style="--value:47" title="Dag 4: 47%"><span>to</span></div>
-          <div class="bar" style="--value:63" title="Dag 5: 63%"><span>fr</span></div>
-          <div class="bar" style="--value:92" title="Dag 6: 92%"><span>lø</span></div>
-          <div class="bar" style="--value:68" title="Dag 7: 68%"><span>sø</span></div>
-          <div class="bar" style="--value:75" title="Dag 8: 75%"><span>ma</span></div>
-          <div class="bar" style="--value:58" title="Dag 9: 58%"><span>ti</span></div>
-          <div class="bar" style="--value:84" title="Dag 10: 84%"><span>on</span></div>
-          <div class="bar" style="--value:49" title="Dag 11: 49%"><span>to</span></div>
-          <div class="bar" style="--value:66" title="Dag 12: 66%"><span>fr</span></div>
-          <div class="bar" style="--value:97" title="Dag 13: 97%"><span>lø</span></div>
-          <div class="bar" style="--value:71" title="Dag 14: 71%"><span>sø</span></div>
-        </div>
+        <div class="bar-chart" data-daily-chart role="img" aria-live="polite" aria-label="Omsetning siste 14 dager"></div>
       </article>
       <article class="card daily-summary-card">
         <header>
@@ -484,6 +479,9 @@
       const dayGuestsEl = document.querySelector('[data-day-guests]');
       const dayReceiptsEl = document.querySelector('[data-day-receipts]');
       const dayStatusEl = document.querySelector('[data-day-status]');
+      const barChart = document.querySelector('[data-daily-chart]');
+      const weekdayFmt = new Intl.DateTimeFormat('nb-NO', { weekday: 'short' });
+      const chartDateFmt = new Intl.DateTimeFormat('nb-NO', { day: '2-digit', month: '2-digit' });
 
       const renderDayStatus = (message, tone = 'muted') => {
         if (!dayStatusEl) return;
@@ -585,6 +583,46 @@
           dailyTableBody.appendChild(loadingRow);
         };
 
+        const renderChart = (days, { isDemo = false, message = '' } = {}) => {
+          if (!barChart) return;
+          if (!Array.isArray(days) || !days.length) {
+            barChart.dataset.empty = '1';
+            barChart.removeAttribute('data-demo');
+            barChart.innerHTML = `<div class="bar-chart__empty">${message || 'Ingen data'}</div>`;
+            return;
+          }
+          barChart.removeAttribute('data-empty');
+          if (isDemo) {
+            barChart.dataset.demo = '1';
+          } else {
+            barChart.removeAttribute('data-demo');
+          }
+          const sorted = [...days].sort((a,b)=>a.date.localeCompare(b.date));
+          const slice = sorted.slice(-14);
+          const maxRevenue = Math.max(...slice.map(d=>Number(d.revenue || 0)));
+          barChart.innerHTML = '';
+          slice.forEach((day) => {
+            const revenue = Number(day.revenue || 0);
+            const ratio = maxRevenue > 0 ? (revenue / maxRevenue) : 0;
+            const column = document.createElement('div');
+            column.className = 'bar__column';
+            column.style.setProperty('--value', (ratio * 100).toFixed(2));
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            const dateObj = day.date ? new Date(`${day.date}T00:00:00`) : null;
+            const dayNameRaw = dateObj && !Number.isNaN(dateObj.getTime()) ? weekdayFmt.format(dateObj) : '';
+            const dayName = dayNameRaw ? dayNameRaw.replace('.', '').slice(0,3).toUpperCase() : '';
+            const dateLabel = dateObj && !Number.isNaN(dateObj.getTime()) ? chartDateFmt.format(dateObj) : (day.date || '');
+            const friendly = dateObj && !Number.isNaN(dateObj.getTime()) ? dateFmtLong.format(dateObj) : (day.date || '');
+            bar.title = `${friendly}: ${moneyFmt.format(revenue)}`;
+            const label = document.createElement('span');
+            label.className = 'bar__label';
+            label.innerHTML = `<strong>${dayName}</strong><small>${dateLabel}</small>`;
+            bar.append(column, label);
+            barChart.appendChild(bar);
+          });
+        };
+
         const renderRows = (days, { showDemoNotice = false } = {}) => {
           if (!Array.isArray(days) || !days.length) {
             throw Object.assign(new Error('Ingen data'), { code: 'NO_DAILY_DATA' });
@@ -649,12 +687,15 @@
 
         let attemptedDemoFallback = false;
         renderLoading();
+        renderChart([], { message: 'Henter …' });
 
         const load = (options = {}) => {
           fetchDaily(options)
             .then((data) => {
               const days = Array.isArray(data?.daily) ? data.daily : [];
-              renderRows(days, { showDemoNotice: !!options.demo });
+              const isDemo = !!options.demo || data?.mode === 'demo';
+              renderRows(days, { showDemoNotice: isDemo });
+              renderChart(days, { isDemo });
             })
             .catch((error) => {
               console.error('Kunne ikke hente daglig omsetning:', error);
@@ -670,7 +711,9 @@
               }
               if (attemptedDemoFallback && options.demo) {
                 try {
-                  renderRows(error?.body?.daily || [], { showDemoNotice: true });
+                  const days = error?.body?.daily || [];
+                  renderRows(days, { showDemoNotice: true });
+                  renderChart(days, { isDemo: true });
                   return;
                 } catch (_) {
                   /* fall through */
@@ -682,6 +725,7 @@
                   : `Kunne ikke hente daglig omsetning. ${error?.message || ''}`,
                 { replace: false }
               );
+              renderChart([], { message: error?.body?.message || error?.message || 'Feil ved henting' });
             });
         };
 
