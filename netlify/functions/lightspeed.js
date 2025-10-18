@@ -222,30 +222,6 @@ function receiptRevenue(receipt){
   return total;
 }
 
-function summarizeTransactionsByDay(transactions){
-  const map = new Map();
-  for (const txn of transactions) {
-    const dateObj = pickReceiptDate(txn);
-    if (!dateObj) continue;
-    const key = formatDateKey(dateObj);
-    const revenue = transactionNetTotal(txn);
-    if (revenue <= 0) continue;
-    const guests = Number(
-      txn?.head?.guestCount ??
-      txn?.head?.covers ??
-      txn?.head?.customerCount ??
-      txn?.head?.customers ??
-      0
-    );
-    const bucket = map.get(key) || { date: key, revenue: 0, guests: 0, receipts: 0 };
-    bucket.revenue += revenue;
-    bucket.guests += Number.isFinite(guests) ? guests : 0;
-    bucket.receipts += 1;
-    map.set(key, bucket);
-  }
-  return Array.from(map.values()).sort((a,b)=> b.date.localeCompare(a.date));
-}
-
 function receiptGuestCount(receipt){
   const candidates = [
     receipt?.guestCount,
@@ -373,6 +349,7 @@ function summarizePeriodSalesFromData(data={}){
 
   let totalRevenue = 0;
   const items = Object.create(null);
+  const dailyTotals = new Map();
 
   for (const txn of transactions) {
     const head = txn?.head || {};
@@ -390,6 +367,23 @@ function summarizePeriodSalesFromData(data={}){
     const baseTotal = lineRecords.reduce((sum, record) => sum + record.revenue, 0);
     const scale = baseTotal > 0 ? netTotal / baseTotal : 0;
 
+    const dateObj = pickReceiptDate(txn);
+    const dayKey = dateObj ? formatDateKey(dateObj) : (head?.businessDay || null);
+    if (dayKey) {
+      const bucket = dailyTotals.get(dayKey) || { date: dayKey, revenue: 0, guests: 0, receipts: 0 };
+      bucket.revenue += netTotal;
+      const guests = Number(
+        head?.guestCount ??
+        head?.covers ??
+        head?.customerCount ??
+        head?.customers ??
+        0
+      );
+      if (Number.isFinite(guests) && guests > 0) bucket.guests += guests;
+      bucket.receipts += 1;
+      dailyTotals.set(dayKey, bucket);
+    }
+
     for (const record of lineRecords) {
       const scaledRevenue = scale ? record.revenue * scale : 0;
       if (scaledRevenue <= 0) continue;
@@ -406,7 +400,11 @@ function summarizePeriodSalesFromData(data={}){
     totalRevenue += netTotal;
   }
 
-  return { totalRevenue, items };
+  return {
+    totalRevenue,
+    items,
+    daily: Array.from(dailyTotals.values()).sort((a,b)=> b.date.localeCompare(a.date))
+  };
 }
 
 function transactionNetTotal(transaction={}){
@@ -670,7 +668,7 @@ exports.handler = async (event) => {
     );
 
     const includeDaily = singleDate || q.group === 'daily' || q.daily === '1';
-    const daily = includeDaily ? summarizeTransactionsByDay(transactions) : undefined;
+    const daily = includeDaily ? (summary.daily || []) : undefined;
     let dayTotal = null;
     if (singleDate) {
       const match = (daily || []).find((d) => d.date === singleDate);
