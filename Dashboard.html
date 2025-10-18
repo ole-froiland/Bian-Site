@@ -585,29 +585,35 @@
 
         const renderChart = (days, { isDemo = false, message = '' } = {}) => {
           if (!barChart) return;
-          if (!Array.isArray(days) || !days.length) {
+          const sorted = [...(Array.isArray(days) ? days : [])].sort((a,b)=>a.date.localeCompare(b.date));
+          const slice = sorted.slice(-14);
+          const maxRevenue = Math.max(...slice.map(d=>Number(d.revenue || 0)), 0) || 1;
+          barChart.innerHTML = '';
+
+          if (!slice.length) {
             barChart.dataset.empty = '1';
             barChart.removeAttribute('data-demo');
             barChart.innerHTML = `<div class="bar-chart__empty">${message || 'Ingen data'}</div>`;
             return;
           }
+
           barChart.removeAttribute('data-empty');
           if (isDemo) {
             barChart.dataset.demo = '1';
           } else {
             barChart.removeAttribute('data-demo');
           }
-          const sorted = [...days].sort((a,b)=>a.date.localeCompare(b.date));
-          const slice = sorted.slice(-14);
-          const maxRevenue = Math.max(...slice.map(d=>Number(d.revenue || 0)));
-          barChart.innerHTML = '';
+
           const chartHeight = barChart.clientHeight || 240;
+          const maxBarHeight = chartHeight * 0.9;
+          const minBarHeight = Math.max(6, chartHeight * 0.05);
+
           slice.forEach((day) => {
             const revenue = Number(day.revenue || 0);
-            const ratio = maxRevenue > 0 ? (revenue / maxRevenue) : 0;
+            const ratio = Math.max(0, revenue / maxRevenue);
             const column = document.createElement('div');
             column.className = 'bar__column';
-            const columnHeight = Math.max(6, ratio * chartHeight);
+            const columnHeight = Math.max(minBarHeight, ratio * maxBarHeight);
             column.style.setProperty('--height', `${columnHeight}px`);
             const bar = document.createElement('div');
             bar.className = 'bar';
@@ -671,8 +677,8 @@
           url.searchParams.set('from', from);
           url.searchParams.set('to', todayISO);
           url.searchParams.set('group', 'daily');
-          url.searchParams.set('limit', '50');
-          url.searchParams.set('window', '60');
+          url.searchParams.set('limit', '120');
+          url.searchParams.set('window', '120');
           if (demo) url.searchParams.set('demo', '1');
 
           return fetch(url.toString(), { headers: { accept: 'application/json' } })
