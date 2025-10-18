@@ -62,6 +62,7 @@ LIGHTSPEED_OPERATOR=<optional-operator-id>
 > ```bash
 > netlify env:set LIGHTSPEED_X_TOKEN "3c8d63ffebb147adb2e0dc6e8b1bd90c306b17d3"
 > netlify env:set LIGHTSPEED_BUSINESS_ID "41258"
+> netlify env:set LIGHTSPEED_BUSINESS_UNITS "41258"
 > netlify env:set LIGHTSPEED_OPERATOR ""
 > ```
 >
@@ -128,6 +129,7 @@ Du kan overstyre verdiene midlertidig ved å eksportere dem før scriptet kjøre
 ```bash
 export LIGHTSPEED_X_TOKEN=... 
 export LIGHTSPEED_BUSINESS_ID=...
+export LIGHTSPEED_BUSINESS_UNITS=...
 export LIGHTSPEED_OPERATOR=...
 bash scripts/provision-netlify-env.sh
 ```

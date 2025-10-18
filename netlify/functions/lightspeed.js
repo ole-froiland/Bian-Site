@@ -18,14 +18,8 @@ const CFG = {
   operator: process.env.LIGHTSPEED_OPERATOR || ''
 };
 
-const DEFAULT_RECEIPTS_ENDPOINT = 'reports/v3.0/receipts';
-const RECEIPTS_ENDPOINT_CANDIDATES = [
-  'reports/v3.0/receipts',
-  'accounting/v3.0/receipts',
-  'reporting/v3.0/receipts',
-  'reports/v2/receipts',
-  'reports/receipts'
-];
+
+const BUSINESS_PERIODS_ENDPOINT = 'transaction/v3.0/business_periods';
 
 const TRANSACTION_ENDPOINT = 'transaction/v3.0/transactions/';
 
@@ -75,83 +69,75 @@ function headerVariants(baseHeaders, tokenOverride){
 }
 
 // Try two common param shapes for receipts endpoints
-function buildReceiptsUrl(endpoint, from, to, page=0, size=200){
-  const base = new URL(endpoint, CFG.baseUrl);
-  // First attempt: start/end
-  base.searchParams.set('start', from);
-  base.searchParams.set('end', to);
-  base.searchParams.set('page', String(page));
-  base.searchParams.set('size', String(size));
-  return base.toString();
+function buildApiUrl(path){
+  return new URL(path.replace(/^\/+/, ''), CFG.baseUrl);
 }
 
-function buildReceiptsUrlAlt(endpoint, from, to, page=0, size=200){
-  const base = new URL(endpoint, CFG.baseUrl);
-  // Alternate attempt: from/to
-  base.searchParams.set('from', from);
-  base.searchParams.set('to', to);
-  base.searchParams.set('page', String(page));
-  base.searchParams.set('size', String(size));
-  return base.toString();
-}
-
-// Some APIs prefer limit/offset
-function buildReceiptsUrlLimitOffset(endpoint, from, to, offset=0, limit=200){
-  const base = new URL(endpoint, CFG.baseUrl);
-  base.searchParams.set('from', from);
-  base.searchParams.set('to', to);
-  base.searchParams.set('offset', String(offset));
-  base.searchParams.set('limit', String(limit));
-  return base.toString();
-}
-
-async function fetchReceiptsRange({ from, to, endpoint }){
-  const provided = (endpoint || DEFAULT_RECEIPTS_ENDPOINT).replace(/^\/+|\/+$/g,'');
-  const candidates = [provided, ...RECEIPTS_ENDPOINT_CANDIDATES.filter(e => e !== provided)];
+async function fetchTransactionsRange({ from, to, maxPeriods = 120 }){
   const baseHeaders = authHeaders();
+  const headerOptions = headerVariants(baseHeaders);
+  const periodsUrl = buildApiUrl(BUSINESS_PERIODS_ENDPOINT);
+  if (from) periodsUrl.searchParams.set('start', from);
+  if (to) periodsUrl.searchParams.set('end', to);
+
+  let periodsData = null;
   let lastErr = null;
-
-  for (const ep of candidates) {
-    const items = [];
-    let page = 0;
-    const size = 200;
-    let success = true;
-    for (let i = 0; i < 20; i++) {
-      let data = null;
-      let ok = false;
-      // Try each header variant across param styles
-      for (const hdr of headerVariants(baseHeaders)) {
-        try { data = await fetchJson(buildReceiptsUrl(ep, from, to, page, size), hdr); ok = true; break; } catch (e1) { lastErr = e1; }
-        try { data = await fetchJson(buildReceiptsUrlAlt(ep, from, to, page, size), hdr); ok = true; break; } catch (e2) { lastErr = e2; }
-        try { data = await fetchJson(buildReceiptsUrlLimitOffset(ep, from, to, page*size, size), hdr); ok = true; break; } catch (e3) { lastErr = e3; }
-      }
-      if (!ok) { success = false; break; }
-
-      const arr = Array.isArray(data?.data) ? data.data
-                : Array.isArray(data?.values) ? data.values
-                : Array.isArray(data?.receipts) ? data.receipts
-                : Array.isArray(data?.items) ? data.items
-                : Array.isArray(data) ? data
-                : [];
-      items.push(...arr);
-
-      const total = (data?.totalElements ?? data?.total ?? null);
-      const hasMore = arr.length === size || (typeof total === 'number' && (page+1)*size < total);
-      if(!hasMore) break;
-      page++;
+  for (const hdr of headerOptions) {
+    try {
+      periodsData = await fetchJson(periodsUrl.toString(), hdr);
+      break;
+    } catch (error) {
+      lastErr = error;
     }
+  }
+  if (!periodsData) {
+    throw lastErr || new Error('Failed to fetch business periods');
+  }
 
-    if (success && items.length >= 0) {
-      return items;
+  const periods = Array.isArray(periodsData?.businessPeriods) ? periodsData.businessPeriods : [];
+  const filteredPeriods = periods
+    .filter((period) => {
+      const day = period?.businessDay;
+      if (!day) return false;
+      return (!from || day >= from) && (!to || day <= to);
+    })
+    .sort((a, b) => a.businessDay?.localeCompare(b.businessDay));
+
+  const limitedPeriods = filteredPeriods.slice(-maxPeriods);
+  const transactions = [];
+
+  for (const period of limitedPeriods) {
+    const periodId = period?.periodId;
+    if (!periodId) continue;
+    const txUrl = buildApiUrl(`transaction/v3.0/transactions/${periodId}`);
+    let txData = null;
+    for (const hdr of headerOptions) {
+      try {
+        txData = await fetchJson(txUrl.toString(), hdr);
+        break;
+      } catch (error) {
+        lastErr = error;
+      }
+    }
+    if (Array.isArray(txData?.transactions)) {
+      txData.transactions.forEach((tx) => {
+        if (!tx.head) tx.head = {};
+        if (!tx.head.businessDay && period.businessDay) tx.head.businessDay = period.businessDay;
+        transactions.push(tx);
+      });
     }
   }
 
-  throw lastErr || new Error('Failed to fetch receipts from all known endpoints');
+  if (!transactions.length && lastErr) {
+    throw lastErr;
+  }
+
+  return transactions;
 }
 
 // Extract line items from a Lightspeed Restaurant/Gastrofix receipt object
 function extractLines(receipt){
-  const lines = receipt?.items || receipt?.positions || receipt?.lines || [];
+  const lines = receipt?.lineItems || receipt?.items || receipt?.positions || receipt?.lines || [];
   if(Array.isArray(lines)) return lines;
   // Some APIs wrap in { items: { data: [...] } }
   if (lines && Array.isArray(lines.data)) return lines.data;
@@ -159,20 +145,33 @@ function extractLines(receipt){
 }
 
 function pickLineName(line){
-  return line?.productName || line?.name || line?.title || line?.articleName || 'Ukjent';
+  return line?.extras?.itemName || line?.productName || line?.name || line?.title || line?.articleName || 'Ukjent';
 }
 
 function pickLineId(line){
-  return line?.productId || line?.articleId || line?.id || null;
+  return line?.related?.itemSku || line?.productId || line?.articleId || line?.id || null;
 }
 
 function pickQty(line){
+  const qty = Number(line?.amounts?.quantity ?? line?.quantity ?? line?.qty ?? 0);
+  const units = Number(line?.amounts?.units ?? 1000);
+  if (Number.isFinite(qty) && Number.isFinite(units) && units !== 0) {
+    return qty / units;
+  }
   const n = Number(line?.quantity ?? line?.qty ?? 1);
   return Number.isFinite(n) ? n : 1;
 }
 
 function pickRevenue(line){
-  const n = Number(line?.amount ?? line?.grossAmount ?? line?.totalPrice ?? line?.priceTotal ?? 0);
+  const n = Number(
+    line?.amounts?.actualNetAmount ??
+    line?.amounts?.regularNetAmount ??
+    line?.amount ??
+    line?.grossAmount ??
+    line?.totalPrice ??
+    line?.priceTotal ??
+    0
+  );
   return Number.isFinite(n) ? n : 0;
 }
 
@@ -221,6 +220,30 @@ function receiptRevenue(receipt){
     if(Number.isFinite(val)) total += val;
   }
   return total;
+}
+
+function summarizeTransactionsByDay(transactions){
+  const map = new Map();
+  for (const txn of transactions) {
+    const dateObj = pickReceiptDate(txn);
+    if (!dateObj) continue;
+    const key = formatDateKey(dateObj);
+    const revenue = transactionNetTotal(txn);
+    if (revenue <= 0) continue;
+    const guests = Number(
+      txn?.head?.guestCount ??
+      txn?.head?.covers ??
+      txn?.head?.customerCount ??
+      txn?.head?.customers ??
+      0
+    );
+    const bucket = map.get(key) || { date: key, revenue: 0, guests: 0, receipts: 0 };
+    bucket.revenue += revenue;
+    bucket.guests += Number.isFinite(guests) ? guests : 0;
+    bucket.receipts += 1;
+    map.set(key, bucket);
+  }
+  return Array.from(map.values()).sort((a,b)=> b.date.localeCompare(a.date));
 }
 
 function receiptGuestCount(receipt){
@@ -538,7 +561,6 @@ exports.handler = async (event) => {
       has_LIGHTSPEED_OPERATOR: !!process.env.LIGHTSPEED_OPERATOR
     });
 
-    const endpoint = (q.endpoint || '').trim() || DEFAULT_RECEIPTS_ENDPOINT;
     const metric = (q.metric === 'qty') ? 'qty' : 'revenue';
     // Allow operator override via query for troubleshooting
     if (q.operator) CFG.operator = String(q.operator);
@@ -614,35 +636,57 @@ exports.handler = async (event) => {
       const top = aggregateTopProducts(demoReceipts, metric);
       const daily = summarizeReceiptsByDay(demoReceipts);
       const limit = Math.max(1, Math.min(50, Number(q.limit||3)|0));
-      return ok({ from, to, endpoint, count: demoReceipts.length, top: top.slice(0,limit), daily });
+      const dayTotal = singleDate ? (daily.find((d) => d.date === singleDate) || { date: singleDate, revenue: 0, guests: 0, receipts: 0 }) : undefined;
+      return ok({ from, to, endpoint: BUSINESS_PERIODS_ENDPOINT, count: demoReceipts.length, top: top.slice(0,limit), daily, dayTotal, mode: 'demo' });
     }
 
     if(!CFG.xToken || !CFG.businessId){
       return err(400,'CONFIG_MISSING','Missing Lightspeed env vars (X_TOKEN or BUSINESS_ID)');
     }
 
-    // Fetch receipts and aggregate
-    let receipts;
+    // Fetch transactions and aggregate
+    let transactions;
     try{
-      receipts = await fetchReceiptsRange({ from, to, endpoint });
+      transactions = await fetchTransactionsRange({ from, to });
     }catch(e){
       const status = e?.status || 502;
-      return err(status, 'RECEIPTS_FAIL', String(e.message||e), {
+      return err(status, 'TRANSACTIONS_FAIL', String(e.message||e), {
         details: e?.body,
-        triedEndpoints: [endpoint || DEFAULT_RECEIPTS_ENDPOINT, ...RECEIPTS_ENDPOINT_CANDIDATES]
+        endpoint: BUSINESS_PERIODS_ENDPOINT
       });
     }
 
-    const top = aggregateTopProducts(receipts, metric);
+    const summary = summarizePeriodSalesFromData({ transactions });
+    const itemsArray = Object.values(summary.items || {}).map(entry => ({
+      sku: entry.sku,
+      name: entry.name,
+      revenue: Number(entry.revenue || 0),
+      quantity: Number(entry.quantity || 0),
+    }));
     const limit = Math.max(1, Math.min(50, Number(q.limit||3)|0));
+    itemsArray.sort(metric === 'qty'
+      ? (a, b) => b.quantity - a.quantity
+      : (a, b) => b.revenue - a.revenue
+    );
+
     const includeDaily = singleDate || q.group === 'daily' || q.daily === '1';
-    const daily = includeDaily ? summarizeReceiptsByDay(receipts) : undefined;
+    const daily = includeDaily ? summarizeTransactionsByDay(transactions) : undefined;
     let dayTotal = null;
     if (singleDate) {
       const match = (daily || []).find((d) => d.date === singleDate);
       dayTotal = match || { date: singleDate, revenue: 0, guests: 0, receipts: 0 };
     }
-    return ok({ from, to, endpoint, count: receipts.length, top: top.slice(0,limit), daily, dayTotal });
+
+    return ok({
+      from,
+      to,
+      endpoint: BUSINESS_PERIODS_ENDPOINT,
+      count: transactions.length,
+      top: itemsArray.slice(0, limit),
+      totalRevenue: Number(summary.totalRevenue || 0),
+      daily,
+      dayTotal
+    });
   }catch(e){
     return err(500,'UNEXPECTED', String(e.message||e));
   }
