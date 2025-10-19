@@ -604,7 +604,9 @@
             return;
           }
 
-          const maxRevenue = Math.max(...days.map(d => Number(d.revenue || 0)), 0) || 1;
+          const revenues = days.map(d => Math.max(0, Number(d.revenue || 0)));
+          const maxRevenue = Math.max(...revenues, 0) || 1;
+          const minRevenue = Math.min(...revenues.filter(n => n > 0));
           const chartHeight = barChart.clientHeight || 240;
           const maxBarHeight = chartHeight * 0.9;
           const minBarHeight = Math.max(6, chartHeight * 0.05);
@@ -617,8 +619,9 @@
           }
 
           days.forEach((day) => {
-            const revenue = Number(day.revenue || 0);
-            const ratio = Math.max(0, revenue / maxRevenue);
+            const revenue = Math.max(0, Number(day.revenue || 0));
+            const ratioRaw = maxRevenue > 0 ? revenue / maxRevenue : 0;
+            const ratio = ratioRaw > 0 ? Math.pow(ratioRaw, (minRevenue && minRevenue / maxRevenue < 0.2) ? 0.35 : 0.5) : 0;
             const column = document.createElement('div');
             column.className = 'bar__column';
             const columnHeight = Math.max(minBarHeight, ratio * maxBarHeight);
@@ -631,7 +634,7 @@
             const dateLabel = dateObj && !Number.isNaN(dateObj.getTime()) ? chartDateFmt.format(dateObj) : (day.date || '');
             const friendly = dateObj && !Number.isNaN(dateObj.getTime()) ? dateFmtLong.format(dateObj) : (day.date || '');
             bar.title = `${friendly}: ${moneyFmt.format(revenue)}`;
-            if (revenue === 0) {
+            if (!revenue) {
               column.classList.add('bar__column--zero');
             }
             const label = document.createElement('span');
