@@ -541,9 +541,19 @@
         if (!dayRevenueEl) return;
         const parsed = date ? new Date(`${date}T00:00:00`) : null;
         const friendly = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : date || '–';
-        dayRevenueEl.textContent = moneyFmt.format(Number(revenue || 0));
-        dayGuestsEl.textContent = `${qtyFmt.format(Number(guests || 0))} gjester`;
-        dayReceiptsEl.textContent = `${qtyFmt.format(Number(receipts || 0))} kvitteringer`;
+        const revenueValue = Number(revenue || 0);
+        const guestsValue = Number(guests || 0);
+        const receiptsValue = Number(receipts || 0);
+        const averageSale = receiptsValue > 0 ? revenueValue / receiptsValue : null;
+        dayRevenueEl.textContent = moneyFmt.format(revenueValue);
+        dayGuestsEl.textContent = `${qtyFmt.format(guestsValue)} gjester`;
+        dayReceiptsEl.textContent = `${qtyFmt.format(receiptsValue)} kvitteringer`;
+        if (dayAverageEl) {
+          dayAverageEl.textContent = averageSale != null ? moneyFmt.format(averageSale) : '–';
+        }
+        if (dayAverageMetaEl) {
+          dayAverageMetaEl.textContent = receiptsValue > 0 ? `${qtyFmt.format(receiptsValue)} kvitteringer` : ' ';
+        }
         renderDayStatus(isDemo ? `Viser demo for ${friendly} (mangler Lightspeed-nøkler).` : `Tall for ${friendly}`);
       };
 
@@ -570,6 +580,8 @@
         dayRevenueEl.textContent = '–';
         dayGuestsEl.textContent = '– gjester';
         dayReceiptsEl.textContent = '– kvitteringer';
+        if (dayAverageEl) dayAverageEl.textContent = '–';
+        if (dayAverageMetaEl) dayAverageMetaEl.textContent = ' ';
 
         let attemptedDemo = false;
 
