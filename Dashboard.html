@@ -352,21 +352,17 @@
         </header>
         <div class="daily-summary">
           <article class="summary-card">
-            <span class="summary-card__label">Dagens omsetning</span>
+            <span class="summary-card__label">Omsetning</span>
             <p class="summary-card__value" data-day-revenue>–</p>
-            <span class="summary-card__meta" data-day-date> </span>
           </article>
           <article class="summary-card">
-            <span class="summary-card__label">Kvitteringer</span>
+            <span class="summary-card__label">Antall kvitteringer</span>
             <p class="summary-card__value" data-day-receipts>–</p>
-            <span class="summary-card__meta" data-day-customers> </span>
           </article>
           <article class="summary-card">
             <span class="summary-card__label">Snitt per kjøp</span>
             <p class="summary-card__value" data-day-average>–</p>
-            <span class="summary-card__meta" data-day-average-meta> </span>
           </article>
-          <div class="daily-summary__status" data-day-status></div>
         </div>
       </article>
       <article class="card table-card">
@@ -522,11 +518,8 @@
       const dayPicker = document.querySelector('#sales-day-picker');
       const dayHeadingEl = document.querySelector('[data-day-heading]');
       const dayRevenueEl = document.querySelector('[data-day-revenue]');
-      const dayGuestsEl = document.querySelector('[data-day-customers]');
       const dayReceiptsEl = document.querySelector('[data-day-receipts]');
       const dayAverageEl = document.querySelector('[data-day-average]');
-      const dayAverageMetaEl = document.querySelector('[data-day-average-meta]');
-      const dayDateEl = document.querySelector('[data-day-date]');
       const dayStatusEl = document.querySelector('[data-day-status]');
       const barChart = document.querySelector('[data-daily-chart]');
       const chartPrevBtn = document.querySelector('[data-chart-nav="prev"]');
@@ -550,22 +543,17 @@
 
       const defaultDayHeading = 'Dagens omsetning';
 
-      const renderDayTotals = ({ date, revenue, guests, receipts }, { isDemo = false } = {}) => {
+      const renderDayTotals = ({ date, revenue, receipts }, { isDemo = false } = {}) => {
         if (!dayRevenueEl) return;
         const parsed = date ? new Date(`${date}T00:00:00`) : null;
         const friendly = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : date || '–';
         const revenueValue = Number(revenue || 0);
-        const guestsValue = Number(guests || 0);
         const receiptsValue = Number(receipts || 0);
         const averageSale = receiptsValue > 0 ? revenueValue / receiptsValue : null;
         dayRevenueEl.textContent = moneyFmt.format(revenueValue);
-        dayGuestsEl.textContent = `${qtyFmt.format(guestsValue)} gjester`;
-        dayReceiptsEl.textContent = `${qtyFmt.format(receiptsValue)} kvitteringer`;
+        dayReceiptsEl.textContent = qtyFmt.format(receiptsValue);
         if (dayAverageEl) {
           dayAverageEl.textContent = averageSale != null ? moneyFmt.format(averageSale) : '–';
-        }
-        if (dayAverageMetaEl) {
-          dayAverageMetaEl.textContent = receiptsValue > 0 ? `${qtyFmt.format(receiptsValue)} kvitteringer` : ' ';
         }
         if (dayHeadingEl) {
           const headingFriendly = friendly && friendly !== '–' ? friendly : todayISO;
@@ -596,12 +584,9 @@
 
       const loadDayTotals = (date) => {
         if (!dayRevenueEl) return;
-        renderDayStatus('Henter omsetning ...');
         dayRevenueEl.textContent = '–';
-        dayGuestsEl.textContent = '– gjester';
-        dayReceiptsEl.textContent = '– kvitteringer';
+        dayReceiptsEl.textContent = '–';
         if (dayAverageEl) dayAverageEl.textContent = '–';
-        if (dayAverageMetaEl) dayAverageMetaEl.textContent = ' ';
         if (dayHeadingEl) dayHeadingEl.textContent = defaultDayHeading;
 
         let attemptedDemo = false;
