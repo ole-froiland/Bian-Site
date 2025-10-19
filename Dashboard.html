@@ -159,6 +159,10 @@
     .bar-chart .bar__label{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;}
     .bar-chart .bar__label strong{font-weight:700;}
     .bar-chart .bar__label small{font-size:0.68rem;text-transform:none;letter-spacing:0.04em;color:var(--muted);}
+    .chart-nav{display:flex;align-items:center;gap:8px;}
+    .chart-nav__btn{width:32px;height:28px;border-radius:10px;border:1px solid var(--border);background:var(--surface-raised);color:inherit;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;transition:background 0.2s ease,border-color 0.2s ease,transform 0.2s ease;cursor:pointer;}
+    .chart-nav__btn:hover:not(:disabled){background:var(--accent-soft);border-color:var(--accent);transform:translateY(-1px);}
+    .chart-nav__btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
     .tips-list{list-style:none;margin:0;padding:0;display:grid;gap:clamp(14px,3vw,20px);}
     .tips-list li{display:flex;flex-direction:column;gap:12px;padding:clamp(14px,3vw,22px);border-radius:14px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.16);}
     body[data-theme="light"] .tips-list li{background:rgba(148,163,184,0.12);}
@@ -303,6 +307,10 @@
       <article class="card chart-card">
         <header>
           <h2>Omsetning (14 dager)</h2>
+          <div class="chart-nav">
+            <button type="button" class="chart-nav__btn" data-chart-nav="prev" aria-label="Forrige 14 dager">‹</button>
+            <button type="button" class="chart-nav__btn" data-chart-nav="next" aria-label="Neste 14 dager">›</button>
+          </div>
         </header>
         <div class="bar-chart" data-daily-chart role="img" aria-live="polite" aria-label="Omsetning siste 14 dager"></div>
       </article>
@@ -586,17 +594,18 @@
 
         const renderChart = (days, { isDemo = false, message = '' } = {}) => {
           if (!barChart) return;
-          const sorted = [...(Array.isArray(days) ? days : [])].sort((a,b)=>a.date.localeCompare(b.date));
-          const slice = sorted.slice(-14);
-          const maxRevenue = Math.max(...slice.map(d=>Number(d.revenue || 0)), 0) || 1;
           barChart.innerHTML = '';
-
-          if (!slice.length) {
+          if (!Array.isArray(days) || !days.length) {
             barChart.dataset.empty = '1';
             barChart.removeAttribute('data-demo');
             barChart.innerHTML = `<div class="bar-chart__empty">${message || 'Ingen data'}</div>`;
             return;
           }
+
+          const maxRevenue = Math.max(...days.map(d => Number(d.revenue || 0)), 0) || 1;
+          const chartHeight = barChart.clientHeight || 240;
+          const maxBarHeight = chartHeight * 0.9;
+          const minBarHeight = Math.max(6, chartHeight * 0.05);
 
           barChart.removeAttribute('data-empty');
           if (isDemo) {
@@ -605,11 +614,7 @@
             barChart.removeAttribute('data-demo');
           }
 
-          const chartHeight = barChart.clientHeight || 240;
-          const maxBarHeight = chartHeight * 0.9;
-          const minBarHeight = Math.max(6, chartHeight * 0.05);
-
-          slice.forEach((day) => {
+          days.forEach((day) => {
             const revenue = Number(day.revenue || 0);
             const ratio = Math.max(0, revenue / maxRevenue);
             const column = document.createElement('div');
@@ -624,11 +629,9 @@
             const dateLabel = dateObj && !Number.isNaN(dateObj.getTime()) ? chartDateFmt.format(dateObj) : (day.date || '');
             const friendly = dateObj && !Number.isNaN(dateObj.getTime()) ? dateFmtLong.format(dateObj) : (day.date || '');
             bar.title = `${friendly}: ${moneyFmt.format(revenue)}`;
-
             if (revenue === 0) {
               column.classList.add('bar__column--zero');
             }
-
             const label = document.createElement('span');
             label.className = 'bar__label';
             label.innerHTML = `<strong>${dayName}</strong><small>${dateLabel}</small>`;
@@ -638,10 +641,11 @@
         };
 
         const renderRows = (days, { showDemoNotice = false } = {}) => {
-          if (!Array.isArray(days) || !days.length) {
-            throw Object.assign(new Error('Ingen data'), { code: 'NO_DAILY_DATA' });
-          }
           dailyTableBody.innerHTML = '';
+          if (!Array.isArray(days) || !days.length) {
+            renderError('Ingen data', { replace: true });
+            return;
+          }
           if (showDemoNotice) {
             const notice = document.createElement('tr');
             notice.innerHTML = '<td colspan="3">Viser demo-data. Sett Lightspeed-nøkler i Netlify for ekte tall.</td>';
@@ -674,8 +678,68 @@
           dailyTableBody.appendChild(row);
         };
 
+        const addDaysISO = (iso, delta) => {
+          const base = iso ? new Date(`${iso}T00:00:00`) : new Date(`${todayISO}T00:00:00`);
+          if (Number.isNaN(base.getTime())) return toISODate(new Date(`${todayISO}T00:00:00`));
+          base.setDate(base.getDate() + delta);
+          return toISODate(base);
+        };
+
+        const clampCursorDate = (iso) => {
+          const latest = chartDataAll.length ? chartDataAll[0].date : todayISO;
+          const oldest = chartDataAll.length ? chartDataAll[chartDataAll.length - 1].date : latest;
+          const earliestEnd = chartDataAll.length >= chartWindowDays ? addDaysISO(oldest, chartWindowDays - 1) : latest;
+          let target = iso || latest;
+          if (target.localeCompare(latest) > 0) target = latest;
+          if (target.localeCompare(earliestEnd) < 0) target = earliestEnd;
+          return target;
+        };
+
+        const buildChartRange = (endIso) => {
+          const cursor = clampCursorDate(endIso);
+          const endDate = new Date(`${cursor}T00:00:00`);
+          const startDate = new Date(endDate);
+          startDate.setDate(startDate.getDate() - (chartWindowDays - 1));
+          const range = [];
+          for (let i = 0; i < chartWindowDays; i++) {
+            const current = new Date(startDate);
+            current.setDate(startDate.getDate() + i);
+            const iso = toISODate(current);
+            const entry = chartDataMap.get(iso) || { date: iso, revenue: 0, guests: 0, receipts: 0 };
+            range.push(entry);
+          }
+          return { cursor, range };
+        };
+
+        const updateChartNavButtons = () => {
+          if (!chartPrevBtn || !chartNextBtn) return;
+          if (!chartDataAll.length) {
+            chartPrevBtn.disabled = true;
+            chartNextBtn.disabled = true;
+            return;
+          }
+          const latest = chartDataAll[0]?.date || todayISO;
+          const oldest = chartDataAll[chartDataAll.length - 1]?.date || latest;
+          const earliestEnd = chartDataAll.length >= chartWindowDays ? addDaysISO(oldest, chartWindowDays - 1) : latest;
+          chartPrevBtn.disabled = chartCursorDate ? chartCursorDate.localeCompare(earliestEnd) <= 0 : true;
+          chartNextBtn.disabled = chartCursorDate ? chartCursorDate.localeCompare(latest) >= 0 : false;
+        };
+
+        const renderChartWindow = (endIso, { isDemo = false } = {}) => {
+          const { cursor, range } = buildChartRange(endIso);
+          chartCursorDate = cursor;
+          renderChart(range, { isDemo });
+          updateChartNavButtons();
+        };
+
+        const shiftChartWindow = (offsetDays) => {
+          if (!chartCursorDate) return;
+          const target = addDaysISO(chartCursorDate, offsetDays);
+          renderChartWindow(target, { isDemo: chartIsDemo });
+        };
+
         const fromDate = new Date(today);
-        fromDate.setDate(fromDate.getDate() - 60);
+        fromDate.setDate(fromDate.getDate() - 120);
         const from = toISODate(fromDate);
 
         const fetchDaily = ({ demo = false } = {}) => {
@@ -683,8 +747,8 @@
           url.searchParams.set('from', from);
           url.searchParams.set('to', todayISO);
           url.searchParams.set('group', 'daily');
-          url.searchParams.set('limit', '120');
-          url.searchParams.set('window', '120');
+          url.searchParams.set('limit', '180');
+          url.searchParams.set('window', '180');
           if (demo) url.searchParams.set('demo', '1');
 
           return fetch(url.toString(), { headers: { accept: 'application/json' } })
@@ -703,14 +767,21 @@
         let attemptedDemoFallback = false;
         renderLoading();
         renderChart([], { message: 'Henter …' });
+        updateChartNavButtons();
 
         const load = (options = {}) => {
           fetchDaily(options)
             .then((data) => {
               const days = Array.isArray(data?.daily) ? data.daily : [];
               const isDemo = !!options.demo || data?.mode === 'demo';
-              renderRows(days, { showDemoNotice: isDemo });
-              renderChart(days, { isDemo });
+              const sortedDesc = [...days].sort((a, b) => b.date.localeCompare(a.date));
+              renderRows(sortedDesc, { showDemoNotice: isDemo });
+              chartDataAll = sortedDesc;
+              chartDataMap = new Map(sortedDesc.map(entry => [entry.date, entry]));
+              chartLatestDate = chartDataAll.length ? chartDataAll[0].date : todayISO;
+              chartOldestDate = chartDataAll.length ? chartDataAll[chartDataAll.length - 1].date : chartLatestDate;
+              chartIsDemo = isDemo;
+              renderChartWindow(chartLatestDate, { isDemo });
             })
             .catch((error) => {
               console.error('Kunne ikke hente daglig omsetning:', error);
@@ -727,8 +798,14 @@
               if (attemptedDemoFallback && options.demo) {
                 try {
                   const days = error?.body?.daily || [];
-                  renderRows(days, { showDemoNotice: true });
-                  renderChart(days, { isDemo: true });
+                  const sortedDesc = [...days].sort((a, b) => b.date.localeCompare(a.date));
+                  renderRows(sortedDesc, { showDemoNotice: true });
+                  chartDataAll = sortedDesc;
+                  chartDataMap = new Map(sortedDesc.map(entry => [entry.date, entry]));
+                  chartLatestDate = chartDataAll.length ? chartDataAll[0].date : todayISO;
+                  chartOldestDate = chartDataAll.length ? chartDataAll[chartDataAll.length - 1].date : chartLatestDate;
+                  chartIsDemo = true;
+                  renderChartWindow(chartLatestDate, { isDemo: true });
                   return;
                 } catch (_) {
                   /* fall through */
@@ -740,9 +817,23 @@
                   : `Kunne ikke hente daglig omsetning. ${error?.message || ''}`,
                 { replace: false }
               );
+              chartDataAll = [];
+              chartDataMap = new Map();
+              chartCursorDate = null;
+              chartLatestDate = todayISO;
+              chartOldestDate = todayISO;
+              chartIsDemo = false;
               renderChart([], { message: error?.body?.message || error?.message || 'Feil ved henting' });
+              updateChartNavButtons();
             });
         };
+
+        if (chartPrevBtn) {
+          chartPrevBtn.addEventListener('click', () => shiftChartWindow(-chartWindowDays));
+        }
+        if (chartNextBtn) {
+          chartNextBtn.addEventListener('click', () => shiftChartWindow(chartWindowDays));
+        }
 
         load();
       }
