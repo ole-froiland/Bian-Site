@@ -566,7 +566,7 @@
             : headingFriendly;
           dayHeadingEl.textContent = `Tall hentet fra ${headingDisplay}`;
         }
-        renderDayStatus(isDemo ? `Viser demo for ${friendly} (mangler Lightspeed-nøkler).` : `Tall for ${friendly}`);
+        renderDayStatus(isDemo ? `Viser demo for ${friendly} (mangler Lightspeed-nøkler).` : '');
       };
 
       const fetchDayTotals = (date, { demo = false } = {}) => {
