@@ -489,6 +489,8 @@
       const dayReceiptsEl = document.querySelector('[data-day-receipts]');
       const dayStatusEl = document.querySelector('[data-day-status]');
       const barChart = document.querySelector('[data-daily-chart]');
+      const chartPrevBtn = document.querySelector('[data-chart-nav="prev"]');
+      const chartNextBtn = document.querySelector('[data-chart-nav="next"]');
       const weekdayFmt = new Intl.DateTimeFormat('nb-NO', { weekday: 'short' });
       const chartDateFmt = new Intl.DateTimeFormat('nb-NO', { day: '2-digit', month: '2-digit' });
 
@@ -678,6 +680,14 @@
           dailyTableBody.appendChild(row);
         };
 
+        const chartWindowDays = 14;
+        let chartDataAll = [];
+        let chartDataMap = new Map();
+        let chartCursorDate = null;
+        let chartLatestDate = todayISO;
+        let chartOldestDate = todayISO;
+        let chartIsDemo = false;
+
         const addDaysISO = (iso, delta) => {
           const base = iso ? new Date(`${iso}T00:00:00`) : new Date(`${todayISO}T00:00:00`);
           if (Number.isNaN(base.getTime())) return toISODate(new Date(`${todayISO}T00:00:00`));
@@ -739,7 +749,7 @@
         };
 
         const fromDate = new Date(today);
-        fromDate.setDate(fromDate.getDate() - 120);
+        fromDate.setDate(fromDate.getDate() - 60);
         const from = toISODate(fromDate);
 
         const fetchDaily = ({ demo = false } = {}) => {
@@ -747,8 +757,8 @@
           url.searchParams.set('from', from);
           url.searchParams.set('to', todayISO);
           url.searchParams.set('group', 'daily');
-          url.searchParams.set('limit', '180');
-          url.searchParams.set('window', '180');
+          url.searchParams.set('limit', '90');
+          url.searchParams.set('window', '90');
           if (demo) url.searchParams.set('demo', '1');
 
           return fetch(url.toString(), { headers: { accept: 'application/json' } })
