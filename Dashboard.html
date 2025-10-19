@@ -627,7 +627,10 @@
 
           const revenues = days.map(d => Math.max(0, Number(d.revenue || 0)));
           const maxRevenue = Math.max(...revenues, 0) || 1;
-          const minRevenue = Math.min(...revenues.filter(n => n > 0));
+          const nonZeroRevenues = revenues.filter(n => n > 0);
+          const minRevenue = nonZeroRevenues.length ? Math.min(...nonZeroRevenues) : 0;
+          const logMax = Math.log10(maxRevenue + 1);
+          const logMin = Math.log10((minRevenue || 0) + 1);
           const chartHeight = barChart.clientHeight || 240;
           const maxBarHeight = chartHeight * 0.9;
           const minBarHeight = Math.max(6, chartHeight * 0.05);
@@ -660,8 +663,12 @@
 
           days.forEach((day) => {
             const revenue = Math.max(0, Number(day.revenue || 0));
-            const ratioRaw = maxRevenue > 0 ? revenue / maxRevenue : 0;
-            const ratio = ratioRaw > 0 ? Math.pow(ratioRaw, (minRevenue && minRevenue / maxRevenue < 0.2) ? 0.35 : 0.5) : 0;
+            let ratio = 0;
+            if (revenue > 0) {
+              const logValue = Math.log10(revenue + 1);
+              ratio = (logValue - logMin) / Math.max(logMax - logMin, 1e-6);
+            }
+            ratio = Math.max(0, Math.min(1, ratio));
             const column = document.createElement('div');
             column.className = 'bar__column';
             const columnHeight = Math.max(minBarHeight, ratio * maxBarHeight);
@@ -732,13 +739,13 @@
           dailyTableBody.appendChild(row);
         };
 
-        const chartWindowDays = 14;
-        let chartDataAll = [];
-        let chartDataMap = new Map();
-        let chartCursorDate = null;
-        let chartLatestDate = todayISO;
-        let chartOldestDate = todayISO;
-        let chartIsDemo = false;
+      const chartWindowDays = 14;
+      let chartDataAll = [];
+      let chartDataMap = new Map();
+      let chartCursorDate = null;
+      let chartLatestDate = todayISO;
+      let chartOldestDate = todayISO;
+      let chartIsDemo = false;
 
         const addDaysISO = (iso, delta) => {
           const base = iso ? new Date(`${iso}T00:00:00`) : new Date(`${todayISO}T00:00:00`);
