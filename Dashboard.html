@@ -153,7 +153,8 @@
       font-size:0.7rem;color:var(--muted);text-align:center;
     }
     .bar-chart .bar{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:10px;text-align:center;color:var(--muted);height:100%;}
-    .bar-chart .bar__column{width:100%;min-height:6px;border-radius:18px 18px 12px 12px;background:linear-gradient(180deg,var(--accent),var(--accent-strong));box-shadow:0 12px 30px rgba(14,165,233,0.25);transition:transform 0.25s ease;height:var(--height,6px);}
+    .bar-chart .bar__column{width:100%;min-height:6px;border-radius:18px 18px 12px 12px;background:linear-gradient(180deg,var(--accent),var(--accent-strong));box-shadow:0 12px 30px rgba(14,165,233,0.25);transition:transform 0.25s ease,height:var(--height,6px);}
+    .bar-chart .bar__column--zero{background:linear-gradient(180deg,rgba(148,163,184,0.4),rgba(99,102,241,0.35));box-shadow:none;opacity:0.6;}
     .bar-chart .bar__column:hover{transform:translateY(-4px);}
     .bar-chart .bar__label{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;}
     .bar-chart .bar__label strong{font-weight:700;}
@@ -623,6 +624,11 @@
             const dateLabel = dateObj && !Number.isNaN(dateObj.getTime()) ? chartDateFmt.format(dateObj) : (day.date || '');
             const friendly = dateObj && !Number.isNaN(dateObj.getTime()) ? dateFmtLong.format(dateObj) : (day.date || '');
             bar.title = `${friendly}: ${moneyFmt.format(revenue)}`;
+
+            if (revenue === 0) {
+              column.classList.add('bar__column--zero');
+            }
+
             const label = document.createElement('span');
             label.className = 'bar__label';
             label.innerHTML = `<strong>${dayName}</strong><small>${dateLabel}</small>`;
