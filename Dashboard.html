@@ -629,8 +629,7 @@
           const maxRevenue = Math.max(...revenues, 0) || 1;
           const nonZeroRevenues = revenues.filter(n => n > 0);
           const minRevenue = nonZeroRevenues.length ? Math.min(...nonZeroRevenues) : 0;
-          const logMax = Math.log10(maxRevenue + 1);
-          const logMin = Math.log10((minRevenue || 0) + 1);
+          const stretchFactor = 0.6;
           const chartHeight = barChart.clientHeight || 240;
           const maxBarHeight = chartHeight * 0.9;
           const minBarHeight = Math.max(6, chartHeight * 0.05);
@@ -665,8 +664,8 @@
             const revenue = Math.max(0, Number(day.revenue || 0));
             let ratio = 0;
             if (revenue > 0) {
-              const logValue = Math.log10(revenue + 1);
-              ratio = (logValue - logMin) / Math.max(logMax - logMin, 1e-6);
+              const scaled = (revenue - minRevenue) * stretchFactor;
+              ratio = (minRevenue + scaled) / Math.max(maxRevenue, 1);
             }
             ratio = Math.max(0, Math.min(1, ratio));
             const column = document.createElement('div');
