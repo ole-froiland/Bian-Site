@@ -167,6 +167,15 @@
     .chart-nav__btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
     .chart-tooltip{position:absolute;min-width:120px;max-width:220px;padding:8px 12px;border-radius:10px;background:rgba(28,35,56,0.92);color:#f8f9ff;font-size:0.75rem;font-weight:600;letter-spacing:0.01em;box-shadow:0 12px 32px rgba(15,23,42,0.45);pointer-events:none;opacity:0;transform:translate(-50%, -12px);transition:opacity 0.15s ease, transform 0.15s ease;z-index:3;}
     .chart-tooltip[data-visible="1"]{opacity:1;transform:translate(-50%, -16px);}
+    .daily-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;align-items:stretch;}
+    .daily-summary__controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+    .daily-summary__input{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:inherit;font:inherit;}
+    .daily-summary__input:focus-visible{outline:none;box-shadow:var(--ring);}
+    .daily-summary__status{grid-column:1/-1;font-size:0.85rem;color:var(--muted);margin-top:4px;}
+    .summary-card{background:var(--surface-raised);border:1px solid rgba(148,163,184,0.18);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;box-shadow:none;}
+    .summary-card__label{text-transform:uppercase;font-size:0.68rem;letter-spacing:0.14em;color:var(--muted);font-weight:600;margin:0;}
+    .summary-card__value{font-size:clamp(1.3rem,2vw,1.8rem);font-weight:700;margin:0;color:var(--text-strong);}
+    .summary-card__meta{font-size:0.82rem;color:var(--muted);}
     .tips-list{list-style:none;margin:0;padding:0;display:grid;gap:clamp(14px,3vw,20px);}
     .tips-list li{display:flex;flex-direction:column;gap:12px;padding:clamp(14px,3vw,22px);border-radius:14px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.16);}
     body[data-theme="light"] .tips-list li{background:rgba(148,163,184,0.12);}
@@ -328,13 +337,21 @@
           </div>
         </header>
         <div class="daily-summary">
-          <div>
-            <p class="daily-summary__headline" data-day-revenue>–</p>
-            <div class="daily-summary__meta">
-              <span data-day-guests>– gjester</span>
-              <span data-day-receipts>– kvitteringer</span>
-            </div>
-          </div>
+          <article class="summary-card">
+            <span class="summary-card__label">Dagens omsetning</span>
+            <p class="summary-card__value" data-day-revenue>–</p>
+            <span class="summary-card__meta" data-day-date> </span>
+          </article>
+          <article class="summary-card">
+            <span class="summary-card__label">Kvitteringer</span>
+            <p class="summary-card__value" data-day-receipts>–</p>
+            <span class="summary-card__meta" data-day-guests> </span>
+          </article>
+          <article class="summary-card">
+            <span class="summary-card__label">Snitt per kjøp</span>
+            <p class="summary-card__value" data-day-average>–</p>
+            <span class="summary-card__meta" data-day-average-meta> </span>
+          </article>
           <div class="daily-summary__status" data-day-status></div>
         </div>
       </article>
@@ -492,6 +509,9 @@
       const dayRevenueEl = document.querySelector('[data-day-revenue]');
       const dayGuestsEl = document.querySelector('[data-day-guests]');
       const dayReceiptsEl = document.querySelector('[data-day-receipts]');
+      const dayAverageEl = document.querySelector('[data-day-average]');
+      const dayAverageMetaEl = document.querySelector('[data-day-average-meta]');
+      const dayDateEl = document.querySelector('[data-day-date]');
       const dayStatusEl = document.querySelector('[data-day-status]');
       const barChart = document.querySelector('[data-daily-chart]');
       const chartPrevBtn = document.querySelector('[data-chart-nav="prev"]');
