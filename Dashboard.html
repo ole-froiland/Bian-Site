@@ -336,7 +336,7 @@
       </article>
       <article class="card daily-summary-card">
         <header>
-          <h2>Dagens omsetning</h2>
+          <h2 data-day-heading>Dagens omsetning</h2>
           <div class="daily-summary__controls">
             <label for="sales-day-picker" class="sr-only">Velg dato</label>
             <input type="date" id="sales-day-picker" class="daily-summary__input" />
@@ -512,6 +512,7 @@
       const todayISO = toISODate(today);
 
       const dayPicker = document.querySelector('#sales-day-picker');
+      const dayHeadingEl = document.querySelector('[data-day-heading]');
       const dayRevenueEl = document.querySelector('[data-day-revenue]');
       const dayGuestsEl = document.querySelector('[data-day-customers]');
       const dayReceiptsEl = document.querySelector('[data-day-receipts]');
@@ -539,6 +540,8 @@
         chartTooltip.hidden = true;
       };
 
+      const defaultDayHeading = 'Dagens omsetning';
+
       const renderDayTotals = ({ date, revenue, guests, receipts }, { isDemo = false } = {}) => {
         if (!dayRevenueEl) return;
         const parsed = date ? new Date(`${date}T00:00:00`) : null;
@@ -555,6 +558,13 @@
         }
         if (dayAverageMetaEl) {
           dayAverageMetaEl.textContent = receiptsValue > 0 ? `${qtyFmt.format(receiptsValue)} kvitteringer` : ' ';
+        }
+        if (dayHeadingEl) {
+          const headingFriendly = friendly && friendly !== '–' ? friendly : todayISO;
+          const headingDisplay = (typeof headingFriendly === 'string' && headingFriendly.length)
+            ? headingFriendly.charAt(0).toUpperCase() + headingFriendly.slice(1)
+            : headingFriendly;
+          dayHeadingEl.textContent = `Tall hentet fra ${headingDisplay}`;
         }
         renderDayStatus(isDemo ? `Viser demo for ${friendly} (mangler Lightspeed-nøkler).` : `Tall for ${friendly}`);
       };
@@ -584,6 +594,7 @@
         dayReceiptsEl.textContent = '– kvitteringer';
         if (dayAverageEl) dayAverageEl.textContent = '–';
         if (dayAverageMetaEl) dayAverageMetaEl.textContent = ' ';
+        if (dayHeadingEl) dayHeadingEl.textContent = defaultDayHeading;
 
         let attemptedDemo = false;
 
