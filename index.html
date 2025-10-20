@@ -47,8 +47,8 @@
 
     header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
     .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-block:14px;padding-inline-end:clamp(28px,6vw,96px)}
-    .brand{display:flex;align-items:center;font-weight:800;color:#7d79f9;text-decoration:none;font-size:clamp(1.1rem,2vw,1.4rem);letter-spacing:.06em;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;transition:color .2s ease}
-    .brand:hover{color:#6c63d9}
+    .brand{display:flex;align-items:center;font-weight:800;color:#7f7bff;text-decoration:none;font-size:clamp(1.35rem,3vw,1.8rem);letter-spacing:.04em;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;transition:color .2s ease;text-transform:capitalize}
+    .brand:hover{color:#6d67ff}
     nav{justify-self:center}
     nav ul{display:flex;align-items:center;gap:24px}
     .nav a,nav .dropdown>button{font-size:clamp(14px,1.3vw,16px);font-weight:700;letter-spacing:.01em;color:var(--ink-900);padding:10px 12px;border-radius:999px;text-decoration:none}
@@ -213,7 +213,7 @@
     @media (max-width:720px){
       .container{padding-inline:clamp(18px,7vw,32px);}
       .nav{grid-template-columns:repeat(2,auto);justify-content:space-between;align-items:center;padding-inline-end:18px;row-gap:10px;}
-      .brand{font-size:16px;}
+      .brand{font-size:1.45rem;justify-self:flex-start;}
       .nav-right{grid-column:1 / -1;justify-self:flex-end;}
       nav{grid-column:1 / -1;width:100%;}
       nav ul{left:18px;right:18px;top:58px;}
