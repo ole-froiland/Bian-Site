@@ -638,11 +638,11 @@ exports.handler = async (event) => {
           ]
         };
       });
-      const top = aggregateTopProducts(demoReceipts, metric);
+      const items = aggregateTopProducts(demoReceipts, metric);
       const daily = summarizeReceiptsByDay(demoReceipts);
       const limit = Math.max(1, Math.min(50, Number(q.limit||3)|0));
       const dayTotal = singleDate ? (daily.find((d) => d.date === singleDate) || { date: singleDate, revenue: 0, guests: 0, receipts: 0 }) : undefined;
-      return ok({ from, to, endpoint: BUSINESS_PERIODS_ENDPOINT, count: demoReceipts.length, top: top.slice(0,limit), daily, dayTotal, mode: 'demo' });
+      return ok({ from, to, endpoint: BUSINESS_PERIODS_ENDPOINT, count: demoReceipts.length, top: items.slice(0,limit), items, daily, dayTotal, mode: 'demo' });
     }
 
     if(!CFG.xToken || !CFG.businessId){
@@ -699,6 +699,7 @@ exports.handler = async (event) => {
       endpoint: BUSINESS_PERIODS_ENDPOINT,
       count: transactions.length,
       top: itemsArray.slice(0, limit),
+      items: itemsArray,
       totalRevenue: Number(summary.totalRevenue || 0),
       daily,
       dayTotal

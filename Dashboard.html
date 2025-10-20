@@ -188,15 +188,20 @@
     body[data-theme="light"] .summary-card__value.fade{color:rgba(100,116,139,0.55);}
     body[data-theme="light"] .summary-card__meta{color:rgba(71,85,105,0.74);}
     .summary-card__meta strong{color:#f8f9ff;font-weight:600;}
-    .tips-list{list-style:none;margin:0;padding:0;display:grid;gap:clamp(14px,3vw,20px);}
-    .tips-list li{display:flex;flex-direction:column;gap:12px;padding:clamp(14px,3vw,22px);border-radius:14px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.16);}
-    body[data-theme="light"] .tips-list li{background:rgba(148,163,184,0.12);}
-    .tip-body{font-size:1rem;color:var(--text);}
-    .tip-tags{display:flex;flex-wrap:wrap;gap:8px;}
-    .tip-tags .chip{display:inline-flex;align-items:center;justify-content:center;padding:0 14px;height:30px;border-radius:999px;font-size:0.85rem;font-weight:600;border:1px solid transparent;letter-spacing:0.02em;}
-    .tip-tags .chip.positive{color:var(--positive);background:rgba(52,211,153,0.18);border-color:rgba(52,211,153,0.24);}
-    .tip-tags .chip.neutral{color:var(--neutral);background:rgba(251,191,36,0.18);border-color:rgba(251,191,36,0.3);}
-    .tip-tags .chip.attention{color:var(--attention);background:rgba(248,113,113,0.18);border-color:rgba(248,113,113,0.3);}
+    .ai-insights-card header{align-items:flex-start;gap:12px;}
+    .ai-insights__meta{margin-left:auto;font-size:0.9rem;color:var(--muted);display:flex;gap:8px;align-items:center;}
+    .ai-insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-top:18px;}
+    .ai-insights__column h3{margin:0 0 12px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.14em;color:rgba(203,213,225,0.75);font-weight:700;}
+    .ai-insights__list{list-style:none;margin:0;padding:0;display:grid;gap:12px;}
+    .ai-insights__item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:16px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.18);box-shadow:0 16px 28px rgba(15,23,42,0.22);}
+    .ai-insights__product{font-weight:600;color:var(--text-strong);max-width:60%;word-break:break-word;}
+    .ai-insights__metric{font-size:0.88rem;color:var(--muted);text-align:right;}
+    .ai-insights__status{margin-top:22px;font-size:0.9rem;color:var(--muted);}
+    .ai-insights__status[data-tone="demo"]{color:var(--accent);}
+    .ai-insights__status[data-tone="error"]{color:var(--attention);}
+    body[data-theme="light"] .ai-insights__column h3{color:rgba(51,65,85,0.75);}
+    body[data-theme="light"] .ai-insights__item{background:rgba(255,255,255,0.9);border-color:rgba(148,163,184,0.26);box-shadow:0 12px 26px rgba(148,163,184,0.28);}
+    body[data-theme="light"] .ai-insights__metric{color:rgba(71,85,105,0.75);}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
     @media (max-width:960px){
       .brand-title{font-size:1.15rem;}
@@ -218,7 +223,6 @@
       .nav-actions{flex-wrap:wrap;}
       .tablist{grid-template-columns:1fr;}
       .tab-button{text-align:center;}
-      .tips-list li{padding:18px;}
     }
     @media (prefers-reduced-motion:reduce){
       *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important;}
@@ -420,33 +424,24 @@
       </article>
     </section>
     <section class="tab-panel" id="ai-tips" role="tabpanel" aria-labelledby="tab-ai" tabindex="0" hidden>
-      <article class="card tips-card">
+      <article class="card ai-insights-card">
         <header>
           <h2>AI-tips</h2>
+          <div class="ai-insights__meta">
+            <span data-ai-products-date>–</span>
+          </div>
         </header>
-        <ul class="tips-list">
-          <li>
-            <div class="tip-body">Bruk AI til å teste alternative menybeskrivelser og fremhev råvarer for å øke bestillinger på premium-retter.</div>
-            <div class="tip-tags">
-              <span class="chip positive">Potensial: Høy</span>
-              <span class="chip neutral">Effekt: Middels</span>
-            </div>
-          </li>
-          <li>
-            <div class="tip-body">Analyser værvarsel og bookingdata for å justere bemanningen automatisk før helgetopper.</div>
-            <div class="tip-tags">
-              <span class="chip positive">Potensial: Middels</span>
-              <span class="chip attention">Effekt: Høy</span>
-            </div>
-          </li>
-          <li>
-            <div class="tip-body">La AI foreslå mersalgsforslag til servitørene basert på gjestenes historikk og favoritter.</div>
-            <div class="tip-tags">
-              <span class="chip positive">Potensial: Høy</span>
-              <span class="chip neutral">Effekt: Lav</span>
-            </div>
-          </li>
-        </ul>
+        <div class="ai-insights" data-ai-insights>
+          <div class="ai-insights__column">
+            <h3>Mest solgte produkter</h3>
+            <ul class="ai-insights__list" data-ai-top-list></ul>
+          </div>
+          <div class="ai-insights__column">
+            <h3>Minst solgte produkter</h3>
+            <ul class="ai-insights__list" data-ai-bottom-list></ul>
+          </div>
+        </div>
+        <p class="ai-insights__status" data-ai-products-status></p>
       </article>
     </section>
   </main>
@@ -528,11 +523,102 @@
       const chartCard = barChart ? barChart.closest('.chart-card') : null;
       const weekdayFmt = new Intl.DateTimeFormat('nb-NO', { weekday: 'short' });
       const chartDateFmt = new Intl.DateTimeFormat('nb-NO', { day: '2-digit', month: '2-digit' });
+      const aiTopListEl = document.querySelector('[data-ai-top-list]');
+      const aiBottomListEl = document.querySelector('[data-ai-bottom-list]');
+      const aiProductsStatusEl = document.querySelector('[data-ai-products-status]');
+      const aiProductsDateEl = document.querySelector('[data-ai-products-date]');
 
       const renderDayStatus = (message, tone = 'muted') => {
         if (!dayStatusEl) return;
         dayStatusEl.textContent = message || '';
         dayStatusEl.dataset.tone = tone;
+      };
+
+      const setAiProductsStatus = (message = '', tone = '') => {
+        if (!aiProductsStatusEl) return;
+        aiProductsStatusEl.textContent = message || '';
+        if (tone) {
+          aiProductsStatusEl.dataset.tone = tone;
+        } else {
+          aiProductsStatusEl.removeAttribute('data-tone');
+        }
+      };
+
+      const buildProductListItem = ({ name, revenue, quantity }) => {
+        const itemEl = document.createElement('li');
+        itemEl.className = 'ai-insights__item';
+        const nameEl = document.createElement('span');
+        nameEl.className = 'ai-insights__product';
+        nameEl.textContent = name;
+        const metricEl = document.createElement('span');
+        metricEl.className = 'ai-insights__metric';
+        const parts = [];
+        const safeRevenue = Number.isFinite(revenue) ? revenue : 0;
+        parts.push(moneyFmt.format(safeRevenue));
+        if (Number.isFinite(quantity) && quantity > 0) {
+          parts.push(`${qtyFmt.format(quantity)} stk`);
+        }
+        metricEl.textContent = parts.join(' • ');
+        itemEl.append(nameEl, metricEl);
+        return itemEl;
+      };
+
+      const renderProductInsights = (items, { date, state = 'ready', message = '', isDemo = false } = {}) => {
+        if (aiProductsDateEl) {
+          const parsed = date ? new Date(`${date}T00:00:00`) : null;
+          const formatted = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : (date || '–');
+          aiProductsDateEl.textContent = formatted;
+        }
+
+        if (aiTopListEl) aiTopListEl.innerHTML = '';
+        if (aiBottomListEl) aiBottomListEl.innerHTML = '';
+
+        if (state === 'loading') {
+          setAiProductsStatus('Henter produktinnsikt …');
+          return;
+        }
+
+        if (state === 'error') {
+          setAiProductsStatus(message || 'Kunne ikke hente produktinnsikt.', 'error');
+          return;
+        }
+
+        const processed = Array.isArray(items) ? items.map((entry) => ({
+          name: String(entry?.name || 'Ukjent produkt'),
+          revenue: Number(entry?.revenue || 0),
+          quantity: Number(entry?.quantity ?? entry?.qty ?? 0),
+        })) : [];
+
+        const meaningful = processed.filter((entry) => entry.revenue !== 0 || entry.quantity !== 0);
+
+        if (!meaningful.length) {
+          setAiProductsStatus(message || 'Ingen produktdata for denne datoen.');
+          return;
+        }
+
+        setAiProductsStatus(isDemo ? 'Viser demo-data for produktsalget.' : '', isDemo ? 'demo' : '');
+
+        const topItems = [...meaningful]
+          .sort((a, b) => {
+            if (b.revenue !== a.revenue) return b.revenue - a.revenue;
+            return b.quantity - a.quantity;
+          })
+          .slice(0, 5);
+
+        const bottomItems = [...meaningful]
+          .sort((a, b) => {
+            if (a.revenue !== b.revenue) return a.revenue - b.revenue;
+            return a.quantity - b.quantity;
+          })
+          .slice(0, 5);
+
+        if (aiTopListEl) {
+          topItems.forEach((item) => aiTopListEl.appendChild(buildProductListItem(item)));
+        }
+
+        if (aiBottomListEl) {
+          bottomItems.forEach((item) => aiBottomListEl.appendChild(buildProductListItem(item)));
+        }
       };
 
       const hideGlobalTooltip = () => {
@@ -568,6 +654,7 @@
       const fetchDayTotals = (date, { demo = false } = {}) => {
         const url = new URL('/.netlify/functions/lightspeed', apiBase);
         url.searchParams.set('date', date);
+        url.searchParams.set('limit', '50');
         if (demo) url.searchParams.set('demo', '1');
         return fetch(url.toString(), { headers: { accept: 'application/json' } })
           .then(async (response) => {
@@ -588,25 +675,26 @@
         dayReceiptsEl.textContent = '–';
         if (dayAverageEl) dayAverageEl.textContent = '–';
         if (dayHeadingEl) dayHeadingEl.textContent = defaultDayHeading;
+        renderProductInsights(null, { date, state: 'loading' });
 
         let attemptedDemo = false;
 
         const attempt = (options = {}) => {
           fetchDayTotals(date, options)
             .then((data) => {
-              if (data?.dayTotal) {
-                renderDayTotals(data.dayTotal, { isDemo: !!options.demo });
-                return;
-              }
+              const isDemo = !!options.demo;
+              const items = Array.isArray(data?.items) ? data.items : Array.isArray(data?.top) ? data.top : [];
+              let selected = data?.dayTotal || null;
               const daily = Array.isArray(data?.daily) ? data.daily : [];
-              const match = daily.find((d) => d.date === date);
-              if (match) {
-                renderDayTotals(match, { isDemo: !!options.demo });
-              } else if (daily.length) {
-                renderDayTotals(daily[0], { isDemo: !!options.demo });
+              if (!selected && daily.length) {
+                selected = daily.find((d) => d.date === date) || daily[0];
+              }
+              if (selected) {
+                renderDayTotals(selected, { isDemo });
               } else {
                 renderDayStatus('Ingen omsetning funnet for valgt dato.');
               }
+              renderProductInsights(items, { date, isDemo, message: 'Ingen produktdata for denne datoen.' });
             })
             .catch((error) => {
               console.error('Kunne ikke hente dagsomsetning:', error);
@@ -614,14 +702,22 @@
                 (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL');
               if (allowDemo) {
                 attemptedDemo = true;
+                renderProductInsights(null, { date, state: 'loading' });
                 attempt({ demo: true });
                 return;
               }
               if (attemptedDemo && options.demo && error?.body?.dayTotal) {
                 renderDayTotals(error.body.dayTotal, { isDemo: true });
+                const items = Array.isArray(error?.body?.items) ? error.body.items : Array.isArray(error?.body?.top) ? error.body.top : [];
+                renderProductInsights(items, { date, isDemo: true });
                 return;
               }
               renderDayStatus(error?.body?.message || error?.message || 'Feil ved henting av omsetning', 'error');
+              renderProductInsights(null, {
+                date,
+                state: 'error',
+                message: error?.body?.message || error?.message || 'Kunne ikke hente produktsalget. Prøv igjen senere.',
+              });
             });
         };
 
