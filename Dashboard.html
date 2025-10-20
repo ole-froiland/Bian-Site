@@ -189,7 +189,8 @@
     body[data-theme="light"] .summary-card__meta{color:rgba(71,85,105,0.74);}
     .summary-card__meta strong{color:#f8f9ff;font-weight:600;}
     .ai-insights-card header{align-items:flex-start;gap:12px;}
-    .ai-insights__meta{margin-left:auto;font-size:0.9rem;color:var(--muted);display:flex;gap:8px;align-items:center;}
+    .ai-insights__meta{margin-left:auto;font-size:0.9rem;color:var(--muted);display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+    .ai-insights__input{min-width:160px;}
     .ai-insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-top:18px;}
     .ai-insights__column h3{margin:0 0 12px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.14em;color:rgba(203,213,225,0.75);font-weight:700;}
     .ai-insights__list{list-style:none;margin:0;padding:0;display:grid;gap:12px;}
@@ -429,6 +430,8 @@
           <h2>AI-tips</h2>
           <div class="ai-insights__meta">
             <span data-ai-products-date>–</span>
+            <label for="ai-products-picker" class="sr-only">Velg dato for AI-tips</label>
+            <input type="date" id="ai-products-picker" class="daily-summary__input ai-insights__input" />
           </div>
         </header>
         <div class="ai-insights" data-ai-insights>
@@ -527,6 +530,7 @@
       const aiBottomListEl = document.querySelector('[data-ai-bottom-list]');
       const aiProductsStatusEl = document.querySelector('[data-ai-products-status]');
       const aiProductsDateEl = document.querySelector('[data-ai-products-date]');
+      const aiProductsPicker = document.querySelector('#ai-products-picker');
 
       const renderDayStatus = (message, tone = 'muted') => {
         if (!dayStatusEl) return;
@@ -567,7 +571,7 @@
         if (aiProductsDateEl) {
           const parsed = date ? new Date(`${date}T00:00:00`) : null;
           const formatted = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : (date || '–');
-          aiProductsDateEl.textContent = formatted;
+          aiProductsDateEl.textContent = formatted ? `Tall for ${formatted}` : '–';
         }
 
         if (aiTopListEl) aiTopListEl.innerHTML = '';
@@ -671,6 +675,9 @@
 
       const loadDayTotals = (date) => {
         if (!dayRevenueEl) return;
+        if (aiProductsPicker && aiProductsPicker.value !== date) {
+          aiProductsPicker.value = date;
+        }
         dayRevenueEl.textContent = '–';
         dayReceiptsEl.textContent = '–';
         if (dayAverageEl) dayAverageEl.textContent = '–';
@@ -734,6 +741,20 @@
         loadDayTotals(dayPicker.value);
         dayPicker.addEventListener('change', () => {
           const date = dayPicker.value || todayISO;
+          loadDayTotals(date);
+        });
+      }
+
+      if (aiProductsPicker) {
+        aiProductsPicker.max = todayISO;
+        if (!aiProductsPicker.value) {
+          aiProductsPicker.value = dayPicker?.value || todayISO;
+        }
+        aiProductsPicker.addEventListener('change', () => {
+          const date = aiProductsPicker.value || todayISO;
+          if (dayPicker && dayPicker.value !== date) {
+            dayPicker.value = date;
+          }
           loadDayTotals(date);
         });
       }
