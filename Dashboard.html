@@ -195,8 +195,8 @@
     .ai-insights__column h3{margin:0 0 12px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.14em;color:rgba(203,213,225,0.75);font-weight:700;}
     .ai-insights__list{list-style:none;margin:0;padding:0;display:grid;gap:12px;}
     .ai-insights__item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:16px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.18);box-shadow:0 16px 28px rgba(15,23,42,0.22);}
-    .ai-insights__product{font-weight:600;color:var(--text-strong);max-width:60%;word-break:break-word;}
-    .ai-insights__metric{font-size:0.88rem;color:var(--muted);text-align:right;}
+    .ai-insights__product{font-weight:600;color:var(--text-strong);flex:1;min-width:0;word-break:break-word;}
+    .ai-insights__metric{font-size:0.88rem;color:var(--muted);text-align:right;white-space:nowrap;}
     .ai-insights__status{margin-top:22px;font-size:0.9rem;color:var(--muted);}
     .ai-insights__status[data-tone="demo"]{color:var(--accent);}
     .ai-insights__status[data-tone="error"]{color:var(--attention);}
@@ -217,6 +217,11 @@
       .tablist{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
       .daily-summary{grid-template-columns:1fr;justify-content:stretch;}
       .summary-card{max-width:none;}
+      .ai-insights{grid-template-columns:1fr;}
+      .ai-insights__meta{justify-content:flex-start;align-items:stretch;}
+      .ai-insights__input{width:100%;min-width:0;}
+      .ai-insights__item{flex-direction:column;align-items:flex-start;gap:8px;padding:16px 18px;}
+      .ai-insights__metric{width:100%;text-align:left;white-space:normal;}
     }
     @media (max-width:520px){
       .shell{padding-inline:16px;}
