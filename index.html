@@ -47,9 +47,8 @@
 
     header{position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);box-shadow:0 8px 18px rgba(2,6,23,.04);z-index:50}
     .nav{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding-block:14px;padding-inline-end:clamp(28px,6vw,96px)}
-    .brand{display:flex;gap:.6rem;align-items:center;font-weight:800;color:var(--ink-900);text-decoration:none}
-    .brand .logo{inline-size:40px;block-size:40px;border-radius:12px;background:#fff;border:2px solid var(--brand-600);display:grid;place-items:center;box-shadow:var(--shadow)}
-    .brand span{font-size:18px}
+    .brand{display:flex;align-items:center;font-weight:800;color:#7d79f9;text-decoration:none;font-size:clamp(1.1rem,2vw,1.4rem);letter-spacing:.06em;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;transition:color .2s ease}
+    .brand:hover{color:#6c63d9}
     nav{justify-self:center}
     nav ul{display:flex;align-items:center;gap:24px}
     .nav a,nav .dropdown>button{font-size:clamp(14px,1.3vw,16px);font-weight:700;letter-spacing:.01em;color:var(--ink-900);padding:10px 12px;border-radius:999px;text-decoration:none}
@@ -247,28 +246,7 @@
     @media (prefers-reduced-motion: reduce){ .skip-link{ transition:none } }
   </style>
 
-  <!-- Inline SVGs for Scope logo -->
-  <svg width="0" height="0" style="position:absolute">
-    <defs>
-      <!-- Bullseye icon used in the header square -->
-      <symbol id="icon-scope" viewBox="0 0 40 40">
-        <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="3"/>
-        <circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="3"/>
-        <circle cx="20" cy="20" r="6" fill="none" stroke="currentColor" stroke-width="3"/>
-        <circle cx="20" cy="20" r="2.2" fill="currentColor"/>
-      </symbol>
-      <!-- Full logotype for places where you want the wordmark + rings (optional) -->
-      <symbol id="logotype-scope" viewBox="0 0 200 40">
-        <g fill="none" stroke="#7d79f9" stroke-width="3">
-          <circle cx="176" cy="20" r="18"/>
-          <circle cx="176" cy="20" r="12"/>
-          <circle cx="176" cy="20" r="6"/>
-        </g>
-        <circle cx="176" cy="20" r="2.4" fill="#7d79f9"/>
-        <text x="0" y="28" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="28" font-weight="800" fill="#7d79f9">Scope</text>
-      </symbol>
-    </defs>
-  </svg>
+  
 </head>
 
 <body>
@@ -276,12 +254,7 @@
 
   <header>
     <div class="container nav" role="navigation" aria-label="Toppmeny" data-i18n-attr="aria-label:header.topnav_label">
-      <a class="brand" href="#top" aria-label="Scope hjem" data-i18n-attr="aria-label:header.brand_aria">
-        <div class="logo" aria-hidden="true" style="color:var(--brand-600)">
-          <svg width="24" height="24" viewBox="0 0 40 40" aria-hidden="true"><use href="#icon-scope"/></svg>
-        </div>
-        <span>Scope</span>
-      </a>
+      <a class="brand" href="#top" aria-label="Scope hjem" data-i18n-attr="aria-label:header.brand_aria">Scope</a>
 
       <button class="mobile-toggle" aria-expanded="false" aria-controls="mainmenu" data-i18n="mobile.menu_button">Meny</button>
 
