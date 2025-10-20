@@ -52,8 +52,8 @@
     .brand:visited{color:#756bff}
     nav{justify-self:center}
     nav ul{display:flex;align-items:center;gap:24px}
-    .nav a,nav .dropdown>button{font-size:clamp(14px,1.3vw,16px);font-weight:700;letter-spacing:.01em;color:var(--ink-900);padding:10px 12px;border-radius:999px;text-decoration:none}
-    .nav a:hover,nav .dropdown>button:hover{background:var(--muted)}
+    .nav a:not(.brand),nav .dropdown>button{font-size:clamp(14px,1.3vw,16px);font-weight:700;letter-spacing:.01em;color:var(--ink-900);padding:10px 12px;border-radius:999px;text-decoration:none}
+    .nav a:not(.brand):hover,nav .dropdown>button:hover{background:var(--muted)}
     .nav-right{display:flex;align-items:center;gap:12px;contain:layout paint}
     .nav-right>*{display:flex;align-items:center}
     .nav-actions{display:flex;align-items:center;gap:12px;white-space:nowrap}
