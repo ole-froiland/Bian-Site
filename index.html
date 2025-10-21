@@ -207,7 +207,9 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
     footer{padding:36px 0;color:var(--ink-800)}
     footer .row{display:flex;align-items:center;justify-content:space-between}
 
-    .mobile-toggle{display:none;border:1px solid var(--brand-outline);border-radius:999px;padding:0 10px;height:30px;font-weight:700;background:#fff;color:var(--ink-900);cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;align-items:center}
+    .mobile-toggle{display:none;border:1px solid var(--brand-outline);border-radius:999px;padding:0 12px;height:34px;font-weight:700;background:#fff;color:var(--ink-900);cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;align-items:center;gap:6px;}
+    .mobile-toggle .dots{display:flex;flex-direction:column;gap:3px;margin-right:2px;}
+    .mobile-toggle .dots span{width:14px;height:2px;border-radius:999px;background:currentColor;display:block;}
     .mobile-toggle:focus-visible{outline:none;box-shadow:var(--ring)}
     body[data-theme="dark"] .mobile-toggle{background:var(--surface);color:var(--ink-900)}
     @media (max-width:1024px){
@@ -221,13 +223,17 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
       .container{padding-inline:clamp(12px,7vw,28px);}
       .nav{grid-template-columns:auto auto;grid-template-rows:auto auto;align-items:center;gap:8px;padding-inline:clamp(12px,7vw,28px);padding-block:8px;}
       .brand{font-size:1.4rem;grid-column:1;grid-row:1;justify-self:flex-start;}
-      .mobile-toggle{display:inline-flex;grid-column:2;grid-row:1;justify-self:end;align-items:center;}
-      .nav-right{grid-column:1 / -1;grid-row:2;justify-content:flex-end;flex-wrap:wrap;gap:6px;}
-      .nav-actions{gap:6px;white-space:normal;}
+      .mobile-toggle{display:inline-flex;grid-column:2;grid-row:1;justify-self:end;}
+      .nav-right{grid-column:1 / -1;grid-row:2;display:none;flex-direction:column;align-items:flex-start;gap:8px;margin-top:8px;background:var(--surface);padding:8px;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 20px rgba(2,6,23,0.08);position:relative;z-index:30;width:100%;}
+      .nav-right.open{display:flex;}
+      .nav-actions{gap:6px;white-space:normal;flex-wrap:wrap;width:100%;}
+      .nav-actions .chip{flex:1 1 100%;min-width:0;justify-content:center;}
+      .nav-actions .theme-switch{flex:1 1 100%;}
+      .nav-right>a.chip{width:100%;justify-content:center;}
       nav{grid-column:1 / -1;width:100%;}
-      nav ul{left:clamp(12px,7vw,28px);right:clamp(12px,7vw,28px);top:56px;}
+      nav ul{left:clamp(12px,7vw,28px);right:clamp(12px,7vw,28px);top:58px;}
       .chip{height:28px;min-width:40px;padding:0 8px;font-size:0.76rem;}
-      .mobile-toggle{height:28px;min-width:40px;padding:0 8px;font-size:0.76rem;}
+      .mobile-toggle{height:28px;font-size:0.78rem;padding:0 10px;}
       #lang-toggle,.theme-switch{height:28px;}
       .theme-switch{width:44px;min-width:44px;}
       .theme-switch .slider{padding:2px;}
@@ -272,7 +278,10 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
     <div class="container nav" role="navigation" aria-label="Toppmeny" data-i18n-attr="aria-label:header.topnav_label">
       <a class="brand" href="#top" aria-label="Scope hjem" data-i18n-attr="aria-label:header.brand_aria">Scope</a>
 
-      <button class="mobile-toggle" aria-expanded="false" aria-controls="mainmenu" data-i18n="mobile.menu_button">Meny</button>
+      <button class="mobile-toggle" aria-expanded="false" aria-controls="mainmenu" data-i18n-attr="aria-label:mobile.menu_button">
+        <span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span data-i18n="mobile.menu_button">Meny</span>
+      </button>
 
       <nav aria-label="Hovedmeny" data-i18n-attr="aria-label:header.mainmenu_label">
         <ul id="mainmenu">
@@ -656,11 +665,22 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
     applyLang(start);
 
     // Mobilmeny
-    const toggle=$('.mobile-toggle'); const menuEl=$('#mainmenu');
+    const toggle=$('.mobile-toggle'); const menuEl=$('#mainmenu'); const navActions=$('.nav-right');
     toggle?.addEventListener('click',()=>{
       const open = menuEl.classList.toggle('open');
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if(navActions){ navActions.classList.toggle('open', open); }
     });
+    const mq = window.matchMedia('(max-width: 720px)');
+    const resetMenuForDesktop = () => {
+      if(!mq.matches){
+        menuEl?.classList.remove('open');
+        navActions?.classList.remove('open');
+        toggle?.setAttribute('aria-expanded','false');
+      }
+    };
+    mq.addEventListener ? mq.addEventListener('change', resetMenuForDesktop) : mq.addListener(resetMenuForDesktop);
+    resetMenuForDesktop();
 
     // Dropdowns
     $$('.dropdown').forEach(dd=>{

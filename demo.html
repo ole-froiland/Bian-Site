@@ -31,12 +31,12 @@
 
     .container{max-width:980px;margin:0 auto;padding:clamp(20px,4vw,40px)}
 
-header{display:flex;align-items:center;justify-content:space-between;padding:8px clamp(12px,4vw,48px);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 18px 28px rgba(15,23,42,0.18);position:sticky;top:0;z-index:40;padding-top:env(safe-area-inset-top,0);}
+    header{display:flex;align-items:center;justify-content:space-between;padding:8px clamp(12px,4vw,48px);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 18px 28px rgba(15,23,42,0.18);position:sticky;top:0;z-index:40;padding-top:env(safe-area-inset-top,0);gap:12px;}
 a.brand{display:flex;align-items:center;text-decoration:none;font-weight:800;color:#756bff;font-size:clamp(1.35rem,3vw,1.8rem);letter-spacing:.045em;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;transition:color .2s ease;text-transform:capitalize}
     a.brand:hover{color:#625aff}
     a.brand:visited{color:#756bff}
     body[data-theme="dark"] a.brand{color:#625aff}
-.nav-actions{display:flex;align-items:center;gap:8px;white-space:nowrap;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+    .nav-actions{display:flex;align-items:center;gap:8px;white-space:nowrap;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
     #lang-toggle,.theme-switch{height:30px}
     .theme-switch{min-width:48px}
 
@@ -45,7 +45,12 @@ a.brand{display:flex;align-items:center;text-decoration:none;font-weight:800;col
     .btn.primary{background:var(--brand-gradient);border-color:transparent;color:#fff;box-shadow:0 6px 16px rgba(125,121,249,.25)}
     .btn.primary[disabled]{opacity:.7;cursor:not-allowed}
 
-.chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 10px;height:30px;font-weight:700;background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:44px;font-size:0.82rem;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background-color .20s ease,border-color .20s ease,color .20s ease;will-change:background-color,border-color,color;backface-visibility:hidden;transform:translateZ(0);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 10px;height:30px;font-weight:700;background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:44px;font-size:0.82rem;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background-color .20s ease,border-color .20s ease,color .20s ease;will-change:background-color,border-color,color;backface-visibility:hidden;transform:translateZ(0);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+    .mobile-toggle{display:none;border:1px solid var(--brand-outline);border-radius:999px;padding:0 12px;height:34px;font-weight:700;background:#fff;color:var(--ink-900);cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.06);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;align-items:center;gap:6px;}
+    .mobile-toggle .dots{display:flex;flex-direction:column;gap:3px;margin-right:2px;}
+    .mobile-toggle .dots span{width:14px;height:2px;border-radius:999px;background:currentColor;display:block;}
+    .mobile-toggle:focus-visible{outline:none;box-shadow:var(--ring)}
+    body[data-theme="dark"] .mobile-toggle{background:var(--surface);color:var(--ink-900)}
     .chip:focus-visible{outline:none;box-shadow:var(--ring)}
     .chip:hover{background:var(--muted)}
     body:not([data-theme="dark"]) .chip{color:#0b1220}
@@ -103,6 +108,21 @@ a.brand{display:flex;align-items:center;text-decoration:none;font-weight:800;col
 
     footer{margin-top:26px}
 
+    @media (max-width:720px){
+      header{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;gap:8px;padding-inline:clamp(12px,7vw,28px);}
+      .mobile-toggle{display:inline-flex;grid-column:2;grid-row:1;justify-self:end;height:28px;min-width:44px;padding:0 10px;font-size:0.78rem;}
+      .brand{grid-column:1;grid-row:1;}
+      .nav-actions{grid-column:1 / -1;grid-row:2;display:none;flex-direction:column;align-items:flex-start;gap:8px;margin-top:6px;background:var(--surface);padding:8px;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 20px rgba(2,6,23,0.08);width:100%;}
+      .nav-actions.open{display:flex;}
+      .nav-actions .chip{flex:1 1 100%;height:28px;min-width:38px;padding:0 8px;font-size:0.76rem;justify-content:center;}
+      .nav-actions .theme-switch{width:44px;}
+      #lang-toggle,.theme-switch{height:28px;}
+      .theme-switch{width:44px;min-width:44px;}
+      .theme-switch .slider{padding:2px;}
+      .theme-switch .thumb{width:20px;height:20px;left:2px;}
+      .theme-switch input:checked + .slider .thumb{left:calc(100% - 2px);}
+    }
+
     /* back-cta chip */
     .back{display:inline-flex;align-items:center;gap:10px;border-radius:999px;border:1px solid var(--border);padding:10px 14px;background:var(--surface);text-decoration:none;color:inherit;box-shadow:var(--shadow)}
     .back svg{flex:none}
@@ -123,7 +143,11 @@ a.brand{display:flex;align-items:center;text-decoration:none;font-weight:800;col
   <div class="container">
     <header>
       <a class="brand" href="index.html">Scope</a>
-      <div class="nav-actions">
+      <button class="mobile-toggle" aria-expanded="false" aria-controls="demo-actions" data-i18n-attr="aria-label:mobile.menu_button">
+        <span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span data-i18n="mobile.menu_button">Meny</span>
+      </button>
+      <div class="nav-actions" id="demo-actions">
         <button id="lang-toggle" class="chip" aria-label="Bytt språk">NO</button>
         <label class="theme-switch">
           <input type="checkbox" id="theme-toggle" aria-label="Tema">
@@ -308,6 +332,7 @@ a.brand{display:flex;align-items:center;text-decoration:none;font-weight:800;col
     // i18n
     const dict={
       no:{eyebrow:"KONTAKT",title:"Book en demo",lead:"Fyll inn info og velg tidspunkt. Du får kalenderinvitasjon på e‑post.",
+          "mobile.menu_button":"Meny",
           name_label:"Navn",name_ph:"Ola Nordmann",
           org_label:"Org.nr",org_ph:"999999999",org_hint:"9 siffer (Brønnøysund)",
           email_label:"E‑post",email_ph:"din@restaurant.no",
@@ -324,6 +349,7 @@ a.brand{display:flex;align-items:center;text-decoration:none;font-weight:800;col
           next:"Neste",back:"Tilbake",step:"Steg",of:"av",
           err_name:"Skriv inn navn", err_org:"Ugyldig org.nr (9 siffer)", err_email:"Ugyldig e‑post", err_date:"Velg en dato", err_time:"Velg et tidspunkt 09–16", err_other:"Vennligst spesifiser"},
       en:{eyebrow:"CONTACT",title:"Book a demo",lead:"Fill in your details and pick a time. You’ll receive a calendar invitation by email.",
+          "mobile.menu_button":"Menu",
           name_label:"Name",name_ph:"Jane Doe",
           org_label:"Org. number",org_ph:"999999999",org_hint:"9 digits (Brønnøysund)",
           email_label:"Email",email_ph:"you@restaurant.com",
@@ -340,6 +366,23 @@ a.brand{display:flex;align-items:center;text-decoration:none;font-weight:800;col
           next:"Next",back:"Back",step:"Step",of:"of",
           err_name:"Please enter your name", err_org:"Invalid org. number (9 digits)", err_email:"Invalid email", err_date:"Pick a date", err_time:"Pick a time 09–16", err_other:"Please specify"}
     };
+    const mobileToggle=document.querySelector('.mobile-toggle');
+    const mobileActions=document.querySelector('.nav-actions');
+    mobileToggle?.addEventListener('click',()=>{
+      const open = mobileActions && !mobileActions.classList.contains('open');
+      if(mobileActions){ mobileActions.classList.toggle('open', open); }
+      mobileToggle?.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    const demoMq = window.matchMedia('(max-width: 720px)');
+    const resetDemoMenu=()=>{
+      if(!demoMq.matches){
+        mobileActions?.classList.remove('open');
+        mobileToggle?.setAttribute('aria-expanded','false');
+      }
+    };
+    demoMq.addEventListener ? demoMq.addEventListener('change', resetDemoMenu) : demoMq.addListener(resetDemoMenu);
+    resetDemoMenu();
+
     const langBtn=$('#lang-toggle');
     const initial=localStorage.getItem('scope.lang') || ((navigator.language||'').toLowerCase().startsWith('no')?'no':'en');
     function t(k){return dict[(document.documentElement.lang)||'no'][k]||k}
