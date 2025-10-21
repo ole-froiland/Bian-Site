@@ -224,11 +224,11 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
       .nav{grid-template-columns:auto auto;grid-template-rows:auto auto;align-items:center;gap:8px;padding-inline:clamp(12px,7vw,28px);padding-block:8px;}
       .brand{font-size:1.4rem;grid-column:1;grid-row:1;justify-self:flex-start;}
       .mobile-toggle{display:inline-flex;grid-column:2;grid-row:1;justify-self:end;}
-      .nav-right{grid-column:1 / -1;grid-row:2;display:none;flex-direction:column;align-items:flex-start;gap:8px;margin-top:8px;background:var(--surface);padding:8px;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 20px rgba(2,6,23,0.08);position:relative;z-index:30;width:100%;}
+      .nav-right{grid-column:1 / -1;grid-row:2;display:none;flex-direction:column;align-items:stretch;gap:8px;margin-top:8px;background:var(--surface);padding:10px;border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 24px rgba(2,6,23,0.12);position:relative;z-index:30;width:100%;}
       .nav-right.open{display:flex;}
       .nav-actions{gap:6px;white-space:normal;flex-wrap:wrap;width:100%;}
       .nav-actions .chip{flex:1 1 100%;min-width:0;justify-content:center;}
-      .nav-actions .theme-switch{flex:1 1 100%;}
+      .nav-actions .theme-switch{align-self:center;}
       .nav-right>a.chip{width:100%;justify-content:center;}
       nav{grid-column:1 / -1;width:100%;}
       nav ul{left:clamp(12px,7vw,28px);right:clamp(12px,7vw,28px);top:58px;}
@@ -278,7 +278,7 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
     <div class="container nav" role="navigation" aria-label="Toppmeny" data-i18n-attr="aria-label:header.topnav_label">
       <a class="brand" href="#top" aria-label="Scope hjem" data-i18n-attr="aria-label:header.brand_aria">Scope</a>
 
-      <button class="mobile-toggle" aria-expanded="false" aria-controls="mainmenu" data-i18n-attr="aria-label:mobile.menu_button">
+      <button class="mobile-toggle" aria-expanded="false" aria-controls="mainmenu nav-actions" data-i18n-attr="aria-label:mobile.menu_button">
         <span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
         <span data-i18n="mobile.menu_button">Meny</span>
       </button>
@@ -312,7 +312,7 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
         </ul>
       </nav>
 
-      <div class="nav-right">
+      <div class="nav-right" id="nav-actions">
       <a href="login.html" class="chip" data-i18n="right.login">Logg inn</a>
       <div class="nav-actions">
         <button id="lang-toggle" class="chip" title="Språk">NO</button>
@@ -681,6 +681,24 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
     };
     mq.addEventListener ? mq.addEventListener('change', resetMenuForDesktop) : mq.addListener(resetMenuForDesktop);
     resetMenuForDesktop();
+    $$('#mainmenu a').forEach(link=>{
+      link.addEventListener('click', ()=>{
+        if(mq.matches){
+          menuEl?.classList.remove('open');
+          navActions?.classList.remove('open');
+          toggle?.setAttribute('aria-expanded','false');
+        }
+      });
+    });
+    navActions?.querySelectorAll('a').forEach(link=>{
+      link.addEventListener('click', ()=>{
+        if(mq.matches){
+          navActions?.classList.remove('open');
+          menuEl?.classList.remove('open');
+          toggle?.setAttribute('aria-expanded','false');
+        }
+      });
+    });
 
     // Dropdowns
     $$('.dropdown').forEach(dd=>{
