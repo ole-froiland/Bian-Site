@@ -31,11 +31,12 @@
 
     .container{max-width:980px;margin:0 auto;padding:clamp(20px,4vw,40px)}
 
-    header{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
-    a.brand{display:flex;align-items:center;text-decoration:none;font-weight:800;color:#756bff;font-size:clamp(1.35rem,3.2vw,1.9rem);letter-spacing:.045em;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;transition:color .2s ease;text-transform:capitalize}
+    header{display:flex;align-items:center;justify-content:space-between;padding:10px 0;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+    a.brand{display:flex;align-items:center;text-decoration:none;font-weight:800;color:#756bff;font-size:clamp(1.45rem,3.2vw,1.95rem);letter-spacing:.045em;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;transition:color .2s ease;text-transform:capitalize}
     a.brand:hover{color:#625aff}
     a.brand:visited{color:#756bff}
-    .nav-actions{display:flex;align-items:center;gap:12px;white-space:nowrap}
+    body[data-theme="dark"] a.brand{color:#625aff}
+    .nav-actions{display:flex;align-items:center;gap:12px;white-space:nowrap;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
     #lang-toggle,.theme-switch{height:32px}
     .theme-switch{min-width:56px}
 
@@ -44,7 +45,7 @@
     .btn.primary{background:var(--brand-gradient);border-color:transparent;color:#fff;box-shadow:0 6px 16px rgba(125,121,249,.25)}
     .btn.primary[disabled]{opacity:.7;cursor:not-allowed}
 
-    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:8px 12px;font-weight:700;background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:52px;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background-color .20s ease,border-color .20s ease,color .20s ease;will-change:background-color,border-color,color;backface-visibility:hidden;transform:translateZ(0)}
+    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 16px;height:40px;font-weight:700;background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:60px;font-size:0.95rem;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background-color .20s ease,border-color .20s ease,color .20s ease;will-change:background-color,border-color,color;backface-visibility:hidden;transform:translateZ(0);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
     .chip:focus-visible{outline:none;box-shadow:var(--ring)}
     .chip:hover{background:var(--muted)}
     body:not([data-theme="dark"]) .chip{color:#0b1220}
