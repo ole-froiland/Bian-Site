@@ -198,14 +198,21 @@
     .ai-insights__meta{margin-left:auto;font-size:0.9rem;color:var(--muted);display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
     .ai-insights__input{min-width:160px;}
     .ai-insights{margin-top:18px;}
-    .ai-insights__tips{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:ai-tip;}
-    .ai-insights__tip{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:18px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.18);box-shadow:0 16px 28px rgba(15,23,42,0.22);line-height:1.48;counter-increment:ai-tip;}
-    .ai-insights__tip-index{font-weight:700;color:var(--accent);font-size:0.95rem;line-height:1.2;min-width:2.6ch;text-align:right;letter-spacing:0.04em;}
-    .ai-insights__tip-text{font-weight:500;color:var(--text-strong);flex:1;min-width:0;word-break:break-word;}
+    .ai-insights__cards{display:grid;gap:16px;}
+    .ai-insight-card{padding:18px 20px;border-radius:20px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.18);box-shadow:0 18px 30px rgba(15,23,42,0.22);display:flex;flex-direction:column;gap:14px;}
+    .ai-insight-card__header{display:flex;align-items:flex-start;gap:12px;}
+    .ai-insight-card__index{display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);font-size:0.95rem;line-height:1.2;min-width:2.6ch;letter-spacing:0.04em;}
+    .ai-insight-card__title{margin:0;font-size:1rem;font-weight:600;color:var(--text-strong);}
+    .ai-insight-card__summary{margin:0;color:var(--muted);font-size:0.95rem;line-height:1.5;}
+    .ai-insight-card__list{list-style:none;margin:0;padding:0;display:grid;gap:8px;}
+    .ai-insight-card__row{display:flex;justify-content:space-between;gap:14px;font-size:0.94rem;color:var(--text);}
+    .ai-insight-card__row strong{font-weight:600;color:var(--text-strong);}
+    .ai-insight-card__meta{display:flex;gap:10px;flex-wrap:wrap;font-size:0.9rem;color:var(--muted);}
+    .ai-insight-card__recommendation{margin:0;color:var(--text-strong);font-weight:500;font-size:0.96rem;line-height:1.45;}
     .ai-insights__status{margin-top:22px;font-size:0.9rem;color:var(--muted);}
     .ai-insights__status[data-tone="demo"]{color:var(--accent);}
     .ai-insights__status[data-tone="error"]{color:var(--attention);}
-    body[data-theme="light"] .ai-insights__tip{background:rgba(255,255,255,0.92);border-color:rgba(148,163,184,0.26);box-shadow:0 12px 26px rgba(148,163,184,0.28);}
+    body[data-theme="light"] .ai-insight-card{background:rgba(255,255,255,0.92);border-color:rgba(148,163,184,0.26);box-shadow:0 12px 26px rgba(148,163,184,0.28);}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
     @media (max-width:720px){
       .top-bar__inner{padding-inline:clamp(12px,7vw,28px);min-height:56px;gap:8px;}
@@ -232,9 +239,11 @@
       .summary-card{max-width:none;}
       .ai-insights__meta{justify-content:flex-start;align-items:stretch;}
       .ai-insights__input{width:100%;min-width:0;}
-      .ai-insights__tip{flex-direction:column;align-items:flex-start;gap:10px;padding:16px 18px;}
-      .ai-insights__tip-index{text-align:left;}
-      .ai-insights__tip-text{width:100%;}
+      .ai-insight-card{padding:16px 18px;}
+      .ai-insight-card__header{flex-wrap:wrap;gap:8px;}
+      .ai-insight-card__index{text-align:left;}
+      .ai-insight-card__row{flex-direction:column;align-items:flex-start;gap:4px;}
+      .ai-insight-card__meta{flex-direction:column;align-items:flex-start;gap:4px;}
     }
     @media (max-width:520px){
       .shell{padding-inline:16px;}
@@ -454,7 +463,7 @@
           </div>
         </header>
         <div class="ai-insights" data-ai-insights>
-          <ol class="ai-insights__tips" data-ai-tips></ol>
+          <div class="ai-insights__cards" data-ai-tips></div>
         </div>
         <p class="ai-insights__status" data-ai-products-status></p>
       </article>
@@ -559,20 +568,225 @@
         }
       };
 
-      const buildAiTipItem = (text, index) => {
-        const tipEl = document.createElement('li');
-        tipEl.className = 'ai-insights__tip';
-        const indexEl = document.createElement('span');
-        indexEl.className = 'ai-insights__tip-index';
-        indexEl.textContent = String(index).padStart(2, '0');
-        const textEl = document.createElement('span');
-        textEl.className = 'ai-insights__tip-text';
-        textEl.textContent = text;
-        tipEl.append(indexEl, textEl);
-        return tipEl;
+      const formatPercentShort = (change) => {
+        if (!Number.isFinite(change)) return null;
+        if (change === 0) return '0 %';
+        const formatted = percentFmt.format(Math.abs(change));
+        return `${change > 0 ? '+' : '−'}${formatted}`;
       };
 
-      const renderAiTips = ({ tips, date, state = 'ready', message = '', tone = '', isDemo = false, compareDate } = {}) => {
+      const buildInsightCard = (insight, index) => {
+        const card = document.createElement('article');
+        card.className = 'ai-insight-card';
+        card.dataset.kind = insight?.kind || 'status';
+
+        const header = document.createElement('div');
+        header.className = 'ai-insight-card__header';
+        const indexEl = document.createElement('span');
+        indexEl.className = 'ai-insight-card__index';
+        indexEl.textContent = String(index).padStart(2, '0');
+        const titleEl = document.createElement('h3');
+        titleEl.className = 'ai-insight-card__title';
+        titleEl.textContent = insight?.title || 'AI-tips';
+        header.append(indexEl, titleEl);
+        card.append(header);
+
+        if (insight?.summary) {
+          const summaryEl = document.createElement('p');
+          summaryEl.className = 'ai-insight-card__summary';
+          summaryEl.textContent = insight.summary;
+          card.append(summaryEl);
+        }
+
+        const renderProductList = (items = []) => {
+          if (!Array.isArray(items) || !items.length) return;
+          const list = document.createElement('ul');
+          list.className = 'ai-insight-card__list';
+          items.forEach((item) => {
+            const row = document.createElement('li');
+            row.className = 'ai-insight-card__row';
+            const nameEl = document.createElement('strong');
+            nameEl.textContent = item?.name || 'Ukjent produkt';
+            const metricsEl = document.createElement('span');
+            const parts = [];
+            const revenueValue = Number(item?.revenue || 0);
+            if (Number.isFinite(revenueValue)) parts.push(moneyFmt.format(revenueValue));
+            if (Number.isFinite(item?.quantity) && item.quantity > 0) parts.push(`${qtyFmt.format(item.quantity)} stk`);
+            const changePart = typeof item?.changeLabel === 'string' && item.changeLabel
+              ? item.changeLabel
+              : formatPercentShort(item?.change);
+            if (changePart) parts.push(changePart);
+            metricsEl.textContent = parts.join(' • ');
+            row.append(nameEl, metricsEl);
+            list.appendChild(row);
+          });
+          card.append(list);
+        };
+
+        switch (insight?.kind) {
+          case 'top-products':
+          case 'bottom-products':
+            renderProductList(insight.products);
+            break;
+          case 'sales-trend': {
+            const list = document.createElement('ul');
+            list.className = 'ai-insight-card__list';
+            const metrics = insight.metrics || {};
+            const rows = [
+              ['Omsetning', metrics.revenue, 'money'],
+              ['Kvitteringer', metrics.receipts, 'qty'],
+            ];
+            rows.forEach(([label, metric, type]) => {
+              if (!metric) return;
+              const row = document.createElement('li');
+              row.className = 'ai-insight-card__row';
+              const labelEl = document.createElement('strong');
+              labelEl.textContent = label;
+              const valueEl = document.createElement('span');
+              const parts = [];
+              const currentVal = Number(metric.current || 0);
+              if (type === 'money') {
+                parts.push(moneyFmt.format(currentVal));
+              } else {
+                parts.push(qtyFmt.format(currentVal));
+              }
+              const changeLabel = formatPercentShort(metric.change);
+              if (changeLabel) parts.push(changeLabel);
+              valueEl.textContent = parts.join(' • ');
+              row.append(labelEl, valueEl);
+              list.appendChild(row);
+            });
+            if (list.children.length) card.append(list);
+            break;
+          }
+          case 'busy-hours': {
+            const list = document.createElement('ul');
+            list.className = 'ai-insight-card__list';
+            const slots = insight.slots || {};
+            const busy = slots.busiest;
+            const quiet = slots.quietest;
+            if (busy) {
+              const row = document.createElement('li');
+              row.className = 'ai-insight-card__row';
+              const nameEl = document.createElement('strong');
+              nameEl.textContent = `Travlest ${busy.label || ''}`.trim();
+              const valueEl = document.createElement('span');
+              const parts = [moneyFmt.format(Number(busy.revenue || 0))];
+              if (Number.isFinite(busy.receipts) && busy.receipts > 0) {
+                parts.push(`${qtyFmt.format(busy.receipts)} kvitt.`);
+              }
+              valueEl.textContent = parts.join(' • ');
+              row.append(nameEl, valueEl);
+              list.appendChild(row);
+            }
+            if (quiet) {
+              const row = document.createElement('li');
+              row.className = 'ai-insight-card__row';
+              const nameEl = document.createElement('strong');
+              nameEl.textContent = `Roligst ${quiet.label || ''}`.trim();
+              const valueEl = document.createElement('span');
+              const parts = [moneyFmt.format(Math.max(0, Number(quiet.revenue || 0)))];
+              if (Number.isFinite(quiet.receipts) && quiet.receipts > 0) {
+                parts.push(`${qtyFmt.format(quiet.receipts)} kvitt.`);
+              }
+              valueEl.textContent = parts.join(' • ');
+              row.append(nameEl, valueEl);
+              list.appendChild(row);
+            }
+            if (list.children.length) card.append(list);
+            break;
+          }
+          case 'margin': {
+            const info = insight.products || {};
+            const list = document.createElement('ul');
+            list.className = 'ai-insight-card__list';
+            if (info.best) {
+              const row = document.createElement('li');
+              row.className = 'ai-insight-card__row';
+              const nameEl = document.createElement('strong');
+              nameEl.textContent = `Høyest: ${info.best.name}`;
+              const valueEl = document.createElement('span');
+              const parts = [moneyFmt.format(Number(info.best.margin || 0))];
+              if (Number.isFinite(info.best.quantity) && info.best.quantity > 0) {
+                parts.push(`${qtyFmt.format(info.best.quantity)} stk`);
+              }
+              valueEl.textContent = parts.join(' • ');
+              row.append(nameEl, valueEl);
+              list.appendChild(row);
+            }
+            if (info.worst) {
+              const row = document.createElement('li');
+              row.className = 'ai-insight-card__row';
+              const nameEl = document.createElement('strong');
+              nameEl.textContent = `Lavest: ${info.worst.name}`;
+              const valueEl = document.createElement('span');
+              const parts = [moneyFmt.format(Number(info.worst.margin || 0))];
+              if (Number.isFinite(info.worst.quantity) && info.worst.quantity > 0) {
+                parts.push(`${qtyFmt.format(info.worst.quantity)} stk`);
+              }
+              valueEl.textContent = parts.join(' • ');
+              row.append(nameEl, valueEl);
+              list.appendChild(row);
+            }
+            if (list.children.length) card.append(list);
+            break;
+          }
+          case 'ticket': {
+            const metrics = insight.metrics || {};
+            const list = document.createElement('ul');
+            list.className = 'ai-insight-card__list';
+            if (metrics.averageTicket) {
+              const row = document.createElement('li');
+              row.className = 'ai-insight-card__row';
+              const nameEl = document.createElement('strong');
+              nameEl.textContent = 'Snittkvittering';
+              const valueEl = document.createElement('span');
+              const parts = [moneyFmt.format(Number(metrics.averageTicket.current || 0))];
+              const changeLabel = formatPercentShort(metrics.averageTicket.change);
+              if (changeLabel) parts.push(changeLabel);
+              valueEl.textContent = parts.join(' • ');
+              row.append(nameEl, valueEl);
+              list.appendChild(row);
+            }
+            if (metrics.receipts) {
+              const row = document.createElement('li');
+              row.className = 'ai-insight-card__row';
+              const nameEl = document.createElement('strong');
+              nameEl.textContent = 'Kvitteringer';
+              const valueEl = document.createElement('span');
+              const parts = [qtyFmt.format(Number(metrics.receipts.current || 0))];
+              const changeLabel = formatPercentShort(metrics.receipts.change);
+              if (changeLabel) parts.push(changeLabel);
+              valueEl.textContent = parts.join(' • ');
+              row.append(nameEl, valueEl);
+              list.appendChild(row);
+            }
+            if (list.children.length) card.append(list);
+
+            if (insight.pattern && Number.isFinite(insight.pattern.lift)) {
+              const meta = document.createElement('div');
+              meta.className = 'ai-insight-card__meta';
+              const liftLabel = percentFmt.format(Math.abs(insight.pattern.lift));
+              meta.textContent = `${insight.pattern.name} gir ${liftLabel} mer på ${insight.pattern.weekday || 'denne dagen'} (${qtyFmt.format(insight.pattern.occurrences || 0)} uker).`;
+              card.append(meta);
+            }
+            break;
+          }
+          default:
+            break;
+        }
+
+        if (insight?.recommendation) {
+          const recommendationEl = document.createElement('p');
+          recommendationEl.className = 'ai-insight-card__recommendation';
+          recommendationEl.textContent = insight.recommendation;
+          card.append(recommendationEl);
+        }
+
+        return card;
+      };
+
+      const renderAiTips = ({ tips, date, state = 'ready', message = '', tone = '', isDemo = false } = {}) => {
         if (aiProductsDateEl) {
           const parsed = date ? new Date(`${date}T00:00:00`) : null;
           const formatted = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : (date || '–');
@@ -592,7 +806,7 @@
         }
 
         const list = Array.isArray(tips)
-          ? tips.map((tip) => (typeof tip === 'string' ? tip.trim() : '')).filter(Boolean)
+          ? tips.filter((tip) => tip && typeof tip === 'object')
           : [];
 
         if (!list.length) {
@@ -610,7 +824,7 @@
 
         if (!aiTipsListEl) return;
         list.slice(0, 6).forEach((tip, index) => {
-          aiTipsListEl.appendChild(buildAiTipItem(tip, index + 1));
+          aiTipsListEl.appendChild(buildInsightCard(tip, index + 1));
         });
       };
 

@@ -674,14 +674,6 @@ function percentChange(current, previous){
   return (curr - prev) / Math.abs(prev);
 }
 
-function formatPercentChange(change, percentFormatter){
-  if (!Number.isFinite(change)) return null;
-  if (change === 0) return 'på nivå';
-  const magnitude = Math.abs(change);
-  const formatted = percentFormatter.format(magnitude);
-  return change > 0 ? `opp ${formatted}` : `ned ${formatted}`;
-}
-
 function formatHourSlot(hour){
   if (!Number.isFinite(hour)) return 'kl. ?.00';
   const start = Math.max(0, Math.min(23, Math.trunc(hour)));
@@ -883,7 +875,7 @@ function computeRecurringStandout(context, { limit = 4 } = {}){
   return ranked[0] || null;
 }
 
-function generateAiTips(context){
+function generateInsightCards(context){
   const {
     targetDateObj,
     compareDateObj,
@@ -895,100 +887,191 @@ function generateAiTips(context){
     hourly,
   } = context;
 
-  const tips = [];
   const moneyFmt = new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 });
   const percentFmt = new Intl.NumberFormat('nb-NO', { style: 'percent', maximumFractionDigits: 0 });
-  const integerFmt = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 });
   const weekdayLong = (targetDateObj instanceof Date && !Number.isNaN(targetDateObj.getTime()))
     ? new Intl.DateTimeFormat('nb-NO', { weekday: 'long' }).format(targetDateObj)
     : '';
   const weekdayPrev = (compareDateObj instanceof Date && !Number.isNaN(compareDateObj.getTime()))
     ? new Intl.DateTimeFormat('nb-NO', { weekday: 'long' }).format(compareDateObj)
     : '';
+  const comparisonLabel = weekdayPrev ? `forrige ${weekdayPrev}` : 'forrige uke';
+
+  const describeChangeFull = (change) => {
+    if (!Number.isFinite(change)) return null;
+    if (change === 0) return `På nivå vs ${comparisonLabel}`;
+    const formatted = percentFmt.format(Math.abs(change));
+    return `${change > 0 ? 'Opp' : 'Ned'} ${formatted} vs ${comparisonLabel}`;
+  };
+
+  const describeChangeShort = (current, previous) => {
+    if (!Number.isFinite(current) || !Number.isFinite(previous)) return null;
+    if (previous === 0) {
+      if (current === 0) return '0 %';
+      return 'ny';
+    }
+    const change = percentChange(current, previous);
+    if (!Number.isFinite(change)) return null;
+    if (change === 0) return '0 %';
+    const formatted = percentFmt.format(Math.abs(change));
+    return `${change > 0 ? '+' : '−'}${formatted}`;
+  };
 
   const currentProducts = productByDate.get(targetDateKey) || new Map();
   const compareProducts = productByDate.get(compareDateKey) || new Map();
+  const cards = [];
+  const recurring = computeRecurringStandout(context, { limit: 5 });
 
-  const topArray = Array.from(currentProducts.values()).filter((item) => (item?.revenue || 0) > 0);
-  topArray.sort((a, b) => (b.revenue || 0) - (a.revenue || 0));
+  const topArray = Array.from(currentProducts.values()).filter((item) => (item?.revenue || 0) > 0)
+    .sort((a, b) => (b.revenue || 0) - (a.revenue || 0));
   const topSelection = topArray.slice(0, 3);
-  const topNames = topSelection.map((item) => item.name).join(', ');
   const topCurrentRevenue = topSelection.reduce((sum, item) => sum + (item.revenue || 0), 0);
   const topPreviousRevenue = topSelection.reduce((sum, item) => {
     const comp = compareProducts.get(item.key || makeProductKey(item));
     return sum + (comp?.revenue || 0);
   }, 0);
-  const topChange = percentChange(topCurrentRevenue, topPreviousRevenue);
+
   if (topSelection.length) {
-    let changeText = null;
-    if (topChange == null && topPreviousRevenue === 0 && topCurrentRevenue > 0) {
-      changeText = 'nytt salg vs forrige ' + (weekdayPrev || 'uke');
-    } else if (topChange !== null) {
-      const formatted = formatPercentChange(topChange, percentFmt);
-      changeText = formatted ? `${formatted} vs forrige ${weekdayPrev || 'uke'}` : null;
+    const products = topSelection.map((item) => {
+      const comp = compareProducts.get(item.key || makeProductKey(item));
+      const previousRevenue = Number(comp?.revenue || 0);
+      return {
+        name: item.name,
+        revenue: Number(item.revenue || 0),
+        quantity: Number(item.quantity || 0),
+        previousRevenue,
+        change: percentChange(item.revenue || 0, previousRevenue),
+        changeLabel: describeChangeShort(item.revenue || 0, previousRevenue),
+      };
+    });
+
+    let summary = null;
+    if (topPreviousRevenue === 0) {
+      summary = topCurrentRevenue > 0 ? `Nytt salg vs ${comparisonLabel}` : 'Ingen salg i begge perioder';
+    } else {
+      summary = describeChangeFull(percentChange(topCurrentRevenue, topPreviousRevenue));
     }
-    const recurring = computeRecurringStandout(context, { limit: 5 });
-    let recurringText = '';
+    if (!summary) summary = 'Toppomsetning i dag.';
+
+    let recommendation = `Fremhev ${products.map((p) => p.name).join(', ')}.`;
     if (recurring && recurring.occurrences >= 2 && Number.isFinite(recurring.lift) && recurring.lift > 0.05) {
       const liftText = percentFmt.format(recurring.lift);
-      recurringText = ` ${recurring.name} leverer ${liftText} høyere omsetning på ${weekdayLong}.`;
+      recommendation += ` ${recurring.name} gir ${liftText} mer på ${weekdayLong}.`;
     }
-    const mainText = changeText ? `${changeText}` : 'toppomsetning i dag';
-    tips.push(`Fremhev ${topNames} – ${mainText}.${recurringText}`.trim());
+
+    cards.push({
+      kind: 'top-products',
+      title: 'Mest solgte produkter',
+      summary,
+      recommendation,
+      products,
+      comparisonLabel,
+    });
   } else {
-    tips.push('Ingen salg funnet for valgt dato – verifiser Lightspeed-integrasjonen.');
+    cards.push({
+      kind: 'status',
+      title: 'Mest solgte produkter',
+      summary: 'Ingen salg funnet for valgt dato – verifiser Lightspeed-integrasjonen.',
+    });
   }
 
   const bottomArray = Array.from(currentProducts.values())
-    .filter((item) => (item?.quantity || 0) > 0)
+    .filter((item) => (item?.revenue || 0) > 0)
     .sort((a, b) => (a.revenue || 0) - (b.revenue || 0));
   const bottomSelection = bottomArray.slice(0, 3);
+  const bottomCurrent = bottomSelection.reduce((sum, item) => sum + (item.revenue || 0), 0);
+  const bottomPrevious = bottomSelection.reduce((sum, item) => {
+    const comp = compareProducts.get(item.key || makeProductKey(item));
+    return sum + (comp?.revenue || 0);
+  }, 0);
+
   if (bottomSelection.length) {
-    const bottomNames = bottomSelection.map((item) => item.name).join(', ');
-    const bottomCurrent = bottomSelection.reduce((sum, item) => sum + (item.revenue || 0), 0);
-    const bottomPrevious = bottomSelection.reduce((sum, item) => {
+    const products = bottomSelection.map((item) => {
       const comp = compareProducts.get(item.key || makeProductKey(item));
-      return sum + (comp?.revenue || 0);
-    }, 0);
-    const bottomChange = percentChange(bottomCurrent, bottomPrevious);
-    let bottomText = null;
-    if (bottomChange == null && bottomPrevious === 0 && bottomCurrent > 0) {
-      bottomText = 'nytt salg, ingen referanse forrige uke';
-    } else if (bottomChange !== null) {
-      const formatted = formatPercentChange(bottomChange, percentFmt);
-      bottomText = formatted ? `${formatted} vs forrige ${weekdayPrev || 'uke'}` : null;
+      const previousRevenue = Number(comp?.revenue || 0);
+      return {
+        name: item.name,
+        revenue: Number(item.revenue || 0),
+        quantity: Number(item.quantity || 0),
+        previousRevenue,
+        change: percentChange(item.revenue || 0, previousRevenue),
+        changeLabel: describeChangeShort(item.revenue || 0, previousRevenue),
+      };
+    });
+
+    let summary = null;
+    if (bottomPrevious === 0) {
+      summary = bottomCurrent > 0 ? `Nytt salg vs ${comparisonLabel}` : 'Ingen salg registrert enda';
+    } else {
+      summary = describeChangeFull(percentChange(bottomCurrent, bottomPrevious));
     }
-    const directive = bottomChange != null && bottomChange < -0.05 ? 'vurder å flytte dem ut av menyen i rushtiden' : 'gi personalet ett mersalgsmål';
-    const tail = bottomText ? `${bottomText} – ${directive}` : directive;
-    tips.push(`Hold øye med ${bottomNames} – ${tail}.`);
+    if (!summary) summary = `Følg opp ${products.map((p) => p.name).join(', ')}.`;
+
+    const bottomChange = percentChange(bottomCurrent, bottomPrevious);
+    const directive = bottomChange != null && bottomChange < -0.05
+      ? 'Vurder menyjustering eller kampanje i rushtiden.'
+      : 'Gi personalet et mål om mersalg på disse rettene.';
+
+    cards.push({
+      kind: 'bottom-products',
+      title: 'Minst solgte produkter',
+      summary,
+      recommendation: directive,
+      products,
+      comparisonLabel,
+    });
   } else {
-    tips.push('Ingen svake produkter registrert i går – bruk rommet til å teste sesongvarer.');
+    cards.push({
+      kind: 'status',
+      title: 'Minst solgte produkter',
+      summary: 'Ingen svake produkter registrert – bruk rommet til å teste sesongvarer.',
+    });
   }
 
   const targetTotals = dayTotals.get(targetDateKey) || { revenue: 0, receipts: 0, guests: 0 };
   const compareTotals = dayTotals.get(compareDateKey) || { revenue: 0, receipts: 0, guests: 0 };
   const revenueChange = percentChange(targetTotals.revenue, compareTotals.revenue);
   const receiptsChange = percentChange(targetTotals.receipts, compareTotals.receipts);
+
+  const salesSummaryParts = [];
+  const revenueSummary = describeChangeFull(revenueChange);
+  if (revenueSummary) salesSummaryParts.push(`Omsetning: ${revenueSummary}`);
+  const receiptsSummary = describeChangeFull(receiptsChange);
+  if (receiptsSummary) salesSummaryParts.push(`Kvitteringer: ${receiptsSummary}`);
+  const salesSummary = salesSummaryParts.join(' • ') || 'Ingen referansedata tilgjengelig.';
+
   const avgTicketCurrent = targetTotals.receipts > 0 ? targetTotals.revenue / targetTotals.receipts : null;
   const avgTicketPrev = compareTotals.receipts > 0 ? compareTotals.revenue / compareTotals.receipts : null;
   const avgTicketChange = percentChange(avgTicketCurrent, avgTicketPrev);
-  const revenueText = revenueChange != null ? formatPercentChange(revenueChange, percentFmt) : null;
-  const receiptsText = receiptsChange != null ? formatPercentChange(receiptsChange, percentFmt) : null;
-  const recommendation = (() => {
-    if (revenueChange != null && revenueChange < -0.05) {
-      return 'legg inn en tidsbegrenset kampanje på bestselgeren';
-    }
-    if (receiptsChange != null && receiptsChange < -0.05 && (avgTicketChange == null || avgTicketChange <= 0)) {
-      return 'aktiver kundeklubb eller SMS-invitasjon før neste ' + (weekdayLong || 'uke');
-    }
-    if (revenueChange != null && revenueChange > 0.05) {
-      return 'sikre nok bemanning og råvarer til kveldstoppen';
-    }
-    return 'fortsett med dagens tiltak';
-  })();
-  const revenuePart = revenueText ? revenueText : 'ingen endring';
-  const receiptsPart = receiptsText ? receiptsText : 'kvitteringer på nivå';
-  tips.push(`Omsetning ${revenuePart} og ${receiptsPart} vs forrige ${weekdayPrev || 'uke'} – ${recommendation}.`);
+
+  let salesRecommendation = 'Fortsett med dagens tiltak.';
+  if (revenueChange != null && revenueChange < -0.05) {
+    salesRecommendation = 'Planlegg en kampanje for å løfte trafikken igjen.';
+  } else if (receiptsChange != null && receiptsChange < -0.05 && (avgTicketChange == null || avgTicketChange <= 0)) {
+    salesRecommendation = `Aktiver kundeklubb eller SMS-invitasjon før neste ${weekdayLong || 'uke'}.`;
+  } else if (revenueChange != null && revenueChange > 0.05) {
+    salesRecommendation = 'Sikre nok bemanning og råvarer til kveldstoppen.';
+  }
+
+  cards.push({
+    kind: 'sales-trend',
+    title: 'Salgsutvikling',
+    summary: salesSummary,
+    recommendation: salesRecommendation,
+    metrics: {
+      revenue: {
+        current: Number(targetTotals.revenue || 0),
+        previous: Number(compareTotals.revenue || 0),
+        change: revenueChange,
+      },
+      receipts: {
+        current: Number(targetTotals.receipts || 0),
+        previous: Number(compareTotals.receipts || 0),
+        change: receiptsChange,
+      },
+    },
+    comparisonLabel,
+  });
 
   const busiest = hourly.reduce((best, slot) => (slot.revenue > best.revenue ? slot : best), { hour: 0, revenue: -1, receipts: 0 });
   let quietest = null;
@@ -997,42 +1080,119 @@ function generateAiTips(context){
       quietest = slot;
     }
   }
+
   if (busiest && busiest.revenue > 0 && quietest) {
     const busyLabel = formatHourSlot(busiest.hour);
     const quietLabel = formatHourSlot(quietest.hour);
-    const quietDirective = quietest.revenue > 0 ? 'styrk mersalget i denne timen' : 'bruk timen til happy hour / prep';
-    tips.push(`Planlegg bemanning for ${busyLabel} – roligst er ${quietLabel}, ${quietDirective}.`);
+    const quietDirective = quietest.revenue > 0 ? 'Styrk mersalget i denne timen.' : 'Bruk timen til happy hour eller prep.';
+
+    cards.push({
+      kind: 'busy-hours',
+      title: 'Tidsanalyse',
+      summary: `Travlest: ${busyLabel} (${moneyFmt.format(busiest.revenue)}) • Roligst: ${quietLabel} (${moneyFmt.format(Math.max(0, quietest.revenue))})`,
+      recommendation: quietDirective,
+      slots: {
+        busiest: { ...busiest, label: busyLabel },
+        quietest: { ...quietest, label: quietLabel },
+      },
+    });
   } else {
-    tips.push('Ingen timefordeling tilgjengelig – sikre at kvitteringstid lagres i Lightspeed.');
+    cards.push({
+      kind: 'status',
+      title: 'Tidsanalyse',
+      summary: 'Ingen timefordeling tilgjengelig – sikre at kvitteringstid lagres i Lightspeed.',
+    });
   }
 
-  const marginCandidates = topArray.filter((item) => (item.cost || 0) > 0 && (item.revenue || 0) > 0);
-  marginCandidates.sort((a, b) => (b.margin || 0) - (a.margin || 0));
+  const marginCandidates = topArray.filter((item) => (item.cost || 0) > 0 && (item.revenue || 0) > 0)
+    .sort((a, b) => (b.margin || 0) - (a.margin || 0));
   const worstMarginSorted = [...marginCandidates].sort((a, b) => (a.margin || 0) - (b.margin || 0));
+
   if (marginCandidates.length) {
     const best = marginCandidates[0];
     const worst = worstMarginSorted[0] || best;
-    const bestMargin = moneyFmt.format(best.margin || 0);
-    const worstMarginPerUnit = (worst.revenue && worst.quantity) ? worst.margin / worst.quantity : worst.margin;
-    const worstMarginFmt = moneyFmt.format(worstMarginPerUnit || worst.margin || 0);
-    tips.push(`Gi ekstra fokus på ${best.name} – margin ${bestMargin}; vurder pris/tilbehør på ${worst.name} (margin ${worstMarginFmt}).`);
+    const bestMarginValue = Number(best.margin || 0);
+    const worstMarginValue = Number(worst.margin || 0);
+
+    cards.push({
+      kind: 'margin',
+      title: 'Dekningsbidrag',
+      summary: `Høyest margin: ${best.name} (${moneyFmt.format(bestMarginValue)}) • Lavest: ${worst.name} (${moneyFmt.format(worstMarginValue)})`,
+      recommendation: `Fremhev ${best.name}; vurder pris eller tilbehør på ${worst.name}.`,
+      products: {
+        best: {
+          name: best.name,
+          margin: bestMarginValue,
+          revenue: Number(best.revenue || 0),
+          quantity: Number(best.quantity || 0),
+        },
+        worst: {
+          name: worst.name,
+          margin: worstMarginValue,
+          revenue: Number(worst.revenue || 0),
+          quantity: Number(worst.quantity || 0),
+        },
+      },
+    });
   } else {
-    tips.push('Ingen varekost registrert – legg inn kostpriser for å få lønnsomhetstips.');
+    cards.push({
+      kind: 'status',
+      title: 'Dekningsbidrag',
+      summary: 'Ingen varekost registrert – legg inn kostpriser for å få lønnsomhetstips.',
+    });
   }
 
   if (avgTicketCurrent != null) {
-    const avgTicketText = moneyFmt.format(avgTicketCurrent);
-    const avgTicketDelta = avgTicketChange != null ? formatPercentChange(avgTicketChange, percentFmt) : null;
-    const receiptsDelta = receiptsChange != null ? formatPercentChange(receiptsChange, percentFmt) : null;
-    const qualifier = avgTicketDelta ? `(${avgTicketDelta} vs forrige ${weekdayPrev || 'uke'})` : '– ingen referanse forrige uke';
-    const receiptsNote = receiptsDelta ? `, kvitteringer ${receiptsDelta}` : '';
-    const action = (avgTicketChange != null && avgTicketChange < 0) ? 'be teamet anbefale dessert etter hovedrett' : 'behold mersalgsfokuset etter kl. 19';
-    tips.push(`Gjennomsnittlig kvittering ${avgTicketText} ${qualifier}${receiptsNote} – ${action}.`);
+    const averageSummary = describeChangeFull(percentChange(avgTicketCurrent, avgTicketPrev));
+    const receiptsSummary = describeChangeFull(receiptsChange);
+    const ticketSummaryParts = [];
+    ticketSummaryParts.push(`Snittkvittering: ${moneyFmt.format(avgTicketCurrent)}${averageSummary ? ` (${averageSummary})` : ''}`);
+    if (receiptsSummary) ticketSummaryParts.push(`Kvitteringer: ${receiptsSummary}`);
+
+    let ticketRecommendation = (avgTicketChange != null && avgTicketChange < 0)
+      ? 'Be teamet anbefale dessert eller drikke etter hovedrett.'
+      : 'Fortsett mersalgsfokuset etter kl. 19.';
+
+    if (recurring && recurring.occurrences >= 2 && Number.isFinite(recurring.lift) && recurring.lift > 0.05) {
+      const liftText = percentFmt.format(recurring.lift);
+      ticketRecommendation += ` Planlegg ${recurring.name} på ${weekdayLong} – ${liftText} høyere salg enn ellers.`;
+    }
+
+    cards.push({
+      kind: 'ticket',
+      title: 'Kvitteringsanalyse',
+      summary: ticketSummaryParts.join(' • '),
+      recommendation: ticketRecommendation,
+      metrics: {
+        averageTicket: {
+          current: avgTicketCurrent,
+          previous: Number(avgTicketPrev || 0),
+          change: percentChange(avgTicketCurrent, avgTicketPrev),
+        },
+        receipts: {
+          current: Number(targetTotals.receipts || 0),
+          previous: Number(compareTotals.receipts || 0),
+          change: receiptsChange,
+        },
+      },
+      pattern: recurring ? {
+        name: recurring.name,
+        occurrences: recurring.occurrences,
+        lift: recurring.lift,
+        avgRevenue: recurring.avgRevenue,
+        weekday: weekdayLong,
+      } : null,
+      comparisonLabel,
+    });
   } else {
-    tips.push('Manglende kvitteringsdata – kontroller at rapportene henter customerCount og totals.');
+    cards.push({
+      kind: 'status',
+      title: 'Kvitteringsanalyse',
+      summary: 'Manglende kvitteringsdata – kontroller at rapportene henter customerCount og totals.',
+    });
   }
 
-  return tips.slice(0, 6);
+  return cards.slice(0, 6);
 }
 
 function dayTotalsToPlain(entry){
@@ -1096,18 +1256,92 @@ exports.handler = async (event) => {
       if (q.demo === '1') {
         const weekday = new Intl.DateTimeFormat('nb-NO', { weekday: 'long' }).format(targetDateObj);
         const prevWeekday = new Intl.DateTimeFormat('nb-NO', { weekday: 'long' }).format(compareDateObj);
+        const comparisonLabel = `forrige ${prevWeekday}`;
+        const demoInsights = [
+          {
+            kind: 'top-products',
+            title: 'Mest solgte produkter',
+            summary: `Opp 12 % vs ${comparisonLabel}`,
+            recommendation: 'Fremhev Burger 180g, Pasta Alfredo og Husets IPA.',
+            products: [
+              { name: 'Burger 180g', revenue: 48650, quantity: 68, previousRevenue: 43500, change: 0.12, changeLabel: '+12 %' },
+              { name: 'Pasta Alfredo', revenue: 31890, quantity: 44, previousRevenue: 29200, change: 0.092, changeLabel: '+9 %' },
+              { name: 'Husets IPA', revenue: 27440, quantity: 86, previousRevenue: 25100, change: 0.093, changeLabel: '+9 %' },
+            ],
+            comparisonLabel,
+          },
+          {
+            kind: 'bottom-products',
+            title: 'Minst solgte produkter',
+            summary: `Ned 18 % vs ${comparisonLabel}`,
+            recommendation: 'Gi personalet et mersalgsmål på disse rettene.',
+            products: [
+              { name: 'Vegansk salat', revenue: 6240, quantity: 12, previousRevenue: 7600, change: -0.179, changeLabel: '−18 %' },
+              { name: 'Focaccia', revenue: 5820, quantity: 18, previousRevenue: 7200, change: -0.191, changeLabel: '−19 %' },
+              { name: 'Mineralvann', revenue: 5480, quantity: 34, previousRevenue: 6680, change: -0.18, changeLabel: '−18 %' },
+            ],
+            comparisonLabel,
+          },
+          {
+            kind: 'sales-trend',
+            title: 'Salgsutvikling',
+            summary: `Omsetning: Opp 8 % vs ${comparisonLabel} • Kvitteringer: Opp 5 % vs ${comparisonLabel}`,
+            recommendation: 'Sikre nok bemanning og råvarer til kveldstoppen.',
+            metrics: {
+              revenue: { current: 186500, previous: 172400, change: 0.081 },
+              receipts: { current: 410, previous: 390, change: 0.051 },
+            },
+            comparisonLabel,
+          },
+          {
+            kind: 'busy-hours',
+            title: 'Tidsanalyse',
+            summary: 'Travlest: kl. 18–19 (kr 42 800) • Roligst: kl. 15–16 (kr 6 200)',
+            recommendation: 'Bruk den rolige timen til happy hour.',
+            slots: {
+              busiest: { hour: 18, revenue: 42800, receipts: 68, label: 'kl. 18–19' },
+              quietest: { hour: 15, revenue: 6200, receipts: 11, label: 'kl. 15–16' },
+            },
+          },
+          {
+            kind: 'margin',
+            title: 'Dekningsbidrag',
+            summary: 'Høyest margin: Entrecôte (kr 145) • Lavest: Nachos (kr 42)',
+            recommendation: 'Fremhev Entrecôte; vurder pris eller tilbehør på Nachos.',
+            products: {
+              best: { name: 'Entrecôte', margin: 145, revenue: 32500, quantity: 22 },
+              worst: { name: 'Nachos', margin: 42, revenue: 9800, quantity: 28 },
+            },
+          },
+          {
+            kind: 'ticket',
+            title: 'Kvitteringsanalyse',
+            summary: `Snittkvittering: kr 472 (Opp 6 % vs ${comparisonLabel}) • Kvitteringer: Opp 5 % vs ${comparisonLabel}`,
+            recommendation: `Følg opp dessertanbefalinger etter kl. 19. Planlegg Taco Tuesday – ${comparisonLabel.includes('tirsdag') ? 'gir 18 % mer salg.' : 'gir 18 % mer salg.'}`,
+            metrics: {
+              averageTicket: { current: 472, previous: 446, change: 0.058 },
+              receipts: { current: 410, previous: 390, change: 0.051 },
+            },
+            pattern: {
+              name: 'Taco Tuesday',
+              occurrences: 4,
+              lift: 0.18,
+              avgRevenue: 14800,
+              weekday: weekday,
+            },
+            comparisonLabel,
+          },
+        ];
+
         return ok({
           mode: 'demo',
           date: targetDateKey,
           compareDate: compareDateKey,
-          insights: [
-            `Fremhev Burger 180g, Pasta Alfredo og Husets IPA – opp 12% vs forrige ${prevWeekday}.`,
-            `Hold øye med Vegansk salat, Focaccia og Mineralvann – ned 18% vs forrige ${prevWeekday}, sett et mersalgsmål.`,
-            `Omsetning opp 8% og kvitteringer opp 5% vs forrige ${prevWeekday} – fortsett kampanjen mot takeaway-gjester.`,
-            `Planlegg bemanning for kl. 18–19 – roligst er kl. 15–16, bruk timen til happy hour.`,
-            `Gi ekstra fokus på Entrecôte – margin 145 kr; vurder pris på Nachos (margin 42 kr).`,
-            `Gjennomsnittlig kvittering 472 kr (+6% vs forrige ${prevWeekday}) – følg opp dessertanbefalinger etter kl. 19.`,
-          ]
+          insights: demoInsights,
+          totals: {
+            current: { revenue: 186500, receipts: 410, guests: 372, transactions: 410 },
+            compare: { revenue: 172400, receipts: 390, guests: 355, transactions: 390 },
+          },
         });
       }
 
@@ -1129,7 +1363,7 @@ exports.handler = async (event) => {
       }
 
       const context = buildAiInsightContext(transactionsForInsights, targetDateKey, { compareOffset: 7 });
-      const insights = generateAiTips(context);
+      const insights = generateInsightCards(context);
       return ok({
         date: targetDateKey,
         compareDate: context.compareDateKey,
