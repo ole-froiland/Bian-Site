@@ -1,4 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <rect width="200" height="200" rx="32" fill="#f5f4ff"/>
-  <text x="100" y="118" text-anchor="middle" font-family="Poppins, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="96" font-weight="800" fill="#756bff">Scope</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220">
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle"
+        font-family="'Poppins','Inter','SF Pro Display','Segoe UI',sans-serif"
+        font-size="92" font-weight="800" fill="#756bff" letter-spacing="0.04em"
+        textLength="180" lengthAdjust="spacingAndGlyphs">
+    Scope
+  </text>
 </svg>
