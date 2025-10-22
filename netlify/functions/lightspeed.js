@@ -329,6 +329,66 @@ function formatDateKey(date){
   return `${y}-${m}-${d}`;
 }
 
+function buildDateFromDayAndTime(dayStr, timeValue){
+  const base = normDate(dayStr) || null;
+  if (!base) return null;
+  if (timeValue == null) return null;
+  let timeStr = String(timeValue).trim();
+  if (!timeStr) return null;
+  if (/^\d{2}:\d{2}(?::\d{2})?$/.test(timeStr)) {
+    if (timeStr.length === 5) timeStr = `${timeStr}:00`;
+  } else if (/^\d{4}$/.test(timeStr)) {
+    timeStr = `${timeStr.slice(0,2)}:${timeStr.slice(2,4)}:00`;
+  } else if (/^\d{6}$/.test(timeStr)) {
+    timeStr = `${timeStr.slice(0,2)}:${timeStr.slice(2,4)}:${timeStr.slice(4,6)}`;
+  } else {
+    return null;
+  }
+  const dateTime = new Date(`${base}T${timeStr}`);
+  return Number.isNaN(dateTime.getTime()) ? null : dateTime;
+}
+
+function pickTransactionDateTime(transaction){
+  if (!transaction || typeof transaction !== 'object') return null;
+  const head = transaction?.head || {};
+  const candidates = [
+    head?.receiptDateTime,
+    head?.closeDateTime,
+    head?.businessDateTime,
+    head?.paymentDateTime,
+    head?.cashPointCloseDateTime,
+    head?.periodEndTime,
+    head?.periodStartTime,
+    head?.created,
+    head?.updated,
+    transaction?.createdAt,
+    transaction?.updatedAt,
+    transaction?.timestamp,
+  ];
+  for (const candidate of candidates) {
+    const parsed = normalizeDateValue(candidate);
+    if (parsed) return parsed;
+  }
+  if (head?.businessDay) {
+    const timeCandidates = [
+      head?.businessTime,
+      head?.closeTime,
+      head?.startTime,
+      head?.endTime,
+      head?.periodStart,
+      head?.periodEnd,
+    ];
+    for (const timeCandidate of timeCandidates) {
+      const merged = buildDateFromDayAndTime(head.businessDay, timeCandidate);
+      if (merged) return merged;
+    }
+    const fallback = normalizeDateValue(head.businessDay);
+    if (fallback) return fallback;
+  }
+  const fromReceipt = pickReceiptDate(transaction);
+  return fromReceipt || null;
+}
+
 async function fetchPeriodTransactions(periodId){
   const path = `${TRANSACTION_ENDPOINT.replace(/\/+$/, '')}/${String(periodId).replace(/^\/+/, '')}`;
   const url = new URL(path, CFG.baseUrl).toString();
@@ -428,6 +488,38 @@ function transactionNetTotal(transaction={}){
   return total;
 }
 
+function extractLineCost(amounts = {}, extras = {}){
+  const amountCandidates = [
+    amounts?.actualCostAmount,
+    amounts?.costAmount,
+    amounts?.regularCostAmount,
+    amounts?.purchaseNetAmount,
+    amounts?.grossPurchaseAmount,
+  ];
+  for (const candidate of amountCandidates) {
+    const num = Number(candidate);
+    if (Number.isFinite(num) && num !== 0) {
+      return num / 1000.0;
+    }
+  }
+  const extraCandidates = [
+    extras?.itemCost,
+    extras?.recipeCost,
+    extras?.ingredientCost,
+    extras?.cost,
+    extras?.primeCost,
+    extras?.portionCost,
+  ];
+  for (const candidate of extraCandidates) {
+    if (candidate == null) continue;
+    const num = Number(candidate);
+    if (!Number.isFinite(num)) continue;
+    if (Math.abs(num) > 1000) return num / 1000.0;
+    return num;
+  }
+  return 0;
+}
+
 function extractTransactionItems(transaction={}){
   const lineItems = Array.isArray(transaction?.lineItems) ? transaction.lineItems : [];
   const voidedSequences = collectVoidedSequences(lineItems);
@@ -462,6 +554,7 @@ function extractTransactionItems(transaction={}){
       name,
       quantity,
       net: netRevenueFromAmounts(amounts),
+      cost: extractLineCost(amounts, extras),
     });
     taxPercentMap.set(seqInt, amounts?.taxPercent);
   });
@@ -488,11 +581,13 @@ function extractTransactionItems(transaction={}){
     const netRevenue = Number(baseInfo?.net ?? 0);
     if (!Number.isFinite(netRevenue) || netRevenue <= 0) continue;
     const quantity = Number(baseInfo?.quantity ?? 0);
+    const costValue = Number(baseInfo?.cost ?? 0);
     records.push({
       sku: Number(baseInfo?.sku),
       name: String(baseInfo?.name || ''),
       revenue: netRevenue,
       quantity,
+      cost: Number.isFinite(costValue) ? costValue : 0,
     });
   }
   return records;
@@ -553,6 +648,404 @@ function qtyFromThousandths(value){
   return num / 1000.0;
 }
 
+function addDays(date, days){
+  const copy = new Date(date.getTime());
+  copy.setDate(copy.getDate() + days);
+  return copy;
+}
+
+function makeProductKey(record){
+  if (record == null || typeof record !== 'object') return 'unknown';
+  if (record.sku != null && Number.isFinite(Number(record.sku))) {
+    return `sku:${Number(record.sku)}`;
+  }
+  const name = String(record.name || '').trim().toLowerCase();
+  return name ? `name:${name}` : 'unknown';
+}
+
+function percentChange(current, previous){
+  const curr = Number(current);
+  const prev = Number(previous);
+  if (!Number.isFinite(curr) || !Number.isFinite(prev)) return null;
+  if (prev === 0) {
+    if (curr === 0) return 0;
+    return null;
+  }
+  return (curr - prev) / Math.abs(prev);
+}
+
+function formatPercentChange(change, percentFormatter){
+  if (!Number.isFinite(change)) return null;
+  if (change === 0) return 'på nivå';
+  const magnitude = Math.abs(change);
+  const formatted = percentFormatter.format(magnitude);
+  return change > 0 ? `opp ${formatted}` : `ned ${formatted}`;
+}
+
+function formatHourSlot(hour){
+  if (!Number.isFinite(hour)) return 'kl. ?.00';
+  const start = Math.max(0, Math.min(23, Math.trunc(hour)));
+  const end = (start + 1) % 24;
+  const pad = (n) => String(n).padStart(2, '0');
+  return `kl. ${pad(start)}–${pad(end)}`;
+}
+
+function buildAiInsightContext(transactions, targetDateKey, { compareOffset = 7 } = {}){
+  const targetDateObj = new Date(`${targetDateKey}T00:00:00`);
+  if (Number.isNaN(targetDateObj.getTime())) {
+    return {
+      targetDateKey,
+      targetDateObj: null,
+      compareDateKey: null,
+      compareDateObj: null,
+      dayTotals: new Map(),
+      productByDate: new Map(),
+      productTotals: new Map(),
+      hourly: Array.from({ length: 24 }, (_, hour) => ({ hour, revenue: 0, receipts: 0 })),
+    };
+  }
+
+  const compareDateObj = addDays(targetDateObj, -compareOffset);
+  const compareDateKey = formatDateKey(compareDateObj);
+
+  const dayTotals = new Map();
+  const productByDate = new Map();
+  const productTotals = new Map();
+  const hourly = Array.from({ length: 24 }, (_, hour) => ({ hour, revenue: 0, receipts: 0 }));
+
+  const voidedUuids = new Set();
+  for (const txn of transactions) {
+    const maybeUuid = txn?.head?.voidedTrUuid;
+    if (maybeUuid) voidedUuids.add(maybeUuid);
+  }
+
+  for (const txn of transactions) {
+    const head = txn?.head || {};
+    const uuid = head?.uuid;
+    if (!uuid || head?.trainingFlag) continue;
+    if (voidedUuids.has(uuid)) continue;
+    if (head?.typeCode !== '00') continue;
+
+    const netTotal = transactionNetTotal(txn);
+    if (netTotal <= 0) continue;
+
+    const lineRecords = extractTransactionItems(txn) || [];
+    if (!lineRecords.length) continue;
+
+    const baseTotal = lineRecords.reduce((sum, record) => sum + (Number(record?.revenue) || 0), 0);
+    const scale = baseTotal > 0 ? netTotal / baseTotal : 0;
+
+    const dateObj = pickReceiptDate(txn);
+    const dayKey = dateObj ? formatDateKey(dateObj) : (head?.businessDay || null);
+    if (!dayKey) continue;
+
+    const guests = Number(
+      head?.guestCount ??
+      head?.covers ??
+      head?.customerCount ??
+      head?.customers ??
+      head?.persons ??
+      0
+    );
+    const dayBucket = dayTotals.get(dayKey) || { date: dayKey, revenue: 0, receipts: 0, guests: 0, transactions: 0 };
+    dayBucket.revenue += netTotal;
+    dayBucket.receipts += 1;
+    dayBucket.transactions += 1;
+    if (Number.isFinite(guests) && guests > 0) dayBucket.guests += guests;
+    dayTotals.set(dayKey, dayBucket);
+
+    if (dayKey === targetDateKey) {
+      const timestamp = pickTransactionDateTime(txn);
+      if (timestamp instanceof Date && !Number.isNaN(timestamp.getTime())) {
+        const hour = timestamp.getHours();
+        if (hour >= 0 && hour < 24) {
+          const bucket = hourly[hour];
+          bucket.revenue += netTotal;
+          bucket.receipts += 1;
+        }
+      }
+    }
+
+    let productMap = productByDate.get(dayKey);
+    if (!productMap) {
+      productMap = new Map();
+      productByDate.set(dayKey, productMap);
+    }
+
+    for (const record of lineRecords) {
+      const rawRevenue = Number(record?.revenue || 0);
+      if (!Number.isFinite(rawRevenue) || rawRevenue <= 0) continue;
+      const scaledRevenue = scale ? rawRevenue * scale : rawRevenue;
+      const quantity = Number(record?.quantity || 0);
+      const rawCost = Number(record?.cost || 0);
+      const scaledCost = rawCost > 0 ? (scale ? rawCost * scale : rawCost) : 0;
+      const key = makeProductKey(record);
+      const existing = productMap.get(key) || {
+        key,
+        sku: record?.sku ?? null,
+        name: record?.name || 'Ukjent',
+        revenue: 0,
+        quantity: 0,
+        cost: 0,
+        margin: 0,
+      };
+      existing.revenue += scaledRevenue;
+      existing.quantity += quantity;
+      if (scaledCost > 0) existing.cost += scaledCost;
+      existing.margin = existing.revenue - existing.cost;
+      productMap.set(key, existing);
+
+      const totalExisting = productTotals.get(key) || {
+        key,
+        sku: existing.sku,
+        name: existing.name,
+        revenue: 0,
+        quantity: 0,
+        cost: 0,
+        margin: 0,
+        daySet: new Set(),
+      };
+      totalExisting.revenue += scaledRevenue;
+      totalExisting.quantity += quantity;
+      if (scaledCost > 0) totalExisting.cost += scaledCost;
+      totalExisting.margin = totalExisting.revenue - totalExisting.cost;
+      totalExisting.daySet.add(dayKey);
+      productTotals.set(key, totalExisting);
+    }
+  }
+
+  return {
+    targetDateKey,
+    targetDateObj,
+    compareDateKey,
+    compareDateObj,
+    dayTotals,
+    productByDate,
+    productTotals,
+    hourly,
+  };
+}
+
+function computeRecurringStandout(context, { limit = 4 } = {}){
+  const { targetDateObj, productByDate, productTotals } = context;
+  if (!(targetDateObj instanceof Date) || Number.isNaN(targetDateObj.getTime())) return null;
+  const weekday = targetDateObj.getDay();
+  const entries = Array.from(productByDate.entries())
+    .filter(([dateKey]) => {
+      const parsed = new Date(`${dateKey}T00:00:00`);
+      return !Number.isNaN(parsed.getTime()) && parsed.getDay() === weekday;
+    })
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .slice(0, limit);
+
+  if (!entries.length) return null;
+
+  const stats = new Map();
+  for (const [, productMap] of entries) {
+    productMap.forEach((value, key) => {
+      const bucket = stats.get(key) || {
+        key,
+        name: value?.name || 'Ukjent',
+        revenue: 0,
+        quantity: 0,
+        occurrences: 0,
+      };
+      bucket.revenue += Number(value?.revenue || 0);
+      bucket.quantity += Number(value?.quantity || 0);
+      bucket.occurrences += 1;
+      stats.set(key, bucket);
+    });
+  }
+
+  const ranked = Array.from(stats.values())
+    .filter((entry) => entry.occurrences > 0 && entry.revenue > 0)
+    .map((entry) => {
+      const total = productTotals.get(entry.key);
+      const dayCount = total?.daySet instanceof Set ? total.daySet.size : 0;
+      const otherOccurrences = dayCount > entry.occurrences ? (dayCount - entry.occurrences) : 0;
+      const otherRevenue = (total?.revenue ?? 0) - entry.revenue;
+      const otherAvg = otherOccurrences > 0 ? otherRevenue / otherOccurrences : null;
+      const avgRevenue = entry.revenue / entry.occurrences;
+      const lift = otherAvg && otherAvg > 0 ? (avgRevenue - otherAvg) / otherAvg : null;
+      return {
+        ...entry,
+        avgRevenue,
+        otherAvg,
+        lift,
+      };
+    })
+    .sort((a, b) => {
+      if (Number.isFinite(b.lift) && Number.isFinite(a.lift) && b.lift !== a.lift) return b.lift - a.lift;
+      if (b.avgRevenue !== a.avgRevenue) return b.avgRevenue - a.avgRevenue;
+      return b.revenue - a.revenue;
+    });
+
+  return ranked[0] || null;
+}
+
+function generateAiTips(context){
+  const {
+    targetDateObj,
+    compareDateObj,
+    targetDateKey,
+    compareDateKey,
+    dayTotals,
+    productByDate,
+    productTotals,
+    hourly,
+  } = context;
+
+  const tips = [];
+  const moneyFmt = new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 });
+  const percentFmt = new Intl.NumberFormat('nb-NO', { style: 'percent', maximumFractionDigits: 0 });
+  const integerFmt = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 });
+  const weekdayLong = (targetDateObj instanceof Date && !Number.isNaN(targetDateObj.getTime()))
+    ? new Intl.DateTimeFormat('nb-NO', { weekday: 'long' }).format(targetDateObj)
+    : '';
+  const weekdayPrev = (compareDateObj instanceof Date && !Number.isNaN(compareDateObj.getTime()))
+    ? new Intl.DateTimeFormat('nb-NO', { weekday: 'long' }).format(compareDateObj)
+    : '';
+
+  const currentProducts = productByDate.get(targetDateKey) || new Map();
+  const compareProducts = productByDate.get(compareDateKey) || new Map();
+
+  const topArray = Array.from(currentProducts.values()).filter((item) => (item?.revenue || 0) > 0);
+  topArray.sort((a, b) => (b.revenue || 0) - (a.revenue || 0));
+  const topSelection = topArray.slice(0, 3);
+  const topNames = topSelection.map((item) => item.name).join(', ');
+  const topCurrentRevenue = topSelection.reduce((sum, item) => sum + (item.revenue || 0), 0);
+  const topPreviousRevenue = topSelection.reduce((sum, item) => {
+    const comp = compareProducts.get(item.key || makeProductKey(item));
+    return sum + (comp?.revenue || 0);
+  }, 0);
+  const topChange = percentChange(topCurrentRevenue, topPreviousRevenue);
+  if (topSelection.length) {
+    let changeText = null;
+    if (topChange == null && topPreviousRevenue === 0 && topCurrentRevenue > 0) {
+      changeText = 'nytt salg vs forrige ' + (weekdayPrev || 'uke');
+    } else if (topChange !== null) {
+      const formatted = formatPercentChange(topChange, percentFmt);
+      changeText = formatted ? `${formatted} vs forrige ${weekdayPrev || 'uke'}` : null;
+    }
+    const recurring = computeRecurringStandout(context, { limit: 5 });
+    let recurringText = '';
+    if (recurring && recurring.occurrences >= 2 && Number.isFinite(recurring.lift) && recurring.lift > 0.05) {
+      const liftText = percentFmt.format(recurring.lift);
+      recurringText = ` ${recurring.name} leverer ${liftText} høyere omsetning på ${weekdayLong}.`;
+    }
+    const mainText = changeText ? `${changeText}` : 'toppomsetning i dag';
+    tips.push(`Fremhev ${topNames} – ${mainText}.${recurringText}`.trim());
+  } else {
+    tips.push('Ingen salg funnet for valgt dato – verifiser Lightspeed-integrasjonen.');
+  }
+
+  const bottomArray = Array.from(currentProducts.values())
+    .filter((item) => (item?.quantity || 0) > 0)
+    .sort((a, b) => (a.revenue || 0) - (b.revenue || 0));
+  const bottomSelection = bottomArray.slice(0, 3);
+  if (bottomSelection.length) {
+    const bottomNames = bottomSelection.map((item) => item.name).join(', ');
+    const bottomCurrent = bottomSelection.reduce((sum, item) => sum + (item.revenue || 0), 0);
+    const bottomPrevious = bottomSelection.reduce((sum, item) => {
+      const comp = compareProducts.get(item.key || makeProductKey(item));
+      return sum + (comp?.revenue || 0);
+    }, 0);
+    const bottomChange = percentChange(bottomCurrent, bottomPrevious);
+    let bottomText = null;
+    if (bottomChange == null && bottomPrevious === 0 && bottomCurrent > 0) {
+      bottomText = 'nytt salg, ingen referanse forrige uke';
+    } else if (bottomChange !== null) {
+      const formatted = formatPercentChange(bottomChange, percentFmt);
+      bottomText = formatted ? `${formatted} vs forrige ${weekdayPrev || 'uke'}` : null;
+    }
+    const directive = bottomChange != null && bottomChange < -0.05 ? 'vurder å flytte dem ut av menyen i rushtiden' : 'gi personalet ett mersalgsmål';
+    const tail = bottomText ? `${bottomText} – ${directive}` : directive;
+    tips.push(`Hold øye med ${bottomNames} – ${tail}.`);
+  } else {
+    tips.push('Ingen svake produkter registrert i går – bruk rommet til å teste sesongvarer.');
+  }
+
+  const targetTotals = dayTotals.get(targetDateKey) || { revenue: 0, receipts: 0, guests: 0 };
+  const compareTotals = dayTotals.get(compareDateKey) || { revenue: 0, receipts: 0, guests: 0 };
+  const revenueChange = percentChange(targetTotals.revenue, compareTotals.revenue);
+  const receiptsChange = percentChange(targetTotals.receipts, compareTotals.receipts);
+  const avgTicketCurrent = targetTotals.receipts > 0 ? targetTotals.revenue / targetTotals.receipts : null;
+  const avgTicketPrev = compareTotals.receipts > 0 ? compareTotals.revenue / compareTotals.receipts : null;
+  const avgTicketChange = percentChange(avgTicketCurrent, avgTicketPrev);
+  const revenueText = revenueChange != null ? formatPercentChange(revenueChange, percentFmt) : null;
+  const receiptsText = receiptsChange != null ? formatPercentChange(receiptsChange, percentFmt) : null;
+  const recommendation = (() => {
+    if (revenueChange != null && revenueChange < -0.05) {
+      return 'legg inn en tidsbegrenset kampanje på bestselgeren';
+    }
+    if (receiptsChange != null && receiptsChange < -0.05 && (avgTicketChange == null || avgTicketChange <= 0)) {
+      return 'aktiver kundeklubb eller SMS-invitasjon før neste ' + (weekdayLong || 'uke');
+    }
+    if (revenueChange != null && revenueChange > 0.05) {
+      return 'sikre nok bemanning og råvarer til kveldstoppen';
+    }
+    return 'fortsett med dagens tiltak';
+  })();
+  const revenuePart = revenueText ? revenueText : 'ingen endring';
+  const receiptsPart = receiptsText ? receiptsText : 'kvitteringer på nivå';
+  tips.push(`Omsetning ${revenuePart} og ${receiptsPart} vs forrige ${weekdayPrev || 'uke'} – ${recommendation}.`);
+
+  const busiest = hourly.reduce((best, slot) => (slot.revenue > best.revenue ? slot : best), { hour: 0, revenue: -1, receipts: 0 });
+  let quietest = null;
+  for (const slot of hourly) {
+    if (!quietest || slot.revenue < quietest.revenue) {
+      quietest = slot;
+    }
+  }
+  if (busiest && busiest.revenue > 0 && quietest) {
+    const busyLabel = formatHourSlot(busiest.hour);
+    const quietLabel = formatHourSlot(quietest.hour);
+    const quietDirective = quietest.revenue > 0 ? 'styrk mersalget i denne timen' : 'bruk timen til happy hour / prep';
+    tips.push(`Planlegg bemanning for ${busyLabel} – roligst er ${quietLabel}, ${quietDirective}.`);
+  } else {
+    tips.push('Ingen timefordeling tilgjengelig – sikre at kvitteringstid lagres i Lightspeed.');
+  }
+
+  const marginCandidates = topArray.filter((item) => (item.cost || 0) > 0 && (item.revenue || 0) > 0);
+  marginCandidates.sort((a, b) => (b.margin || 0) - (a.margin || 0));
+  const worstMarginSorted = [...marginCandidates].sort((a, b) => (a.margin || 0) - (b.margin || 0));
+  if (marginCandidates.length) {
+    const best = marginCandidates[0];
+    const worst = worstMarginSorted[0] || best;
+    const bestMargin = moneyFmt.format(best.margin || 0);
+    const worstMarginPerUnit = (worst.revenue && worst.quantity) ? worst.margin / worst.quantity : worst.margin;
+    const worstMarginFmt = moneyFmt.format(worstMarginPerUnit || worst.margin || 0);
+    tips.push(`Gi ekstra fokus på ${best.name} – margin ${bestMargin}; vurder pris/tilbehør på ${worst.name} (margin ${worstMarginFmt}).`);
+  } else {
+    tips.push('Ingen varekost registrert – legg inn kostpriser for å få lønnsomhetstips.');
+  }
+
+  if (avgTicketCurrent != null) {
+    const avgTicketText = moneyFmt.format(avgTicketCurrent);
+    const avgTicketDelta = avgTicketChange != null ? formatPercentChange(avgTicketChange, percentFmt) : null;
+    const receiptsDelta = receiptsChange != null ? formatPercentChange(receiptsChange, percentFmt) : null;
+    const qualifier = avgTicketDelta ? `(${avgTicketDelta} vs forrige ${weekdayPrev || 'uke'})` : '– ingen referanse forrige uke';
+    const receiptsNote = receiptsDelta ? `, kvitteringer ${receiptsDelta}` : '';
+    const action = (avgTicketChange != null && avgTicketChange < 0) ? 'be teamet anbefale dessert etter hovedrett' : 'behold mersalgsfokuset etter kl. 19';
+    tips.push(`Gjennomsnittlig kvittering ${avgTicketText} ${qualifier}${receiptsNote} – ${action}.`);
+  } else {
+    tips.push('Manglende kvitteringsdata – kontroller at rapportene henter customerCount og totals.');
+  }
+
+  return tips.slice(0, 6);
+}
+
+function dayTotalsToPlain(entry){
+  if (!entry) return null;
+  return {
+    date: entry.date,
+    revenue: Number(entry.revenue || 0),
+    receipts: Number(entry.receipts || 0),
+    guests: Number(entry.guests || 0),
+    transactions: Number(entry.transactions || entry.receipts || 0),
+  };
+}
+
 exports.handler = async (event) => {
   try{
     if(event.httpMethod !== 'GET') return err(405,'METHOD_NOT_ALLOWED','Use GET');
@@ -586,6 +1079,67 @@ exports.handler = async (event) => {
       to = `${y}-${M}-${D}`;
     }
     if(from>to) [from,to]=[to,from];
+
+    const insightsRequested = q.insights === '1' || q.insights === 'true' || q.ai === '1';
+    if (insightsRequested) {
+      const targetDateKey = singleDate || to;
+      if (!targetDateKey) {
+        return err(400, 'BAD_REQUEST', 'Insights krever en dato.');
+      }
+      const targetDateObj = new Date(`${targetDateKey}T00:00:00`);
+      if (Number.isNaN(targetDateObj.getTime())) {
+        return err(400, 'BAD_DATE', `Ugyldig dato: ${targetDateKey}`);
+      }
+      const compareDateObj = addDays(targetDateObj, -7);
+      const compareDateKey = formatDateKey(compareDateObj);
+
+      if (q.demo === '1') {
+        const weekday = new Intl.DateTimeFormat('nb-NO', { weekday: 'long' }).format(targetDateObj);
+        const prevWeekday = new Intl.DateTimeFormat('nb-NO', { weekday: 'long' }).format(compareDateObj);
+        return ok({
+          mode: 'demo',
+          date: targetDateKey,
+          compareDate: compareDateKey,
+          insights: [
+            `Fremhev Burger 180g, Pasta Alfredo og Husets IPA – opp 12% vs forrige ${prevWeekday}.`,
+            `Hold øye med Vegansk salat, Focaccia og Mineralvann – ned 18% vs forrige ${prevWeekday}, sett et mersalgsmål.`,
+            `Omsetning opp 8% og kvitteringer opp 5% vs forrige ${prevWeekday} – fortsett kampanjen mot takeaway-gjester.`,
+            `Planlegg bemanning for kl. 18–19 – roligst er kl. 15–16, bruk timen til happy hour.`,
+            `Gi ekstra fokus på Entrecôte – margin 145 kr; vurder pris på Nachos (margin 42 kr).`,
+            `Gjennomsnittlig kvittering 472 kr (+6% vs forrige ${prevWeekday}) – følg opp dessertanbefalinger etter kl. 19.`,
+          ]
+        });
+      }
+
+      if(!CFG.xToken || !CFG.businessId){
+        return err(400,'CONFIG_MISSING','Missing Lightspeed env vars (X_TOKEN or BUSINESS_ID)');
+      }
+
+      const insightsFromDate = addDays(targetDateObj, -35);
+      const insightsFrom = formatDateKey(insightsFromDate);
+      let transactionsForInsights;
+      try {
+        transactionsForInsights = await fetchTransactionsRange({ from: insightsFrom, to: targetDateKey, maxPeriods: 90 });
+      } catch (e) {
+        const status = e?.status || 502;
+        return err(status, 'TRANSACTIONS_FAIL', String(e.message || e), {
+          details: e?.body,
+          endpoint: BUSINESS_PERIODS_ENDPOINT,
+        });
+      }
+
+      const context = buildAiInsightContext(transactionsForInsights, targetDateKey, { compareOffset: 7 });
+      const insights = generateAiTips(context);
+      return ok({
+        date: targetDateKey,
+        compareDate: context.compareDateKey,
+        insights,
+        totals: {
+          current: dayTotalsToPlain(context.dayTotals.get(targetDateKey)),
+          compare: dayTotalsToPlain(context.dayTotals.get(context.compareDateKey)),
+        }
+      });
+    }
 
     // Period-level transaction summary
     const periodId = q.periodId || q.period || null;

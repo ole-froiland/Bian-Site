@@ -197,18 +197,15 @@
     .ai-insights-card header{align-items:flex-start;gap:12px;}
     .ai-insights__meta{margin-left:auto;font-size:0.9rem;color:var(--muted);display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
     .ai-insights__input{min-width:160px;}
-    .ai-insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-top:18px;}
-    .ai-insights__column h3{margin:0 0 12px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.14em;color:rgba(203,213,225,0.75);font-weight:700;}
-    .ai-insights__list{list-style:none;margin:0;padding:0;display:grid;gap:12px;}
-    .ai-insights__item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:16px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.18);box-shadow:0 16px 28px rgba(15,23,42,0.22);}
-    .ai-insights__product{font-weight:600;color:var(--text-strong);flex:1;min-width:0;word-break:break-word;}
-    .ai-insights__metric{font-size:0.88rem;color:var(--muted);text-align:right;white-space:nowrap;}
+    .ai-insights{margin-top:18px;}
+    .ai-insights__tips{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:ai-tip;}
+    .ai-insights__tip{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:18px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.18);box-shadow:0 16px 28px rgba(15,23,42,0.22);line-height:1.48;counter-increment:ai-tip;}
+    .ai-insights__tip-index{font-weight:700;color:var(--accent);font-size:0.95rem;line-height:1.2;min-width:2.6ch;text-align:right;letter-spacing:0.04em;}
+    .ai-insights__tip-text{font-weight:500;color:var(--text-strong);flex:1;min-width:0;word-break:break-word;}
     .ai-insights__status{margin-top:22px;font-size:0.9rem;color:var(--muted);}
     .ai-insights__status[data-tone="demo"]{color:var(--accent);}
     .ai-insights__status[data-tone="error"]{color:var(--attention);}
-    body[data-theme="light"] .ai-insights__column h3{color:rgba(51,65,85,0.75);}
-    body[data-theme="light"] .ai-insights__item{background:rgba(255,255,255,0.9);border-color:rgba(148,163,184,0.26);box-shadow:0 12px 26px rgba(148,163,184,0.28);}
-    body[data-theme="light"] .ai-insights__metric{color:rgba(71,85,105,0.75);}
+    body[data-theme="light"] .ai-insights__tip{background:rgba(255,255,255,0.92);border-color:rgba(148,163,184,0.26);box-shadow:0 12px 26px rgba(148,163,184,0.28);}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
     @media (max-width:720px){
       .top-bar__inner{padding-inline:clamp(12px,7vw,28px);min-height:56px;gap:8px;}
@@ -233,11 +230,11 @@
       .tablist{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
       .daily-summary{grid-template-columns:1fr;justify-content:stretch;}
       .summary-card{max-width:none;}
-      .ai-insights{grid-template-columns:1fr;}
       .ai-insights__meta{justify-content:flex-start;align-items:stretch;}
       .ai-insights__input{width:100%;min-width:0;}
-      .ai-insights__item{flex-direction:column;align-items:flex-start;gap:8px;padding:16px 18px;}
-      .ai-insights__metric{width:100%;text-align:left;white-space:normal;}
+      .ai-insights__tip{flex-direction:column;align-items:flex-start;gap:10px;padding:16px 18px;}
+      .ai-insights__tip-index{text-align:left;}
+      .ai-insights__tip-text{width:100%;}
     }
     @media (max-width:520px){
       .shell{padding-inline:16px;}
@@ -457,14 +454,7 @@
           </div>
         </header>
         <div class="ai-insights" data-ai-insights>
-          <div class="ai-insights__column">
-            <h3>Mest solgte produkter</h3>
-            <ul class="ai-insights__list" data-ai-top-list></ul>
-          </div>
-          <div class="ai-insights__column">
-            <h3>Minst solgte produkter</h3>
-            <ul class="ai-insights__list" data-ai-bottom-list></ul>
-          </div>
+          <ol class="ai-insights__tips" data-ai-tips></ol>
         </div>
         <p class="ai-insights__status" data-ai-products-status></p>
       </article>
@@ -548,8 +538,7 @@
       const chartCard = barChart ? barChart.closest('.chart-card') : null;
       const weekdayFmt = new Intl.DateTimeFormat('nb-NO', { weekday: 'short' });
       const chartDateFmt = new Intl.DateTimeFormat('nb-NO', { day: '2-digit', month: '2-digit' });
-      const aiTopListEl = document.querySelector('[data-ai-top-list]');
-      const aiBottomListEl = document.querySelector('[data-ai-bottom-list]');
+      const aiTipsListEl = document.querySelector('[data-ai-tips]');
       const aiProductsStatusEl = document.querySelector('[data-ai-products-status]');
       const aiProductsDateEl = document.querySelector('[data-ai-products-date]');
       const aiProductsPicker = document.querySelector('#ai-products-picker');
@@ -570,81 +559,59 @@
         }
       };
 
-      const buildProductListItem = ({ name, revenue, quantity }) => {
-        const itemEl = document.createElement('li');
-        itemEl.className = 'ai-insights__item';
-        const nameEl = document.createElement('span');
-        nameEl.className = 'ai-insights__product';
-        nameEl.textContent = name;
-        const metricEl = document.createElement('span');
-        metricEl.className = 'ai-insights__metric';
-        const parts = [];
-        const safeRevenue = Number.isFinite(revenue) ? revenue : 0;
-        parts.push(moneyFmt.format(safeRevenue));
-        if (Number.isFinite(quantity) && quantity > 0) {
-          parts.push(`${qtyFmt.format(quantity)} stk`);
-        }
-        metricEl.textContent = parts.join(' • ');
-        itemEl.append(nameEl, metricEl);
-        return itemEl;
+      const buildAiTipItem = (text, index) => {
+        const tipEl = document.createElement('li');
+        tipEl.className = 'ai-insights__tip';
+        const indexEl = document.createElement('span');
+        indexEl.className = 'ai-insights__tip-index';
+        indexEl.textContent = String(index).padStart(2, '0');
+        const textEl = document.createElement('span');
+        textEl.className = 'ai-insights__tip-text';
+        textEl.textContent = text;
+        tipEl.append(indexEl, textEl);
+        return tipEl;
       };
 
-      const renderProductInsights = (items, { date, state = 'ready', message = '', isDemo = false } = {}) => {
+      const renderAiTips = ({ tips, date, state = 'ready', message = '', tone = '', isDemo = false, compareDate } = {}) => {
         if (aiProductsDateEl) {
           const parsed = date ? new Date(`${date}T00:00:00`) : null;
           const formatted = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : (date || '–');
-          aiProductsDateEl.textContent = formatted ? `Tall for ${formatted}` : '–';
+          aiProductsDateEl.textContent = formatted ? `Tips for ${formatted}` : '–';
         }
 
-        if (aiTopListEl) aiTopListEl.innerHTML = '';
-        if (aiBottomListEl) aiBottomListEl.innerHTML = '';
+        if (aiTipsListEl) aiTipsListEl.innerHTML = '';
 
         if (state === 'loading') {
-          setAiProductsStatus('Henter produktinnsikt …');
+          setAiProductsStatus('Genererer tips …');
           return;
         }
 
         if (state === 'error') {
-          setAiProductsStatus(message || 'Kunne ikke hente produktinnsikt.', 'error');
+          setAiProductsStatus(message || 'Kunne ikke generere tips.', 'error');
           return;
         }
 
-        const processed = Array.isArray(items) ? items.map((entry) => ({
-          name: String(entry?.name || 'Ukjent produkt'),
-          revenue: Number(entry?.revenue || 0),
-          quantity: Number(entry?.quantity ?? entry?.qty ?? 0),
-        })) : [];
+        const list = Array.isArray(tips)
+          ? tips.map((tip) => (typeof tip === 'string' ? tip.trim() : '')).filter(Boolean)
+          : [];
 
-        const meaningful = processed.filter((entry) => entry.revenue !== 0 || entry.quantity !== 0);
-
-        if (!meaningful.length) {
-          setAiProductsStatus(message || 'Ingen produktdata for denne datoen.');
+        if (!list.length) {
+          setAiProductsStatus(message || 'Ingen tips for denne datoen.');
           return;
         }
 
-        setAiProductsStatus(isDemo ? 'Viser demo-data for produktsalget.' : '', isDemo ? 'demo' : '');
-
-        const topItems = [...meaningful]
-          .sort((a, b) => {
-            if (b.revenue !== a.revenue) return b.revenue - a.revenue;
-            return b.quantity - a.quantity;
-          })
-          .slice(0, 5);
-
-        const bottomItems = [...meaningful]
-          .sort((a, b) => {
-            if (a.revenue !== b.revenue) return a.revenue - b.revenue;
-            return a.quantity - b.quantity;
-          })
-          .slice(0, 5);
-
-        if (aiTopListEl) {
-          topItems.forEach((item) => aiTopListEl.appendChild(buildProductListItem(item)));
+        if (isDemo) {
+          setAiProductsStatus('Viser demo-tips basert på testdata.', 'demo');
+        } else if (message) {
+          setAiProductsStatus(message, tone || '');
+        } else {
+          setAiProductsStatus('', '');
         }
 
-        if (aiBottomListEl) {
-          bottomItems.forEach((item) => aiBottomListEl.appendChild(buildProductListItem(item)));
-        }
+        if (!aiTipsListEl) return;
+        list.slice(0, 6).forEach((tip, index) => {
+          aiTipsListEl.appendChild(buildAiTipItem(tip, index + 1));
+        });
       };
 
       const hideGlobalTooltip = () => {
@@ -695,6 +662,66 @@
           });
       };
 
+      const fetchAiInsights = (date, { demo = false } = {}) => {
+        const url = new URL('/.netlify/functions/lightspeed', apiBase);
+        url.searchParams.set('date', date);
+        url.searchParams.set('insights', '1');
+        if (demo) url.searchParams.set('demo', '1');
+        return fetch(url.toString(), { headers: { accept: 'application/json' } })
+          .then(async (response) => {
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) {
+              const error = new Error(`HTTP ${response.status}`);
+              error.status = response.status;
+              error.body = payload;
+              throw error;
+            }
+            return payload;
+          });
+      };
+
+      const loadAiInsights = (date) => {
+        if (!aiTipsListEl) return;
+        renderAiTips({ date, state: 'loading' });
+        let attemptedDemo = false;
+
+        const attempt = (options = {}) => {
+          fetchAiInsights(date, options)
+            .then((data) => {
+              const isDemo = !!options.demo || data?.mode === 'demo';
+              const tips = Array.isArray(data?.insights) ? data.insights : [];
+              renderAiTips({
+                tips,
+                date: data?.date || date,
+                compareDate: data?.compareDate,
+                isDemo,
+              });
+            })
+            .catch((error) => {
+              console.error('Kunne ikke generere AI-tips:', error);
+              const allowDemo = !attemptedDemo && error?.status === 400 &&
+                (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL');
+              if (allowDemo) {
+                attemptedDemo = true;
+                renderAiTips({ date, state: 'loading' });
+                attempt({ demo: true });
+                return;
+              }
+              if (attemptedDemo && options.demo && Array.isArray(error?.body?.insights)) {
+                renderAiTips({ tips: error.body.insights, date, isDemo: true });
+                return;
+              }
+              renderAiTips({
+                date,
+                state: 'error',
+                message: error?.body?.message || error?.message || 'Kunne ikke generere tips.',
+              });
+            });
+        };
+
+        attempt();
+      };
+
       const loadDayTotals = (date) => {
         if (!dayRevenueEl) return;
         if (aiProductsPicker && aiProductsPicker.value !== date) {
@@ -704,7 +731,7 @@
         dayReceiptsEl.textContent = '–';
         if (dayAverageEl) dayAverageEl.textContent = '–';
         if (dayHeadingEl) dayHeadingEl.textContent = defaultDayHeading;
-        renderProductInsights(null, { date, state: 'loading' });
+        loadAiInsights(date);
 
         let attemptedDemo = false;
 
@@ -712,7 +739,6 @@
           fetchDayTotals(date, options)
             .then((data) => {
               const isDemo = !!options.demo;
-              const items = Array.isArray(data?.items) ? data.items : Array.isArray(data?.top) ? data.top : [];
               let selected = data?.dayTotal || null;
               const daily = Array.isArray(data?.daily) ? data.daily : [];
               if (!selected && daily.length) {
@@ -723,7 +749,6 @@
               } else {
                 renderDayStatus('Ingen omsetning funnet for valgt dato.');
               }
-              renderProductInsights(items, { date, isDemo, message: 'Ingen produktdata for denne datoen.' });
             })
             .catch((error) => {
               console.error('Kunne ikke hente dagsomsetning:', error);
@@ -731,22 +756,14 @@
                 (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL');
               if (allowDemo) {
                 attemptedDemo = true;
-                renderProductInsights(null, { date, state: 'loading' });
                 attempt({ demo: true });
                 return;
               }
               if (attemptedDemo && options.demo && error?.body?.dayTotal) {
                 renderDayTotals(error.body.dayTotal, { isDemo: true });
-                const items = Array.isArray(error?.body?.items) ? error.body.items : Array.isArray(error?.body?.top) ? error.body.top : [];
-                renderProductInsights(items, { date, isDemo: true });
                 return;
               }
               renderDayStatus(error?.body?.message || error?.message || 'Feil ved henting av omsetning', 'error');
-              renderProductInsights(null, {
-                date,
-                state: 'error',
-                message: error?.body?.message || error?.message || 'Kunne ikke hente produktsalget. Prøv igjen senere.',
-              });
             });
         };
 
