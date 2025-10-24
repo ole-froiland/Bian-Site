@@ -228,6 +228,22 @@
     body[data-theme="light"] .revenue-card{background:rgba(255,255,255,0.95);border-color:rgba(148,163,184,0.24);box-shadow:0 14px 26px rgba(148,163,184,0.22);}
     body[data-theme="light"] .revenue-card__stat{background:rgba(99,102,241,0.06);border-color:rgba(148,163,184,0.18);}
     body[data-theme="light"] .revenue-card__label{color:rgba(71,85,105,0.68);}
+    .product-change-card{margin-top:24px;padding:24px;border-radius:20px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.16);box-shadow:0 16px 30px rgba(15,23,42,0.2);display:flex;flex-direction:column;gap:18px;}
+    .product-change-card header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;}
+    .product-change-card__title{margin:0;font-size:1.1rem;font-weight:600;color:var(--text-strong);}
+    .product-change-card__meta{display:flex;gap:12px;font-size:0.9rem;color:var(--muted);flex-wrap:wrap;}
+    .product-change-card__columns{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+    .product-change-card__column h3{margin:0 0 10px;font-size:0.93rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(203,213,225,0.75);font-weight:700;}
+    .product-change-card__list{list-style:none;margin:0;padding:0;display:grid;gap:10px;}
+    .product-change-card__item{display:flex;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:16px;background:rgba(15,23,42,0.28);border:1px solid rgba(148,163,184,0.14);}
+    .product-change-card__name{font-weight:600;color:var(--text-strong);flex:1;min-width:0;word-break:break-word;}
+    .product-change-card__metrics{font-size:0.9rem;text-align:right;color:var(--muted);white-space:nowrap;}
+    .product-change-card__status{margin:0;font-size:0.92rem;color:var(--muted);}
+    .product-change-card__item[data-tone="up"] .product-change-card__metrics{color:#34d399;}
+    .product-change-card__item[data-tone="down"] .product-change-card__metrics{color:#f87171;}
+    body[data-theme="light"] .product-change-card{background:rgba(255,255,255,0.95);border-color:rgba(148,163,184,0.24);box-shadow:0 14px 26px rgba(148,163,184,0.22);}
+    body[data-theme="light"] .product-change-card__column h3{color:rgba(71,85,105,0.64);}
+    body[data-theme="light"] .product-change-card__item{background:rgba(99,102,241,0.06);border-color:rgba(148,163,184,0.18);}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
     @media (max-width:720px){
       .top-bar__inner{padding-inline:clamp(12px,7vw,28px);min-height:56px;gap:8px;}
@@ -515,6 +531,26 @@
         </div>
         <p class="revenue-card__note" data-revenue-status></p>
       </article>
+      <article class="product-change-card" data-product-change-card>
+        <header>
+          <h2 class="product-change-card__title">Produktendringer</h2>
+          <div class="product-change-card__meta">
+            <span data-product-change-date>–</span>
+            <span data-product-change-compare>–</span>
+          </div>
+        </header>
+        <div class="product-change-card__columns">
+          <div class="product-change-card__column">
+            <h3>Størst vekst</h3>
+            <ul class="product-change-card__list" data-product-change-up></ul>
+          </div>
+          <div class="product-change-card__column">
+            <h3>Størst nedgang</h3>
+            <ul class="product-change-card__list" data-product-change-down></ul>
+          </div>
+        </div>
+        <p class="product-change-card__status" data-product-change-status></p>
+      </article>
     </section>
   </main>
   <script>
@@ -618,6 +654,13 @@
       let chartOldestDate = todayISO;
       let chartIsDemo = false;
       let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
+      const productChangeCardEl = document.querySelector('[data-product-change-card]');
+      const productChangeDateEl = document.querySelector('[data-product-change-date]');
+      const productChangeCompareEl = document.querySelector('[data-product-change-compare]');
+      const productChangeUpEl = document.querySelector('[data-product-change-up]');
+      const productChangeDownEl = document.querySelector('[data-product-change-down]');
+      const productChangeStatusEl = document.querySelector('[data-product-change-status]');
+      let productChangeContext = { date: null, items: [], options: {}, isDemo: false };
 
       const renderDayStatus = (message, tone = 'muted') => {
         if (!dayStatusEl) return;
@@ -708,6 +751,113 @@
         } else {
           el.dataset.tone = value > 0 ? 'up' : 'down';
         }
+      };
+
+      const formatSignedQuantity = (value) => {
+        if (!Number.isFinite(value) || value === 0) return value === 0 ? '0' : null;
+        const formatted = qtyFmt.format(Math.abs(value));
+        return value > 0 ? `+${formatted}` : `-${formatted}`;
+      };
+
+      const normalizeProductItems = (items = []) => {
+        const map = new Map();
+        items.forEach((entry) => {
+          if (!entry) return;
+          const name = String(entry?.name || '').trim();
+          if (!name) return;
+          const key = name.toLowerCase();
+          const revenue = Number(entry?.revenue || 0);
+          const quantity = Number(entry?.quantity ?? entry?.qty ?? 0);
+          const existing = map.get(key) || { name, revenue: 0, quantity: 0 };
+          existing.revenue += Number.isFinite(revenue) ? revenue : 0;
+          existing.quantity += Number.isFinite(quantity) ? quantity : 0;
+          map.set(key, existing);
+        });
+        return map;
+      };
+
+      const computeProductChanges = (currentItems = [], previousItems = []) => {
+        const currMap = normalizeProductItems(currentItems);
+        const prevMap = normalizeProductItems(previousItems);
+        const changes = [];
+
+        currMap.forEach((current, key) => {
+          const previous = prevMap.get(key) || { name: current.name, revenue: 0, quantity: 0 };
+          const revenueChange = Number(current.revenue || 0) - Number(previous.revenue || 0);
+          const quantityChange = Number(current.quantity || 0) - Number(previous.quantity || 0);
+          const pctChange = Number(previous.revenue || 0) > 0 ? revenueChange / Number(previous.revenue || 0) : null;
+          changes.push({
+            key,
+            name: current.name,
+            revenueCurrent: Number(current.revenue || 0),
+            revenuePrevious: Number(previous.revenue || 0),
+            revenueChange,
+            quantityCurrent: Number(current.quantity || 0),
+            quantityPrevious: Number(previous.quantity || 0),
+            quantityChange,
+            percentChange: pctChange,
+          });
+          prevMap.delete(key);
+        });
+
+        prevMap.forEach((previous, key) => {
+          const revenueChange = -Number(previous.revenue || 0);
+          const quantityChange = -Number(previous.quantity || 0);
+          changes.push({
+            key,
+            name: previous.name,
+            revenueCurrent: 0,
+            revenuePrevious: Number(previous.revenue || 0),
+            revenueChange,
+            quantityCurrent: 0,
+            quantityPrevious: Number(previous.quantity || 0),
+            quantityChange,
+            percentChange: previous.revenue > 0 ? -1 : null,
+          });
+        });
+
+        const increases = changes
+          .filter((entry) => entry.revenueChange > 0)
+          .sort((a, b) => b.revenueChange - a.revenueChange);
+
+        const decreases = changes
+          .filter((entry) => entry.revenueChange < 0)
+          .sort((a, b) => a.revenueChange - b.revenueChange);
+
+        return { increases, decreases };
+      };
+
+      const buildProductChangeItem = (entry, { compareLabel } = {}) => {
+        const li = document.createElement('li');
+        li.className = 'product-change-card__item';
+        const tone = entry.revenueChange > 0 ? 'up' : entry.revenueChange < 0 ? 'down' : 'flat';
+        li.dataset.tone = tone;
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'product-change-card__name';
+        nameEl.textContent = entry.name || 'Ukjent produkt';
+
+        const metricsEl = document.createElement('span');
+        metricsEl.className = 'product-change-card__metrics';
+        const parts = [];
+        const currencyLabel = formatSignedCurrency(entry.revenueChange);
+        if (currencyLabel) parts.push(currencyLabel);
+        const percentLabel = formatSignedPercent(entry.percentChange);
+        if (percentLabel) {
+          parts.push(percentLabel);
+        } else if (!Number.isFinite(entry.percentChange)) {
+          if (entry.revenuePrevious === 0 && entry.revenueCurrent > 0) parts.push('ny');
+          if (entry.revenueCurrent === 0 && entry.revenuePrevious > 0) parts.push('ut');
+        }
+        const quantityLabel = formatSignedQuantity(entry.quantityChange);
+        if (quantityLabel && entry.quantityChange !== 0) {
+          parts.push(`${quantityLabel} stk`);
+        }
+        if (parts.length === 0) parts.push('–');
+        metricsEl.textContent = parts.join(' • ');
+
+        li.append(nameEl, metricsEl);
+        return li;
       };
 
       const renderProductInsights = (items, { date, state = 'ready', message = '', isDemo = false } = {}) => {
@@ -896,6 +1046,135 @@
         if (revenueStatusEl) revenueStatusEl.textContent = '';
       };
 
+      const renderProductChangesState = (state, { date, compareDate, message = '', isDemo = false } = {}) => {
+        if (!productChangeCardEl) return;
+        if (productChangeDateEl) productChangeDateEl.textContent = date ? formatFriendlyDate(date) : '–';
+        if (productChangeCompareEl) productChangeCompareEl.textContent = compareDate ? `Mot ${formatFriendlyDate(compareDate)}` : '–';
+        if (productChangeUpEl) productChangeUpEl.innerHTML = '';
+        if (productChangeDownEl) productChangeDownEl.innerHTML = '';
+        if (state === 'loading') {
+          if (productChangeStatusEl) productChangeStatusEl.textContent = message || 'Analyserer salgsendringer …';
+          return;
+        }
+        if (state === 'error') {
+          if (productChangeStatusEl) productChangeStatusEl.textContent = message || 'Kunne ikke beregne endringer.';
+          return;
+        }
+        if (productChangeStatusEl) {
+          productChangeStatusEl.textContent = message || (isDemo ? 'Viser demo-data for produktendringer.' : '');
+        }
+      };
+
+      const renderProductChanges = ({ date, compareDate, currentItems = [], previousItems = [], isDemo = false }) => {
+        if (!productChangeCardEl) return;
+        renderProductChangesState('ready', { date, compareDate, isDemo });
+        const { increases, decreases } = computeProductChanges(currentItems, previousItems);
+        const hasIncreases = increases.length > 0;
+        const hasDecreases = decreases.length > 0;
+
+        if (!hasIncreases && !hasDecreases) {
+          renderProductChangesState('error', { date, compareDate, message: 'Ingen endringer i salg mot forrige uke.' });
+          return;
+        }
+
+        if (productChangeUpEl) {
+          const topUps = increases.slice(0, 5);
+          if (topUps.length) {
+            topUps.forEach((entry) => {
+              productChangeUpEl.appendChild(buildProductChangeItem(entry, { compareLabel: compareDate }));
+            });
+          } else {
+            const li = document.createElement('li');
+            li.className = 'product-change-card__item';
+            li.textContent = 'Ingen produkter økte salget vs forrige uke.';
+            productChangeUpEl.appendChild(li);
+          }
+        }
+
+        if (productChangeDownEl) {
+          const topDowns = decreases.slice(0, 5);
+          if (topDowns.length) {
+            topDowns.forEach((entry) => {
+              productChangeDownEl.appendChild(buildProductChangeItem(entry, { compareLabel: compareDate }));
+            });
+          } else {
+            const li = document.createElement('li');
+            li.className = 'product-change-card__item';
+            li.textContent = 'Ingen produkter falt i salg vs forrige uke.';
+            productChangeDownEl.appendChild(li);
+          }
+        }
+      };
+
+      const pickItemsFromResponse = (data) => {
+        if (!data) return [];
+        if (Array.isArray(data.items)) return data.items;
+        if (Array.isArray(data.top)) return data.top;
+        if (Array.isArray(data.records)) return data.records;
+        return [];
+      };
+
+      const loadProductChanges = ({ date, items = [], options = {}, isDemo = false }) => {
+        if (!productChangeCardEl) return;
+        const iso = sanitizeIso(date);
+        const compareIso = iso ? sanitizeIso(shiftIsoDate(iso, -7)) : null;
+        renderProductChangesState('loading', { date: iso, compareDate: compareIso });
+        productChangeContext = { date: iso, items, options, isDemo };
+
+        if (!iso) {
+          renderProductChangesState('error', { date: iso, compareDate: compareIso, message: 'Velg en dato for å se endringer.' });
+          return;
+        }
+        if (!Array.isArray(items) || !items.length) {
+          renderProductChangesState('error', { date: iso, compareDate: compareIso, message: 'Ingen produktsalg for datoen.' });
+          return;
+        }
+        if (!compareIso) {
+          renderProductChangesState('error', { date: iso, compareDate: compareIso, message: 'Manglet referanse 7 dager tilbake.' });
+          return;
+        }
+
+        const applyResult = (previousItems, compareIsDemo = false) => {
+          if (productChangeContext.date !== iso) return;
+          renderProductChanges({
+            date: iso,
+            compareDate: compareIso,
+            currentItems: items,
+            previousItems,
+            isDemo: isDemo || compareIsDemo,
+          });
+        };
+
+        const handleError = (error) => {
+          if (productChangeContext.date !== iso) return;
+          renderProductChangesState('error', {
+            date: iso,
+            compareDate: compareIso,
+            message: error?.body?.message || error?.message || 'Kunne ikke hente referansesalget.',
+          });
+        };
+
+        fetchDayTotals(compareIso, options)
+          .then((data) => {
+            const previousItems = pickItemsFromResponse(data);
+            applyResult(previousItems, !!options.demo || data?.mode === 'demo');
+          })
+          .catch((error) => {
+            const shouldDemo = !options.demo && error?.status === 400 &&
+              (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL');
+            if (shouldDemo) {
+              fetchDayTotals(compareIso, { demo: true })
+                .then((demoData) => {
+                  const previousItems = pickItemsFromResponse(demoData);
+                  applyResult(previousItems, true);
+                })
+                .catch(handleError);
+              return;
+            }
+            handleError(error);
+          });
+      };
+
       const hideGlobalTooltip = () => {
         if (!chartTooltip) return;
         chartTooltip.dataset.visible = '0';
@@ -955,7 +1234,9 @@
         if (dayHeadingEl) dayHeadingEl.textContent = defaultDayHeading;
         renderProductInsights(null, { date, state: 'loading' });
         renderRevenueAnalysisState('loading', { date });
+        renderProductChangesState('loading', { date });
         revenueAnalysisContext = { date, fallbackDaily: [], entry: null };
+        productChangeContext = { date, items: [], options: {}, isDemo: false };
 
         let attemptedDemo = false;
 
@@ -977,6 +1258,8 @@
               renderProductInsights(items, { date, isDemo, message: 'Ingen produktdata for denne datoen.' });
               revenueAnalysisContext = { date, fallbackDaily: daily, entry: selected };
               renderRevenueAnalysis(revenueAnalysisContext);
+              productChangeContext = { date, items, options, isDemo };
+              loadProductChanges(productChangeContext);
             })
             .catch((error) => {
               console.error('Kunne ikke hente dagsomsetning:', error);
@@ -986,6 +1269,7 @@
                 attemptedDemo = true;
                 renderProductInsights(null, { date, state: 'loading' });
                 renderRevenueAnalysisState('loading', { date });
+                renderProductChangesState('loading', { date });
                 attempt({ demo: true });
                 return;
               }
@@ -995,6 +1279,8 @@
                 renderProductInsights(items, { date, isDemo: true });
                 revenueAnalysisContext = { date, fallbackDaily: Array.isArray(error?.body?.daily) ? error.body.daily : [], entry: error.body.dayTotal };
                 renderRevenueAnalysis(revenueAnalysisContext);
+                productChangeContext = { date, items, options, isDemo: true };
+                loadProductChanges(productChangeContext);
                 return;
               }
               renderDayStatus(error?.body?.message || error?.message || 'Feil ved henting av omsetning', 'error');
@@ -1004,6 +1290,7 @@
                 message: error?.body?.message || error?.message || 'Kunne ikke hente produktsalget. Prøv igjen senere.',
               });
               renderRevenueAnalysisState('error', { date, message: error?.body?.message || error?.message || 'Kunne ikke hente omsetningsanalyse.' });
+              renderProductChangesState('error', { date, message: error?.body?.message || error?.message || 'Kunne ikke beregne endringer.' });
             });
         };
 
