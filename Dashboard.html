@@ -197,22 +197,18 @@
     .ai-insights-card header{align-items:flex-start;gap:12px;}
     .ai-insights__meta{margin-left:auto;font-size:0.9rem;color:var(--muted);display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
     .ai-insights__input{min-width:160px;}
-    .ai-insights{margin-top:18px;}
-    .ai-insights__cards{display:grid;gap:16px;}
-    .ai-insight-card{padding:18px 20px;border-radius:20px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.18);box-shadow:0 18px 30px rgba(15,23,42,0.22);display:flex;flex-direction:column;gap:14px;}
-    .ai-insight-card__header{display:flex;align-items:flex-start;gap:12px;}
-    .ai-insight-card__index{display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);font-size:0.95rem;line-height:1.2;min-width:2.6ch;letter-spacing:0.04em;}
-    .ai-insight-card__title{margin:0;font-size:1rem;font-weight:600;color:var(--text-strong);}
-    .ai-insight-card__summary{margin:0;color:var(--muted);font-size:0.95rem;line-height:1.5;}
-    .ai-insight-card__list{list-style:none;margin:0;padding:0;display:grid;gap:8px;}
-    .ai-insight-card__row{display:flex;justify-content:space-between;gap:14px;font-size:0.94rem;color:var(--text);}
-    .ai-insight-card__row strong{font-weight:600;color:var(--text-strong);}
-    .ai-insight-card__meta{display:flex;gap:10px;flex-wrap:wrap;font-size:0.9rem;color:var(--muted);}
-    .ai-insight-card__recommendation{margin:0;color:var(--text-strong);font-weight:500;font-size:0.96rem;line-height:1.45;}
+    .ai-insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-top:18px;}
+    .ai-insights__column h3{margin:0 0 12px;font-size:0.95rem;text-transform:uppercase;letter-spacing:0.14em;color:rgba(203,213,225,0.75);font-weight:700;}
+    .ai-insights__list{list-style:none;margin:0;padding:0;display:grid;gap:12px;}
+    .ai-insights__item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:16px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.18);box-shadow:0 16px 28px rgba(15,23,42,0.22);}
+    .ai-insights__product{font-weight:600;color:var(--text-strong);flex:1;min-width:0;word-break:break-word;}
+    .ai-insights__metric{font-size:0.88rem;color:var(--muted);text-align:right;white-space:nowrap;}
     .ai-insights__status{margin-top:22px;font-size:0.9rem;color:var(--muted);}
     .ai-insights__status[data-tone="demo"]{color:var(--accent);}
     .ai-insights__status[data-tone="error"]{color:var(--attention);}
-    body[data-theme="light"] .ai-insight-card{background:rgba(255,255,255,0.92);border-color:rgba(148,163,184,0.26);box-shadow:0 12px 26px rgba(148,163,184,0.28);}
+    body[data-theme="light"] .ai-insights__column h3{color:rgba(51,65,85,0.75);}
+    body[data-theme="light"] .ai-insights__item{background:rgba(255,255,255,0.9);border-color:rgba(148,163,184,0.26);box-shadow:0 12px 26px rgba(148,163,184,0.28);}
+    body[data-theme="light"] .ai-insights__metric{color:rgba(71,85,105,0.75);}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
     @media (max-width:720px){
       .top-bar__inner{padding-inline:clamp(12px,7vw,28px);min-height:56px;gap:8px;}
@@ -237,13 +233,11 @@
       .tablist{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
       .daily-summary{grid-template-columns:1fr;justify-content:stretch;}
       .summary-card{max-width:none;}
+      .ai-insights{grid-template-columns:1fr;}
       .ai-insights__meta{justify-content:flex-start;align-items:stretch;}
       .ai-insights__input{width:100%;min-width:0;}
-      .ai-insight-card{padding:16px 18px;}
-      .ai-insight-card__header{flex-wrap:wrap;gap:8px;}
-      .ai-insight-card__index{text-align:left;}
-      .ai-insight-card__row{flex-direction:column;align-items:flex-start;gap:4px;}
-      .ai-insight-card__meta{flex-direction:column;align-items:flex-start;gap:4px;}
+      .ai-insights__item{flex-direction:column;align-items:flex-start;gap:8px;padding:16px 18px;}
+      .ai-insights__metric{width:100%;text-align:left;white-space:normal;}
     }
     @media (max-width:520px){
       .shell{padding-inline:16px;}
@@ -463,7 +457,14 @@
           </div>
         </header>
         <div class="ai-insights" data-ai-insights>
-          <div class="ai-insights__cards" data-ai-tips></div>
+          <div class="ai-insights__column">
+            <h3>Mest solgte produkter</h3>
+            <ul class="ai-insights__list" data-ai-top-list></ul>
+          </div>
+          <div class="ai-insights__column">
+            <h3>Minst solgte produkter</h3>
+            <ul class="ai-insights__list" data-ai-bottom-list></ul>
+          </div>
         </div>
         <p class="ai-insights__status" data-ai-products-status></p>
       </article>
@@ -547,7 +548,8 @@
       const chartCard = barChart ? barChart.closest('.chart-card') : null;
       const weekdayFmt = new Intl.DateTimeFormat('nb-NO', { weekday: 'short' });
       const chartDateFmt = new Intl.DateTimeFormat('nb-NO', { day: '2-digit', month: '2-digit' });
-      const aiTipsListEl = document.querySelector('[data-ai-tips]');
+      const aiTopListEl = document.querySelector('[data-ai-top-list]');
+      const aiBottomListEl = document.querySelector('[data-ai-bottom-list]');
       const aiProductsStatusEl = document.querySelector('[data-ai-products-status]');
       const aiProductsDateEl = document.querySelector('[data-ai-products-date]');
       const aiProductsPicker = document.querySelector('#ai-products-picker');
@@ -568,264 +570,81 @@
         }
       };
 
-      const formatPercentShort = (change) => {
-        if (!Number.isFinite(change)) return null;
-        if (change === 0) return '0 %';
-        const formatted = percentFmt.format(Math.abs(change));
-        return `${change > 0 ? '+' : '−'}${formatted}`;
+      const buildProductListItem = ({ name, revenue, quantity }) => {
+        const itemEl = document.createElement('li');
+        itemEl.className = 'ai-insights__item';
+        const nameEl = document.createElement('span');
+        nameEl.className = 'ai-insights__product';
+        nameEl.textContent = name;
+        const metricEl = document.createElement('span');
+        metricEl.className = 'ai-insights__metric';
+        const parts = [];
+        const safeRevenue = Number.isFinite(revenue) ? revenue : 0;
+        parts.push(moneyFmt.format(safeRevenue));
+        if (Number.isFinite(quantity) && quantity > 0) {
+          parts.push(`${qtyFmt.format(quantity)} stk`);
+        }
+        metricEl.textContent = parts.join(' • ');
+        itemEl.append(nameEl, metricEl);
+        return itemEl;
       };
 
-      const buildInsightCard = (insight, index) => {
-        const card = document.createElement('article');
-        card.className = 'ai-insight-card';
-        card.dataset.kind = insight?.kind || 'status';
-
-        const header = document.createElement('div');
-        header.className = 'ai-insight-card__header';
-        const indexEl = document.createElement('span');
-        indexEl.className = 'ai-insight-card__index';
-        indexEl.textContent = String(index).padStart(2, '0');
-        const titleEl = document.createElement('h3');
-        titleEl.className = 'ai-insight-card__title';
-        titleEl.textContent = insight?.title || 'AI-tips';
-        header.append(indexEl, titleEl);
-        card.append(header);
-
-        if (insight?.summary) {
-          const summaryEl = document.createElement('p');
-          summaryEl.className = 'ai-insight-card__summary';
-          summaryEl.textContent = insight.summary;
-          card.append(summaryEl);
-        }
-
-        const renderProductList = (items = []) => {
-          if (!Array.isArray(items) || !items.length) return;
-          const list = document.createElement('ul');
-          list.className = 'ai-insight-card__list';
-          items.forEach((item) => {
-            const row = document.createElement('li');
-            row.className = 'ai-insight-card__row';
-            const nameEl = document.createElement('strong');
-            nameEl.textContent = item?.name || 'Ukjent produkt';
-            const metricsEl = document.createElement('span');
-            const parts = [];
-            const revenueValue = Number(item?.revenue || 0);
-            if (Number.isFinite(revenueValue)) parts.push(moneyFmt.format(revenueValue));
-            if (Number.isFinite(item?.quantity) && item.quantity > 0) parts.push(`${qtyFmt.format(item.quantity)} stk`);
-            const changePart = typeof item?.changeLabel === 'string' && item.changeLabel
-              ? item.changeLabel
-              : formatPercentShort(item?.change);
-            if (changePart) parts.push(changePart);
-            metricsEl.textContent = parts.join(' • ');
-            row.append(nameEl, metricsEl);
-            list.appendChild(row);
-          });
-          card.append(list);
-        };
-
-        switch (insight?.kind) {
-          case 'top-products':
-          case 'bottom-products':
-            renderProductList(insight.products);
-            break;
-          case 'sales-trend': {
-            const list = document.createElement('ul');
-            list.className = 'ai-insight-card__list';
-            const metrics = insight.metrics || {};
-            const rows = [
-              ['Omsetning', metrics.revenue, 'money'],
-              ['Kvitteringer', metrics.receipts, 'qty'],
-            ];
-            rows.forEach(([label, metric, type]) => {
-              if (!metric) return;
-              const row = document.createElement('li');
-              row.className = 'ai-insight-card__row';
-              const labelEl = document.createElement('strong');
-              labelEl.textContent = label;
-              const valueEl = document.createElement('span');
-              const parts = [];
-              const currentVal = Number(metric.current || 0);
-              if (type === 'money') {
-                parts.push(moneyFmt.format(currentVal));
-              } else {
-                parts.push(qtyFmt.format(currentVal));
-              }
-              const changeLabel = formatPercentShort(metric.change);
-              if (changeLabel) parts.push(changeLabel);
-              valueEl.textContent = parts.join(' • ');
-              row.append(labelEl, valueEl);
-              list.appendChild(row);
-            });
-            if (list.children.length) card.append(list);
-            break;
-          }
-          case 'busy-hours': {
-            const list = document.createElement('ul');
-            list.className = 'ai-insight-card__list';
-            const slots = insight.slots || {};
-            const busy = slots.busiest;
-            const quiet = slots.quietest;
-            if (busy) {
-              const row = document.createElement('li');
-              row.className = 'ai-insight-card__row';
-              const nameEl = document.createElement('strong');
-              nameEl.textContent = `Travlest ${busy.label || ''}`.trim();
-              const valueEl = document.createElement('span');
-              const parts = [moneyFmt.format(Number(busy.revenue || 0))];
-              if (Number.isFinite(busy.receipts) && busy.receipts > 0) {
-                parts.push(`${qtyFmt.format(busy.receipts)} kvitt.`);
-              }
-              valueEl.textContent = parts.join(' • ');
-              row.append(nameEl, valueEl);
-              list.appendChild(row);
-            }
-            if (quiet) {
-              const row = document.createElement('li');
-              row.className = 'ai-insight-card__row';
-              const nameEl = document.createElement('strong');
-              nameEl.textContent = `Roligst ${quiet.label || ''}`.trim();
-              const valueEl = document.createElement('span');
-              const parts = [moneyFmt.format(Math.max(0, Number(quiet.revenue || 0)))];
-              if (Number.isFinite(quiet.receipts) && quiet.receipts > 0) {
-                parts.push(`${qtyFmt.format(quiet.receipts)} kvitt.`);
-              }
-              valueEl.textContent = parts.join(' • ');
-              row.append(nameEl, valueEl);
-              list.appendChild(row);
-            }
-            if (list.children.length) card.append(list);
-            break;
-          }
-          case 'margin': {
-            const info = insight.products || {};
-            const list = document.createElement('ul');
-            list.className = 'ai-insight-card__list';
-            if (info.best) {
-              const row = document.createElement('li');
-              row.className = 'ai-insight-card__row';
-              const nameEl = document.createElement('strong');
-              nameEl.textContent = `Høyest: ${info.best.name}`;
-              const valueEl = document.createElement('span');
-              const parts = [moneyFmt.format(Number(info.best.margin || 0))];
-              if (Number.isFinite(info.best.quantity) && info.best.quantity > 0) {
-                parts.push(`${qtyFmt.format(info.best.quantity)} stk`);
-              }
-              valueEl.textContent = parts.join(' • ');
-              row.append(nameEl, valueEl);
-              list.appendChild(row);
-            }
-            if (info.worst) {
-              const row = document.createElement('li');
-              row.className = 'ai-insight-card__row';
-              const nameEl = document.createElement('strong');
-              nameEl.textContent = `Lavest: ${info.worst.name}`;
-              const valueEl = document.createElement('span');
-              const parts = [moneyFmt.format(Number(info.worst.margin || 0))];
-              if (Number.isFinite(info.worst.quantity) && info.worst.quantity > 0) {
-                parts.push(`${qtyFmt.format(info.worst.quantity)} stk`);
-              }
-              valueEl.textContent = parts.join(' • ');
-              row.append(nameEl, valueEl);
-              list.appendChild(row);
-            }
-            if (list.children.length) card.append(list);
-            break;
-          }
-          case 'ticket': {
-            const metrics = insight.metrics || {};
-            const list = document.createElement('ul');
-            list.className = 'ai-insight-card__list';
-            if (metrics.averageTicket) {
-              const row = document.createElement('li');
-              row.className = 'ai-insight-card__row';
-              const nameEl = document.createElement('strong');
-              nameEl.textContent = 'Snittkvittering';
-              const valueEl = document.createElement('span');
-              const parts = [moneyFmt.format(Number(metrics.averageTicket.current || 0))];
-              const changeLabel = formatPercentShort(metrics.averageTicket.change);
-              if (changeLabel) parts.push(changeLabel);
-              valueEl.textContent = parts.join(' • ');
-              row.append(nameEl, valueEl);
-              list.appendChild(row);
-            }
-            if (metrics.receipts) {
-              const row = document.createElement('li');
-              row.className = 'ai-insight-card__row';
-              const nameEl = document.createElement('strong');
-              nameEl.textContent = 'Kvitteringer';
-              const valueEl = document.createElement('span');
-              const parts = [qtyFmt.format(Number(metrics.receipts.current || 0))];
-              const changeLabel = formatPercentShort(metrics.receipts.change);
-              if (changeLabel) parts.push(changeLabel);
-              valueEl.textContent = parts.join(' • ');
-              row.append(nameEl, valueEl);
-              list.appendChild(row);
-            }
-            if (list.children.length) card.append(list);
-
-            if (insight.pattern && Number.isFinite(insight.pattern.lift)) {
-              const meta = document.createElement('div');
-              meta.className = 'ai-insight-card__meta';
-              const liftLabel = percentFmt.format(Math.abs(insight.pattern.lift));
-              meta.textContent = `${insight.pattern.name} gir ${liftLabel} mer på ${insight.pattern.weekday || 'denne dagen'} (${qtyFmt.format(insight.pattern.occurrences || 0)} uker).`;
-              card.append(meta);
-            }
-            break;
-          }
-          default:
-            break;
-        }
-
-        if (insight?.recommendation) {
-          const recommendationEl = document.createElement('p');
-          recommendationEl.className = 'ai-insight-card__recommendation';
-          recommendationEl.textContent = insight.recommendation;
-          card.append(recommendationEl);
-        }
-
-        return card;
-      };
-
-      const renderAiTips = ({ tips, date, state = 'ready', message = '', tone = '', isDemo = false } = {}) => {
+      const renderProductInsights = (items, { date, state = 'ready', message = '', isDemo = false } = {}) => {
         if (aiProductsDateEl) {
           const parsed = date ? new Date(`${date}T00:00:00`) : null;
           const formatted = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : (date || '–');
-          aiProductsDateEl.textContent = formatted ? `Tips for ${formatted}` : '–';
+          aiProductsDateEl.textContent = formatted ? `Tall for ${formatted}` : '–';
         }
 
-        if (aiTipsListEl) aiTipsListEl.innerHTML = '';
+        if (aiTopListEl) aiTopListEl.innerHTML = '';
+        if (aiBottomListEl) aiBottomListEl.innerHTML = '';
 
         if (state === 'loading') {
-          setAiProductsStatus('Genererer tips …');
+          setAiProductsStatus('Henter produktinnsikt …');
           return;
         }
 
         if (state === 'error') {
-          setAiProductsStatus(message || 'Kunne ikke generere tips.', 'error');
+          setAiProductsStatus(message || 'Kunne ikke hente produktinnsikt.', 'error');
           return;
         }
 
-        const list = Array.isArray(tips)
-          ? tips.filter((tip) => tip && typeof tip === 'object')
-          : [];
+        const processed = Array.isArray(items) ? items.map((entry) => ({
+          name: String(entry?.name || 'Ukjent produkt'),
+          revenue: Number(entry?.revenue || 0),
+          quantity: Number(entry?.quantity ?? entry?.qty ?? 0),
+        })) : [];
 
-        if (!list.length) {
-          setAiProductsStatus(message || 'Ingen tips for denne datoen.');
+        const meaningful = processed.filter((entry) => entry.revenue !== 0 || entry.quantity !== 0);
+
+        if (!meaningful.length) {
+          setAiProductsStatus(message || 'Ingen produktdata for denne datoen.');
           return;
         }
 
-        if (isDemo) {
-          setAiProductsStatus('Viser demo-tips basert på testdata.', 'demo');
-        } else if (message) {
-          setAiProductsStatus(message, tone || '');
-        } else {
-          setAiProductsStatus('', '');
+        setAiProductsStatus(isDemo ? 'Viser demo-data for produktsalget.' : '', isDemo ? 'demo' : '');
+
+        const topItems = [...meaningful]
+          .sort((a, b) => {
+            if (b.revenue !== a.revenue) return b.revenue - a.revenue;
+            return b.quantity - a.quantity;
+          })
+          .slice(0, 5);
+
+        const bottomItems = [...meaningful]
+          .sort((a, b) => {
+            if (a.revenue !== b.revenue) return a.revenue - b.revenue;
+            return a.quantity - b.quantity;
+          })
+          .slice(0, 5);
+
+        if (aiTopListEl) {
+          topItems.forEach((item) => aiTopListEl.appendChild(buildProductListItem(item)));
         }
 
-        if (!aiTipsListEl) return;
-        list.slice(0, 6).forEach((tip, index) => {
-          aiTipsListEl.appendChild(buildInsightCard(tip, index + 1));
-        });
+        if (aiBottomListEl) {
+          bottomItems.forEach((item) => aiBottomListEl.appendChild(buildProductListItem(item)));
+        }
       };
 
       const hideGlobalTooltip = () => {
@@ -876,66 +695,6 @@
           });
       };
 
-      const fetchAiInsights = (date, { demo = false } = {}) => {
-        const url = new URL('/.netlify/functions/lightspeed', apiBase);
-        url.searchParams.set('date', date);
-        url.searchParams.set('insights', '1');
-        if (demo) url.searchParams.set('demo', '1');
-        return fetch(url.toString(), { headers: { accept: 'application/json' } })
-          .then(async (response) => {
-            const payload = await response.json().catch(() => null);
-            if (!response.ok) {
-              const error = new Error(`HTTP ${response.status}`);
-              error.status = response.status;
-              error.body = payload;
-              throw error;
-            }
-            return payload;
-          });
-      };
-
-      const loadAiInsights = (date) => {
-        if (!aiTipsListEl) return;
-        renderAiTips({ date, state: 'loading' });
-        let attemptedDemo = false;
-
-        const attempt = (options = {}) => {
-          fetchAiInsights(date, options)
-            .then((data) => {
-              const isDemo = !!options.demo || data?.mode === 'demo';
-              const tips = Array.isArray(data?.insights) ? data.insights : [];
-              renderAiTips({
-                tips,
-                date: data?.date || date,
-                compareDate: data?.compareDate,
-                isDemo,
-              });
-            })
-            .catch((error) => {
-              console.error('Kunne ikke generere AI-tips:', error);
-              const allowDemo = !attemptedDemo && error?.status === 400 &&
-                (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL');
-              if (allowDemo) {
-                attemptedDemo = true;
-                renderAiTips({ date, state: 'loading' });
-                attempt({ demo: true });
-                return;
-              }
-              if (attemptedDemo && options.demo && Array.isArray(error?.body?.insights)) {
-                renderAiTips({ tips: error.body.insights, date, isDemo: true });
-                return;
-              }
-              renderAiTips({
-                date,
-                state: 'error',
-                message: error?.body?.message || error?.message || 'Kunne ikke generere tips.',
-              });
-            });
-        };
-
-        attempt();
-      };
-
       const loadDayTotals = (date) => {
         if (!dayRevenueEl) return;
         if (aiProductsPicker && aiProductsPicker.value !== date) {
@@ -945,7 +704,7 @@
         dayReceiptsEl.textContent = '–';
         if (dayAverageEl) dayAverageEl.textContent = '–';
         if (dayHeadingEl) dayHeadingEl.textContent = defaultDayHeading;
-        loadAiInsights(date);
+        renderProductInsights(null, { date, state: 'loading' });
 
         let attemptedDemo = false;
 
@@ -953,6 +712,7 @@
           fetchDayTotals(date, options)
             .then((data) => {
               const isDemo = !!options.demo;
+              const items = Array.isArray(data?.items) ? data.items : Array.isArray(data?.top) ? data.top : [];
               let selected = data?.dayTotal || null;
               const daily = Array.isArray(data?.daily) ? data.daily : [];
               if (!selected && daily.length) {
@@ -963,6 +723,7 @@
               } else {
                 renderDayStatus('Ingen omsetning funnet for valgt dato.');
               }
+              renderProductInsights(items, { date, isDemo, message: 'Ingen produktdata for denne datoen.' });
             })
             .catch((error) => {
               console.error('Kunne ikke hente dagsomsetning:', error);
@@ -970,14 +731,22 @@
                 (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL');
               if (allowDemo) {
                 attemptedDemo = true;
+                renderProductInsights(null, { date, state: 'loading' });
                 attempt({ demo: true });
                 return;
               }
               if (attemptedDemo && options.demo && error?.body?.dayTotal) {
                 renderDayTotals(error.body.dayTotal, { isDemo: true });
+                const items = Array.isArray(error?.body?.items) ? error.body.items : Array.isArray(error?.body?.top) ? error.body.top : [];
+                renderProductInsights(items, { date, isDemo: true });
                 return;
               }
               renderDayStatus(error?.body?.message || error?.message || 'Feil ved henting av omsetning', 'error');
+              renderProductInsights(null, {
+                date,
+                state: 'error',
+                message: error?.body?.message || error?.message || 'Kunne ikke hente produktsalget. Prøv igjen senere.',
+              });
             });
         };
 
