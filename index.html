@@ -53,8 +53,8 @@
     .brand:hover{color:#625aff}
     .brand:visited{color:#756bff}
     body[data-theme="dark"] .brand{color:#625aff}
-    nav{margin:0 auto;flex:1;display:flex;justify-content:center;}
-    nav ul{display:flex;align-items:center;gap:24px;justify-content:center;margin:0;text-align:center}
+    nav{margin:0 auto;flex:none;display:flex;justify-content:center;min-width:0;}
+    nav ul{display:flex;align-items:center;gap:24px;justify-content:center;margin:0 40px 0 40px;text-align:center}
     .nav a:not(.brand),nav .dropdown>button{font-size:clamp(.95rem,1.2vw,1.05rem);font-weight:700;letter-spacing:.02em;color:var(--ink-900);padding:10px 12px;border-radius:999px;text-decoration:none;transition:color .2s ease,background .2s ease}
     .nav a:not(.brand):hover,nav .dropdown>button:hover{background:var(--muted);color:#030712}
     body[data-theme="dark"] .nav a:not(.brand),body[data-theme="dark"] nav .dropdown>button{color:#f4f6ff}
