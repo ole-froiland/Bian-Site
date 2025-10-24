@@ -209,6 +209,25 @@
     body[data-theme="light"] .ai-insights__column h3{color:rgba(51,65,85,0.75);}
     body[data-theme="light"] .ai-insights__item{background:rgba(255,255,255,0.9);border-color:rgba(148,163,184,0.26);box-shadow:0 12px 26px rgba(148,163,184,0.28);}
     body[data-theme="light"] .ai-insights__metric{color:rgba(71,85,105,0.75);}
+    .revenue-card{margin-top:24px;padding:24px;border-radius:20px;background:var(--surface-raised);border:1px solid rgba(148,163,184,0.16);box-shadow:0 16px 30px rgba(15,23,42,0.2);display:flex;flex-direction:column;gap:18px;}
+    .revenue-card header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;}
+    .revenue-card__title{margin:0;font-size:1.1rem;font-weight:600;color:var(--text-strong);}
+    .revenue-card__meta{display:flex;gap:12px;font-size:0.9rem;color:var(--muted);flex-wrap:wrap;}
+    .revenue-card__grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}
+    .revenue-card__stat{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:16px;background:rgba(15,23,42,0.28);border:1px solid rgba(148,163,184,0.14);}
+    .revenue-card__label{font-size:0.85rem;text-transform:uppercase;letter-spacing:0.14em;color:rgba(203,213,225,0.75);font-weight:600;}
+    .revenue-card__value{font-size:1.2rem;font-weight:700;color:var(--text-strong);}
+    .revenue-card__delta{font-size:0.92rem;color:var(--muted);}
+    .revenue-card__delta[data-tone="up"]{color:#34d399;}
+    .revenue-card__delta[data-tone="down"]{color:#f87171;}
+    .revenue-card__delta[data-tone="flat"]{color:var(--muted);}
+    .revenue-card__value[data-tone="up"]{color:#34d399;}
+    .revenue-card__value[data-tone="down"]{color:#f87171;}
+    .revenue-card__value[data-tone="flat"]{color:var(--text-strong);}
+    .revenue-card__note{margin:0;font-size:0.92rem;color:var(--muted);}
+    body[data-theme="light"] .revenue-card{background:rgba(255,255,255,0.95);border-color:rgba(148,163,184,0.24);box-shadow:0 14px 26px rgba(148,163,184,0.22);}
+    body[data-theme="light"] .revenue-card__stat{background:rgba(99,102,241,0.06);border-color:rgba(148,163,184,0.18);}
+    body[data-theme="light"] .revenue-card__label{color:rgba(71,85,105,0.68);}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
     @media (max-width:720px){
       .top-bar__inner{padding-inline:clamp(12px,7vw,28px);min-height:56px;gap:8px;}
@@ -238,6 +257,7 @@
       .ai-insights__input{width:100%;min-width:0;}
       .ai-insights__item{flex-direction:column;align-items:flex-start;gap:8px;padding:16px 18px;}
       .ai-insights__metric{width:100%;text-align:left;white-space:normal;}
+      .revenue-card{padding:20px;}
     }
     @media (max-width:520px){
       .shell{padding-inline:16px;}
@@ -468,6 +488,33 @@
         </div>
         <p class="ai-insights__status" data-ai-products-status></p>
       </article>
+      <article class="revenue-card" data-revenue-card>
+        <header>
+          <h2 class="revenue-card__title">Omsetningsanalyse</h2>
+          <div class="revenue-card__meta">
+            <span data-revenue-date>–</span>
+            <span data-revenue-comparison>–</span>
+          </div>
+        </header>
+        <div class="revenue-card__grid">
+          <div class="revenue-card__stat">
+            <span class="revenue-card__label">Omsetning</span>
+            <strong class="revenue-card__value" data-revenue-current>–</strong>
+            <span class="revenue-card__delta" data-revenue-current-note></span>
+          </div>
+          <div class="revenue-card__stat">
+            <span class="revenue-card__label">Mot forrige uke</span>
+            <strong class="revenue-card__value" data-revenue-week-delta>–</strong>
+            <span class="revenue-card__delta" data-revenue-week-note></span>
+          </div>
+          <div class="revenue-card__stat">
+            <span class="revenue-card__label">Mot månedssnitt</span>
+            <strong class="revenue-card__value" data-revenue-month-delta>–</strong>
+            <span class="revenue-card__delta" data-revenue-month-note></span>
+          </div>
+        </div>
+        <p class="revenue-card__note" data-revenue-status></p>
+      </article>
     </section>
   </main>
   <script>
@@ -518,6 +565,7 @@
 
       const moneyFmt = new Intl.NumberFormat('nb-NO', { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 });
       const qtyFmt = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 });
+      const percentFmt = new Intl.NumberFormat('nb-NO', { style: 'percent', maximumFractionDigits: 0 });
       const dateFmtShort = new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'short' });
       const dateFmtLong = new Intl.DateTimeFormat('nb-NO', { weekday: 'short', day: 'numeric', month: 'short' });
 
@@ -553,6 +601,17 @@
       const aiProductsStatusEl = document.querySelector('[data-ai-products-status]');
       const aiProductsDateEl = document.querySelector('[data-ai-products-date]');
       const aiProductsPicker = document.querySelector('#ai-products-picker');
+      const revenueCardEl = document.querySelector('[data-revenue-card]');
+      const revenueDateEl = document.querySelector('[data-revenue-date]');
+      const revenueComparisonEl = document.querySelector('[data-revenue-comparison]');
+      const revenueCurrentEl = document.querySelector('[data-revenue-current]');
+      const revenueCurrentNoteEl = document.querySelector('[data-revenue-current-note]');
+      const revenueWeekDeltaEl = document.querySelector('[data-revenue-week-delta]');
+      const revenueWeekNoteEl = document.querySelector('[data-revenue-week-note]');
+      const revenueMonthDeltaEl = document.querySelector('[data-revenue-month-delta]');
+      const revenueMonthNoteEl = document.querySelector('[data-revenue-month-note]');
+      const revenueStatusEl = document.querySelector('[data-revenue-status]');
+      let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
 
       const renderDayStatus = (message, tone = 'muted') => {
         if (!dayStatusEl) return;
@@ -587,6 +646,62 @@
         metricEl.textContent = parts.join(' • ');
         itemEl.append(nameEl, metricEl);
         return itemEl;
+      };
+
+      const sanitizeIso = (iso) => {
+        if (!iso) return null;
+        const value = String(iso).trim();
+        return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+      };
+
+      const parseIsoDate = (iso) => {
+        const clean = sanitizeIso(iso);
+        if (!clean) return null;
+        const parsed = new Date(`${clean}T00:00:00`);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      };
+
+      const formatFriendlyDate = (iso) => {
+        const parsed = parseIsoDate(iso);
+        if (!parsed) return '–';
+        const formatted = dateFmtLong.format(parsed);
+        return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      };
+
+      const shiftIsoDate = (iso, delta) => {
+        const parsed = parseIsoDate(iso);
+        if (!parsed) return null;
+        const shifted = new Date(parsed);
+        shifted.setDate(parsed.getDate() + delta);
+        return toISODate(shifted);
+      };
+
+      const formatSignedCurrency = (value) => {
+        if (!Number.isFinite(value)) return '–';
+        if (value === 0) return moneyFmt.format(0);
+        const abs = Math.abs(value);
+        const formatted = moneyFmt.format(abs);
+        return value > 0 ? `+${formatted}` : `-${formatted}`;
+      };
+
+      const formatSignedPercent = (value) => {
+        if (!Number.isFinite(value)) return null;
+        if (value === 0) return '0 %';
+        const formatted = percentFmt.format(Math.abs(value));
+        return value > 0 ? `+${formatted}` : `-${formatted}`;
+      };
+
+      const setDeltaTone = (el, value) => {
+        if (!el) return;
+        if (!Number.isFinite(value)) {
+          el.dataset.tone = 'flat';
+          return;
+        }
+        if (value === 0) {
+          el.dataset.tone = 'flat';
+        } else {
+          el.dataset.tone = value > 0 ? 'up' : 'down';
+        }
       };
 
       const renderProductInsights = (items, { date, state = 'ready', message = '', isDemo = false } = {}) => {
@@ -647,6 +762,134 @@
         }
       };
 
+      const getDailyEntry = (iso, fallback = []) => {
+        if (!iso) return null;
+        const fromChart = chartDataMap.get(iso);
+        if (fromChart) return fromChart;
+        return fallback.find((entry) => entry?.date === iso) || null;
+      };
+
+      const getMonthEntries = (iso, fallback = []) => {
+        const parsed = parseIsoDate(iso);
+        if (!parsed) return [];
+        const year = parsed.getFullYear();
+        const month = parsed.getMonth();
+        const matches = (entry) => {
+          const entryDate = parseIsoDate(entry?.date);
+          return entryDate && entryDate.getFullYear() === year && entryDate.getMonth() === month && Number.isFinite(entry?.revenue);
+        };
+        const fromChart = chartDataAll.filter(matches);
+        if (fromChart.length) return fromChart;
+        return fallback.filter(matches);
+      };
+
+      const renderRevenueAnalysisState = (state, { message = '', date } = {}) => {
+        if (!revenueCardEl) return;
+        if (revenueDateEl) revenueDateEl.textContent = date ? formatFriendlyDate(date) : '–';
+        if (state === 'loading' && revenueComparisonEl) revenueComparisonEl.textContent = '–';
+        if (state === 'loading') {
+          revenueCurrentEl && (revenueCurrentEl.textContent = '–');
+          revenueWeekDeltaEl && (revenueWeekDeltaEl.textContent = '–');
+          revenueMonthDeltaEl && (revenueMonthDeltaEl.textContent = '–');
+          setDeltaTone(revenueWeekDeltaEl, NaN);
+          setDeltaTone(revenueMonthDeltaEl, NaN);
+          if (revenueCurrentNoteEl) revenueCurrentNoteEl.textContent = '';
+          if (revenueWeekNoteEl) { revenueWeekNoteEl.textContent = 'Henter referanse …'; setDeltaTone(revenueWeekNoteEl, NaN); }
+          if (revenueMonthNoteEl) { revenueMonthNoteEl.textContent = 'Henter månedsdata …'; setDeltaTone(revenueMonthNoteEl, NaN); }
+          if (revenueStatusEl) revenueStatusEl.textContent = message || 'Analyserer omsetningen …';
+          return;
+        }
+        if (state === 'error') {
+          if (revenueComparisonEl) revenueComparisonEl.textContent = '–';
+          if (revenueStatusEl) revenueStatusEl.textContent = message || 'Kunne ikke hente omsetningsanalyse.';
+          return;
+        }
+        if (revenueStatusEl) revenueStatusEl.textContent = message || '';
+      };
+
+      const renderRevenueAnalysis = ({ date, fallbackDaily = [], entry = null } = {}) => {
+        revenueAnalysisContext = { date, fallbackDaily, entry };
+        if (!revenueCardEl) return;
+        const iso = sanitizeIso(date);
+        renderRevenueAnalysisState('ready', { date: iso });
+        if (!iso) {
+          if (revenueStatusEl) revenueStatusEl.textContent = 'Velg en dato for å se omsetningen.';
+          return;
+        }
+
+        const currentEntry = entry || getDailyEntry(iso, fallbackDaily);
+        if (!currentEntry) {
+          renderRevenueAnalysisState('error', { date: iso, message: 'Ingen omsetning registrert for valgt dato.' });
+          return;
+        }
+
+        const currentRevenue = Number(currentEntry.revenue || 0);
+        const currentReceipts = Number(currentEntry.receipts || 0);
+        if (revenueCurrentEl) revenueCurrentEl.textContent = moneyFmt.format(currentRevenue);
+        if (revenueCurrentNoteEl) {
+          revenueCurrentNoteEl.textContent = currentReceipts > 0 ? `${qtyFmt.format(currentReceipts)} kvitteringer` : '';
+        }
+
+        const prevIso = sanitizeIso(shiftIsoDate(iso, -7));
+        if (revenueComparisonEl) {
+          revenueComparisonEl.textContent = prevIso ? `Referanse: ${formatFriendlyDate(prevIso)}` : 'Ingen referanse 7 dager tidligere';
+        }
+        const prevEntry = prevIso ? getDailyEntry(prevIso, fallbackDaily) : null;
+        if (prevEntry && Number.isFinite(prevEntry.revenue)) {
+          const prevRevenue = Number(prevEntry.revenue || 0);
+          const diff = currentRevenue - prevRevenue;
+          const pct = prevRevenue > 0 ? diff / prevRevenue : null;
+          if (revenueWeekDeltaEl) {
+            revenueWeekDeltaEl.textContent = formatSignedPercent(pct) || formatSignedCurrency(diff);
+            setDeltaTone(revenueWeekDeltaEl, diff);
+          }
+          if (revenueWeekNoteEl) {
+            const parts = [moneyFmt.format(prevRevenue)];
+            if (currentReceipts > 0 && Number.isFinite(prevEntry.receipts)) {
+              parts.push(`${qtyFmt.format(prevEntry.receipts)} kvitt.`);
+            }
+            revenueWeekNoteEl.textContent = `Forrige uke: ${parts.join(' • ')}`;
+            setDeltaTone(revenueWeekNoteEl, diff);
+          }
+        } else {
+          if (revenueWeekDeltaEl) {
+            revenueWeekDeltaEl.textContent = '–';
+            setDeltaTone(revenueWeekDeltaEl, NaN);
+          }
+          if (revenueWeekNoteEl) {
+            revenueWeekNoteEl.textContent = 'Ingen tall 7 dager tilbake.';
+            setDeltaTone(revenueWeekNoteEl, NaN);
+          }
+        }
+
+        const monthEntries = getMonthEntries(iso, fallbackDaily).filter((item) => Number.isFinite(item?.revenue));
+        if (monthEntries.length) {
+          const total = monthEntries.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
+          const monthAverage = monthEntries.length ? total / monthEntries.length : 0;
+          const diffMonth = currentRevenue - monthAverage;
+          const pctMonth = monthAverage > 0 ? diffMonth / monthAverage : null;
+          if (revenueMonthDeltaEl) {
+            revenueMonthDeltaEl.textContent = formatSignedPercent(pctMonth) || formatSignedCurrency(diffMonth);
+            setDeltaTone(revenueMonthDeltaEl, diffMonth);
+          }
+          if (revenueMonthNoteEl) {
+            revenueMonthNoteEl.textContent = `Månedssnitt: ${moneyFmt.format(monthAverage)} (${monthEntries.length} dager)`;
+            setDeltaTone(revenueMonthNoteEl, diffMonth);
+          }
+        } else {
+          if (revenueMonthDeltaEl) {
+            revenueMonthDeltaEl.textContent = '–';
+            setDeltaTone(revenueMonthDeltaEl, NaN);
+          }
+          if (revenueMonthNoteEl) {
+            revenueMonthNoteEl.textContent = 'Manglende månedsdata for å beregne snitt.';
+            setDeltaTone(revenueMonthNoteEl, NaN);
+          }
+        }
+
+        if (revenueStatusEl) revenueStatusEl.textContent = '';
+      };
+
       const hideGlobalTooltip = () => {
         if (!chartTooltip) return;
         chartTooltip.dataset.visible = '0';
@@ -705,6 +948,8 @@
         if (dayAverageEl) dayAverageEl.textContent = '–';
         if (dayHeadingEl) dayHeadingEl.textContent = defaultDayHeading;
         renderProductInsights(null, { date, state: 'loading' });
+        renderRevenueAnalysisState('loading', { date });
+        revenueAnalysisContext = { date, fallbackDaily: [], entry: null };
 
         let attemptedDemo = false;
 
@@ -724,6 +969,8 @@
                 renderDayStatus('Ingen omsetning funnet for valgt dato.');
               }
               renderProductInsights(items, { date, isDemo, message: 'Ingen produktdata for denne datoen.' });
+              revenueAnalysisContext = { date, fallbackDaily: daily, entry: selected };
+              renderRevenueAnalysis(revenueAnalysisContext);
             })
             .catch((error) => {
               console.error('Kunne ikke hente dagsomsetning:', error);
@@ -732,6 +979,7 @@
               if (allowDemo) {
                 attemptedDemo = true;
                 renderProductInsights(null, { date, state: 'loading' });
+                renderRevenueAnalysisState('loading', { date });
                 attempt({ demo: true });
                 return;
               }
@@ -739,6 +987,8 @@
                 renderDayTotals(error.body.dayTotal, { isDemo: true });
                 const items = Array.isArray(error?.body?.items) ? error.body.items : Array.isArray(error?.body?.top) ? error.body.top : [];
                 renderProductInsights(items, { date, isDemo: true });
+                revenueAnalysisContext = { date, fallbackDaily: Array.isArray(error?.body?.daily) ? error.body.daily : [], entry: error.body.dayTotal };
+                renderRevenueAnalysis(revenueAnalysisContext);
                 return;
               }
               renderDayStatus(error?.body?.message || error?.message || 'Feil ved henting av omsetning', 'error');
@@ -747,6 +997,7 @@
                 state: 'error',
                 message: error?.body?.message || error?.message || 'Kunne ikke hente produktsalget. Prøv igjen senere.',
               });
+              renderRevenueAnalysisState('error', { date, message: error?.body?.message || error?.message || 'Kunne ikke hente omsetningsanalyse.' });
             });
         };
 
@@ -1032,6 +1283,9 @@
               chartOldestDate = chartDataAll.length ? chartDataAll[chartDataAll.length - 1].date : chartLatestDate;
               chartIsDemo = isDemo;
               renderChartWindow(chartLatestDate, { isDemo });
+              if (revenueAnalysisContext?.date) {
+                renderRevenueAnalysis(revenueAnalysisContext);
+              }
             })
             .catch((error) => {
               console.error('Kunne ikke hente daglig omsetning:', error);
