@@ -611,6 +611,12 @@
       const revenueMonthDeltaEl = document.querySelector('[data-revenue-month-delta]');
       const revenueMonthNoteEl = document.querySelector('[data-revenue-month-note]');
       const revenueStatusEl = document.querySelector('[data-revenue-status]');
+      let chartDataAll = [];
+      let chartDataMap = new Map();
+      let chartCursorDate = null;
+      let chartLatestDate = todayISO;
+      let chartOldestDate = todayISO;
+      let chartIsDemo = false;
       let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
 
       const renderDayStatus = (message, tone = 'muted') => {
@@ -1171,12 +1177,6 @@
         };
 
       const chartWindowDays = 14;
-      let chartDataAll = [];
-      let chartDataMap = new Map();
-      let chartCursorDate = null;
-      let chartLatestDate = todayISO;
-      let chartOldestDate = todayISO;
-      let chartIsDemo = false;
 
         const addDaysISO = (iso, delta) => {
           const base = iso ? new Date(`${iso}T00:00:00`) : new Date(`${todayISO}T00:00:00`);
