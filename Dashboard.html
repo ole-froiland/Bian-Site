@@ -77,27 +77,27 @@
     button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;}
     button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
     .shell{width:100%;max-width:1120px;margin:0 auto;padding-inline:clamp(16px,6vw,56px);}
-    .top-bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:none;box-shadow:0 18px 28px rgba(15,23,42,0.18);padding-top:env(safe-area-inset-top,0);transition:transform .24s ease,opacity .2s ease;} 
+    .top-bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 18px 28px rgba(15,23,42,0.18);padding-top:env(safe-area-inset-top,0);transition:transform .24s ease,opacity .2s ease;} 
     .top-bar[data-hidden="1"]{transform:translateY(-110%);opacity:0;} 
     .top-bar__inner{display:flex;align-items:center;gap:clamp(10px,3vw,28px);min-height:64px;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding-inline:clamp(16px,4vw,64px);}
-    .brand{display:flex;align-items:center;font-weight:800;color:#756bff;font-size:clamp(1.35rem,3vw,1.8rem);letter-spacing:0.05em;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;text-transform:capitalize;}
+    .brand{display:flex;align-items:center;font-weight:800;color:#756bff;font-size:clamp(1.35rem,3vw,1.8rem);letter-spacing:0.05em;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;text-transform:capitalize;margin-right:auto;}
     body[data-theme="light"] .brand{color:#625aff;}
-    .brand-title{flex:1;text-align:center;font-size:clamp(1.05rem,3vw,1.35rem);font-weight:600;}
-    .nav-actions{display:flex;align-items:center;gap:8px;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;margin-left:auto;}
-    .mobile-toggle{display:none;border:1px solid var(--brand-outline);border-radius:999px;padding:0 14px;height:36px;font-weight:700;background:var(--surface);color:var(--text-strong);cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.08);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;align-items:center;gap:6px;}
+    .brand-title{font-size:clamp(1rem,2.5vw,1.3rem);font-weight:600;color:var(--text-strong);margin-right:auto;}
+    .nav-actions{display:flex;align-items:center;gap:10px;font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;margin-left:auto;}
+    .mobile-toggle{display:none;border:1px solid var(--brand-outline);border-radius:20px;padding:0 16px;height:40px;font-weight:700;background:var(--surface);color:var(--text-strong);cursor:pointer;box-shadow:0 1px 2px rgba(2,6,23,.08);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;align-items:center;gap:6px;}
     .mobile-toggle .dots{display:flex;flex-direction:column;gap:3px;margin-right:2px;}
     .mobile-toggle .dots span{width:14px;height:2px;border-radius:999px;background:currentColor;display:block;}
     .mobile-toggle:focus-visible{outline:none;box-shadow:var(--ring);} 
-    .nav-controls{display:flex;align-items:center;gap:8px;}
-    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 14px;height:36px;min-width:54px;font-weight:700;background:var(--surface);color:inherit;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:0.9rem;letter-spacing:.02em;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .2s ease;will-change:background-color,border-color,color;backface-visibility:hidden;transform:translateZ(0);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+    .nav-controls{display:flex;align-items:center;gap:10px;}
+    .chip{border:1px solid var(--brand-outline);border-radius:999px;padding:0 18px;height:40px;min-width:56px;font-weight:700;background:var(--surface);color:inherit;text-decoration:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:0.95rem;letter-spacing:.02em;box-shadow:0 1px 2px rgba(2,6,23,.06);transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .2s ease;will-change:background-color,border-color,color;backface-visibility:hidden;transform:translateZ(0);font-family:"Poppins","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
     .chip:focus-visible{outline:none;box-shadow:var(--ring);}
     .chip:hover{transform:translateY(-1px);border-color:var(--accent);background:var(--accent-soft);} 
     body[data-theme="dark"] .chip{background:var(--surface-raised);color:var(--text);border-color:rgba(125,121,249,0.45);} 
-    .nav-actions .chip{height:34px;padding:0 12px;border-radius:999px;min-width:48px;font-size:0.88rem;}
-    .nav-actions .chip.user-menu__trigger{padding:0;min-width:40px;height:40px;}
+    .nav-actions .chip{height:40px;padding:0 16px;border-radius:999px;min-width:56px;font-size:0.95rem;}
+    .nav-actions .chip.user-menu__trigger{padding:0;min-width:42px;height:42px;}
     .nav-actions .chip:not(.user-menu__trigger){min-width:48px;}
     .user-menu{position:relative;}
-    .user-menu__trigger{width:40px;height:40px;min-width:40px;padding:0;border-radius:18px;border:1px solid var(--brand-outline);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(15,23,42,0.2);transition:background .22s ease,border-color .22s ease,transform .22s ease;}
+    .user-menu__trigger{width:42px;height:42px;min-width:42px;padding:0;border-radius:20px;border:1px solid var(--brand-outline);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(15,23,42,0.2);transition:background .22s ease,border-color .22s ease,transform .22s ease;}
     .user-menu__trigger:hover{transform:translateY(-1px);border-color:var(--accent);background:var(--accent-soft);}
     body[data-theme="light"] .user-menu__trigger{background:#ffffff;box-shadow:0 10px 18px rgba(31,41,55,0.08);} 
     body[data-theme="light"] .user-menu__trigger:hover{background:#f4f5ff;}
