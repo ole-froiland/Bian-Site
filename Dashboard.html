@@ -322,22 +322,8 @@
           <span data-i18n="mobile.menu_button">Meny</span>
         </button>
         <div class="nav-controls" id="dash-controls">
-          <label class="theme-switch mobile-theme-switch" aria-label="Bytt tema" hidden>
-            <input type="checkbox" aria-label="Tema mobil" />
-            <span class="slider">
-              <span class="thumb">
-                <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="5" />
-                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
-                </svg>
-              </span>
-            </span>
-          </label>
           <button type="button" class="chip" aria-label="Bytt til engelsk">EN</button>
-          <label class="theme-switch" aria-label="Bytt tema">
+          <label class="theme-switch mobile-theme-switch" aria-label="Bytt tema">
             <input type="checkbox" id="dash-theme-toggle" aria-label="Tema" />
             <span class="slider">
               <span class="thumb">
@@ -1661,17 +1647,17 @@
           const open = !navControls.classList.contains('open');
           navControls.classList.toggle('open', open);
           navMobileToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-          if (mobileThemeSwitch) {
-            mobileThemeSwitch.hidden = !open;
-          }
+          if (mobileThemeSwitch && dashMq.matches) mobileThemeSwitch.hidden = !open;
         });
         const dashMq = window.matchMedia('(max-width: 720px)');
         const resetDash = () => {
           if (!dashMq.matches) {
             navControls.classList.remove('open');
             navMobileToggle.setAttribute('aria-expanded', 'false');
-            if (mobileThemeSwitch) mobileThemeSwitch.hidden = true;
-      }
+            if (mobileThemeSwitch) mobileThemeSwitch.hidden = false;
+          } else {
+            if (mobileThemeSwitch) mobileThemeSwitch.hidden = !navControls.classList.contains('open');
+          }
         };
         dashMq.addEventListener ? dashMq.addEventListener('change', resetDash) : dashMq.addListener(resetDash);
         resetDash();
