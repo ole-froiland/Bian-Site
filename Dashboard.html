@@ -34,17 +34,16 @@
       line-height:1.55;
       letter-spacing:0.01em;
       transition:background 0.3s ease,color 0.3s ease;
-      /* Calmer indigo/slate palette (less purple) */
-      --bg:#0b1020;                /* deep navy‑indigo */
-      --surface:#141a2a;           /* neutral slate surface */
-      --surface-raised:#1b2337;    /* raised surface */
-      --border:rgba(148,163,184,0.22); /* cool slate border */
-      --text:#e8ecf5;              /* soft off‑white */
-      --text-strong:#ffffff;       /* strong text */
-      --muted:#9aa6bd;             /* muted slate */
-      --accent:#7d79f9;            /* subtle lilac accent */
-      --accent-strong:#6c63d9;     /* deeper accent */
-      --accent-soft:rgba(125,121,249,0.12); /* lighter glow */
+      --bg:#09101f;
+      --surface:#0f172a;
+      --surface-raised:#182033;
+      --border:rgba(148,163,184,0.22);
+      --text:#e8ecf5;
+      --text-strong:#ffffff;
+      --muted:#9aa6bd;
+      --accent:#7d79f9;
+      --accent-strong:#6c63d9;
+      --accent-soft:rgba(125,121,249,0.12);
       --positive:#34d399;
       --neutral:#fbbf24;
       --attention:#f87171;
@@ -54,17 +53,16 @@
       --track-dark:#374151;
       --card-radius:18px;
       color:var(--text);
-      background:linear-gradient(180deg,rgba(21,27,44,0.95) 0%,rgba(16,23,39,0.98) 120px,var(--bg) 280px);
+      background:#09101f;
       min-height:100vh;
       color-scheme:dark;
     }
     body[data-theme="light"]{
-      background:linear-gradient(180deg,#ffffff 0%,#f9fafd 120px,#f3f5fb 280px);
-      --bg:#f6f7fb;                /* cool neutral */
+      --bg:#f6f7fb;
       --surface:#ffffff;
-      --surface-raised:#eef2ff;    /* very light indigo */
+      --surface-raised:#eef2ff;
       --border:rgba(148,163,184,0.20);
-      --text:#121826;              /* neutral indigo */
+      --text:#121826;
       --text-strong:#121826;
       --muted:#6b7280;
       --accent:#7d79f9;
@@ -72,6 +70,7 @@
       --accent-soft:rgba(125,121,249,0.10);
       --brand-outline:rgba(125,121,249,0.5);
       color-scheme:light;
+      background:#f6f7fb;
     }
     h1,h2,h3,h4{margin:0;font-weight:600;color:var(--text-strong);}
     p{margin:0;}
