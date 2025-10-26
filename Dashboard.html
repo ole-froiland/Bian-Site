@@ -129,9 +129,9 @@
     .theme-switch input:checked + .slider .thumb{left:calc(100% - 2px);transform:translate(-100%,-50%) translateZ(0);} 
     .theme-switch input:checked + .slider .icon.sun{display:none;} 
     .theme-switch input:checked + .slider .icon.moon{display:block;} 
-    .sub-nav{background:var(--bg);border-top:none;box-shadow:none;padding:0 0 10px 0;}
+    .sub-nav{background:var(--bg);border-top:none;box-shadow:none;padding:0;}
     body[data-theme="light"] .sub-nav{background:var(--bg);}
-    body[data-theme="dark"] .sub-nav{background:var(--surface);border-top:1px solid rgba(148,163,184,0.22);}
+    body[data-theme="dark"] .sub-nav{background:var(--bg);}
     .tablist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-inline:clamp(12px,4vw,48px);}
     .tab-button{padding:12px 16px;border-radius:14px;border:1px solid var(--border);background:var(--surface);font-size:0.95rem;font-weight:600;letter-spacing:0.02em;transition:background 0.25s ease,border-color 0.25s ease,box-shadow 0.25s ease,transform 0.25s ease;}
     .tab-button:hover{border-color:var(--accent);background:var(--surface-raised);transform:translateY(-1px);}
