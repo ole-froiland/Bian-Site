@@ -2320,6 +2320,15 @@
               throw new Error(message);
             }
             const aggregates = Array.isArray(data.accounts) ? data.accounts : [];
+            console.groupCollapsed('Tripletex aggregater');
+            console.table(aggregates.map((entry) => ({
+              key: entry.key,
+              label: entry.label,
+              total: entry.total,
+              totalAbsolute: entry.totalAbsolute,
+              months: Object.entries(entry.months || {}).map(([k, v]) => `${k}: ${v.total}`).join(', ')
+            })));
+            console.groupEnd();
             const aggregateMap = new Map(aggregates.map((entry) => [entry.key, entry]));
             const monthSet = new Set();
             aggregates.forEach((entry) => Object.keys(entry.months || {}).forEach((m) => monthSet.add(m)));
