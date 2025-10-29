@@ -12,8 +12,6 @@ const FALLBACK = {
   companyId: process.env.TRIPLETEX_COMPANY_ID || null
 };
 
-const ACCOUNT_ID_3003 = 289896744;
-
 const isTest = FALLBACK.baseUrl.includes('api-test.tripletex.tech');
 
 const toYMD = (y,m,d) => `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -64,8 +62,7 @@ async function createSession() {
   }
 }
 
-// Felles fetch for ledger/posting – velg auth etter miljø
-async function fetchLedger(from, to) {
+async function createLedgerClient() {
   const base = FALLBACK.baseUrl.replace(/\/+$/,'');
   const token = await createSession();
 
@@ -80,18 +77,115 @@ async function fetchLedger(from, to) {
     return JSON.parse(txt);
   }
 
-  const qsBase = `dateFrom=${from}&dateTo=${to}&page=0&count=1000`;
-  const url = `${base}/v2/ledger/posting?${qsBase}&accountId=${ACCOUNT_ID_3003}`;
-  const j = await get(url);
-
-  const arr = j.values || j.data || j.postings || [];
-  const filtered = arr.filter(x => (x.account?.id ?? x.accountId ?? null) === ACCOUNT_ID_3003);
-  return filtered.map(x => ({
+  const mapPosting = (x) => ({
     id: x.id ?? x.voucherId ?? x.number ?? null,
     date: x.date || x.voucherDate || x.transactionDate || null,
     amount: Number(x.amount || x.amountNok || x.value || 0),
-    accountId: x.account?.id ?? x.accountId ?? null
+    accountId: x.account?.id ?? x.accountId ?? null,
+    accountNumber: x.account?.number ?? x.accountNumber ?? null,
+    accountName: x.account?.name ?? x.accountName ?? null
+  });
+
+  async function fetchPostings({ from, to, accountId, accountNumber }) {
+    const postings = [];
+    const pageSize = 1000;
+    let page = 0;
+    while (page < 100) {
+      const params = new URLSearchParams({
+        dateFrom: from,
+        dateTo: to,
+        page: String(page),
+        count: String(pageSize)
+      });
+      if (accountId) params.set('accountId', String(accountId));
+      else if (accountNumber) params.set('accountNumber', String(accountNumber));
+      const url = `${base}/v2/ledger/posting?${params.toString()}`;
+      const j = await get(url);
+      const arr = j.values || j.data || j.postings || [];
+      postings.push(...arr.map(mapPosting));
+      if (arr.length < pageSize) break;
+      page += 1;
+    }
+    return postings;
+  }
+
+  return {
+    fetchPostings,
+  };
+}
+
+const DEFAULT_BEER_ACCOUNT_ID = '289896744';
+
+function parseAccountsParams(rawValues) {
+  if (!rawValues || !rawValues.length) return [];
+  const items = [];
+  rawValues.forEach((raw) => {
+    if (!raw) return;
+    String(raw).split(',').forEach((entry) => {
+      const trimmed = entry.trim();
+      if (!trimmed) return;
+      const [keyPart, valuePart] = trimmed.split(':');
+      const keyLabel = keyPart || trimmed;
+      const [key, label] = keyLabel.split('|');
+      if (!valuePart) return;
+      const value = valuePart.trim();
+      if (!value) return;
+      const descriptor = {};
+      if (value.startsWith('id-')) descriptor.accountId = value.slice(3);
+      else if (/^[0-9]{6,}$/.test(value)) descriptor.accountId = value;
+      else descriptor.accountNumber = value;
+      items.push({ key: key.trim(), label: (label || key).trim(), ...descriptor });
+    });
+  });
+  return items;
+}
+
+function aggregatePostings(postings, accountConfigs, { group } = {}) {
+  const results = new Map();
+  const matchers = accountConfigs.map((cfg) => ({
+    ...cfg,
+    accountId: cfg.accountId ? String(cfg.accountId) : null,
+    accountNumber: cfg.accountNumber ? String(cfg.accountNumber) : null
   }));
+
+  postings.forEach((posting) => {
+    const accountId = posting.accountId ? String(posting.accountId) : null;
+    const accountNumber = posting.accountNumber ? String(posting.accountNumber) : null;
+    const matched = matchers.filter((cfg) => {
+      if (cfg.accountId && cfg.accountId === accountId) return true;
+      if (cfg.accountNumber && cfg.accountNumber === accountNumber) return true;
+      return false;
+    });
+    if (!matched.length) return;
+    matched.forEach((cfg) => {
+      if (!results.has(cfg.key)) {
+        results.set(cfg.key, {
+          key: cfg.key,
+          label: cfg.label || cfg.key,
+          accountId: accountId,
+          accountNumber: accountNumber,
+          total: 0,
+          totalAbsolute: 0,
+          months: {}
+        });
+      }
+      const entry = results.get(cfg.key);
+      const signed = Number(posting.amount || 0);
+      const abs = Math.abs(signed);
+      entry.total += signed;
+      entry.totalAbsolute += abs;
+      if (group === 'month') {
+        const monthKey = (posting.date || '').slice(0, 7) || 'ukjent';
+        if (!entry.months[monthKey]) {
+          entry.months[monthKey] = { total: 0, totalAbsolute: 0 };
+        }
+        entry.months[monthKey].total += signed;
+        entry.months[monthKey].totalAbsolute += abs;
+      }
+    });
+  });
+
+  return Array.from(results.values());
 }
 
 exports.handler = async (event) => {
@@ -99,6 +193,7 @@ exports.handler = async (event) => {
     if(event.httpMethod!=='GET') return err(405,'METHOD_NOT_ALLOWED','Use GET');
 
     const q = event.queryStringParameters || {};
+    const multiQ = event.multiValueQueryStringParameters || {};
     const usedFallback = !process.env.TRIPLETEX_CONSUMER_TOKEN || !process.env.TRIPLETEX_EMPLOYEE_TOKEN;
     if(usedFallback) console.warn('Using fallback Tripletex credentials');
 
@@ -123,6 +218,14 @@ exports.handler = async (event) => {
       }
     }
 
+    const accountParamsRaw = [];
+    if (multiQ.accounts && Array.isArray(multiQ.accounts)) accountParamsRaw.push(...multiQ.accounts);
+    if (q.accounts) accountParamsRaw.push(q.accounts);
+    const accountConfigs = parseAccountsParams(accountParamsRaw);
+    const groupMode = String(q.group || '').toLowerCase();
+
+    const wantsAggregation = accountConfigs.length > 0 || groupMode === 'month';
+
     // demo data
     if(q.demo==='1'){
       const from = normDate(q.from) || toYMD(new Date().getFullYear(),1,1);
@@ -135,7 +238,7 @@ exports.handler = async (event) => {
           id:1000+i,
           date:`${d.getFullYear()}-${mm}-${dd}`,
           amount: Math.round((Math.random()*4000+500)*(Math.random()>0.2?1:-1)),
-          accountId: ACCOUNT_ID_3003
+          accountId: Number(DEFAULT_BEER_ACCOUNT_ID)
         };
       });
       const total = items.reduce((a,b)=>a+Math.abs(b.amount),0);
@@ -152,17 +255,52 @@ exports.handler = async (event) => {
     }
     if(from>to) [from,to]=[to,from];
 
+    if (!wantsAggregation) {
+      let postings;
+      try{
+        const client = await createLedgerClient();
+        postings = await client.fetchPostings({ from, to, accountId: DEFAULT_BEER_ACCOUNT_ID });
+      }catch(e){
+        return err(502,'LEDGER_FAIL', String(e.message||e));
+      }
+
+      const total = postings.reduce((a,p)=>a+Math.abs(Number(p.amount||0)),0);
+      return ok({ dateFrom:from, dateTo:to, count:postings.length, totalBeerSales:total, postings });
+    }
+
+    const client = await createLedgerClient();
     let postings;
     try{
-      postings = await fetchLedger(from, to);
+      postings = await client.fetchPostings({ from, to });
     }catch(e){
       return err(502,'LEDGER_FAIL', String(e.message||e));
     }
 
-    const total = postings.reduce((a,p)=>a+Math.abs(Number(p.amount||0)),0);
-    return ok({ dateFrom:from, dateTo:to, count:postings.length, totalBeerSales:total, postings });
+    const effectiveAccounts = accountConfigs.length
+      ? accountConfigs
+      : [{ key: 'beerRevenue', label: 'Øl salg', accountId: DEFAULT_BEER_ACCOUNT_ID }];
+
+    const aggregates = aggregatePostings(postings, effectiveAccounts, { group: groupMode === 'month' ? 'month' : undefined });
+
+    const totalBeer = aggregates.find((item) => item.accountId === DEFAULT_BEER_ACCOUNT_ID || item.accountNumber === '3003');
+    const defaultPostings = aggregates.length === 1
+      ? postings.filter((p) => {
+          const matchCfg = effectiveAccounts[0];
+          if (matchCfg.accountId && String(p.accountId) === String(matchCfg.accountId)) return true;
+          if (matchCfg.accountNumber && String(p.accountNumber) === String(matchCfg.accountNumber)) return true;
+          return false;
+        })
+      : [];
+
+    return ok({
+      dateFrom: from,
+      dateTo: to,
+      count: postings.length,
+      totalBeerSales: totalBeer ? totalBeer.totalAbsolute : 0,
+      accounts: aggregates,
+      postings: defaultPostings,
+    });
   }catch(e){
     return err(500,'UNEXPECTED', String(e.message||e));
   }
 };
-

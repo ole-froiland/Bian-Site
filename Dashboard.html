@@ -537,6 +537,23 @@
     }
     .bar__label strong{font-size:0.78rem;color:var(--text-strong);}
     .bar__label small{font-size:0.7rem;color:var(--text-muted);}
+    .tripletex-grid{
+      display:grid;
+      gap:var(--space-3);
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    }
+    .tripletex-card h2{font-size:1.05rem;}
+    .tripletex-status{font-size:0.85rem;color:var(--text-muted);margin:0;}
+    .tripletex-status[data-tone="error"]{color:#dc2626;}
+    .tripletex-status[data-tone="muted"]{color:var(--text-muted);}
+    .tripletex-table{width:100%;border-collapse:separate;border-spacing:0;font-size:0.9rem;font-variant-numeric:tabular-nums;}
+    .tripletex-table thead th{padding-bottom:0.6rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.78rem;letter-spacing:0.08em;border-bottom:1px solid var(--border);text-align:left;}
+    .tripletex-table tbody td{padding:0.7rem 0;border-bottom:1px solid var(--border-subtle);}
+    .tripletex-table tbody tr:last-child td{border-bottom:none;}
+    .tripletex-table .numeric{text-align:right;}
+    .tripletex-table .trend-positive{color:#16a34a;}
+    .tripletex-table .trend-negative{color:#dc2626;}
+    .tripletex-table .muted{color:var(--text-muted);}
     .chart-nav{
       display:flex;
       align-items:center;
@@ -897,17 +914,45 @@
     </div>
   </nav>
   <main class="shell">
-    <section class="tab-panel active" id="kpi" role="tabpanel" aria-labelledby="tab-kpi" tabindex="0">
-      <div class="stats-grid">
-        <article class="card stat" data-tripletex-month="jan">
-          <h2>Tripletex · Januar</h2>
-          <p class="stat-number" data-tripletex-amount>–</p>
-          <p class="stat-sub" data-tripletex-status>Henter …</p>
+    <section class="tab-panel active" id="kpi" role="tabpanel" aria-labelledby="tab-kpi" tabindex="0" data-tripletex-config='{"beer":{"label":"Øl","accounts":{"revenue":"id-289896744","cost":"4003"}},"wine":{"label":"Vin","accounts":{"revenue":"3004","cost":"4004"}}}'>
+      <div class="tripletex-grid">
+        <article class="card tripletex-card" data-tripletex-product="beer">
+          <header>
+            <h2 data-tripletex-label>Tripletex · Øl</h2>
+            <p class="tripletex-status" data-tripletex-status>Henter …</p>
+          </header>
+          <table class="tripletex-table">
+            <thead>
+              <tr>
+                <th>Måned</th>
+                <th>Salgsinntekt</th>
+                <th>Varekost</th>
+                <th>Dekningsgrad</th>
+              </tr>
+            </thead>
+            <tbody data-tripletex-table>
+              <tr><td colspan="4" class="muted">Henter …</td></tr>
+            </tbody>
+          </table>
         </article>
-        <article class="card stat" data-tripletex-month="feb">
-          <h2>Tripletex · Februar</h2>
-          <p class="stat-number" data-tripletex-amount>–</p>
-          <p class="stat-sub" data-tripletex-status>Henter …</p>
+        <article class="card tripletex-card" data-tripletex-product="wine">
+          <header>
+            <h2 data-tripletex-label>Tripletex · Vin</h2>
+            <p class="tripletex-status" data-tripletex-status>Henter …</p>
+          </header>
+          <table class="tripletex-table">
+            <thead>
+              <tr>
+                <th>Måned</th>
+                <th>Salgsinntekt</th>
+                <th>Varekost</th>
+                <th>Dekningsgrad</th>
+              </tr>
+            </thead>
+            <tbody data-tripletex-table>
+              <tr><td colspan="4" class="muted">Henter …</td></tr>
+            </tbody>
+          </table>
         </article>
       </div>
     </section>
@@ -2148,89 +2193,173 @@
         load();
       }
 
-      const tripletexCards = document.querySelectorAll('[data-tripletex-month]');
-      if (tripletexCards.length) {
-        const tripletexEndpointCandidates = [
-          '/.netlify/functions/tripletex',
-          '/api/tripletex',
-          '/functions/tripletex'
-        ];
-        let tripletexEndpointCache = null;
-
+      const tripletexSection = document.querySelector('[data-tripletex-config]');
+      if (tripletexSection) {
         const resolveTripletexEndpoint = async () => {
-          if (tripletexEndpointCache) return tripletexEndpointCache;
-          for (const base of tripletexEndpointCandidates) {
+          if (resolveTripletexEndpoint.cache) return resolveTripletexEndpoint.cache;
+          const candidates = [
+            '/.netlify/functions/tripletex',
+            '/api/tripletex',
+            '/functions/tripletex'
+          ];
+          for (const base of candidates) {
             try {
               const ping = await fetch(`${base}?ping=1`, { method: 'GET' });
               if (ping.ok) {
-                tripletexEndpointCache = base;
+                resolveTripletexEndpoint.cache = base;
                 return base;
               }
             } catch (_) {
               /* ignore */
             }
           }
-          tripletexEndpointCache = tripletexEndpointCandidates[0];
-          return tripletexEndpointCache;
+          resolveTripletexEndpoint.cache = candidates[0];
+          return resolveTripletexEndpoint.cache;
         };
 
-        const fetchTripletexRange = async (fromISO, toISO) => {
-          const base = await resolveTripletexEndpoint();
-          const url = new URL(base, window.location.origin);
-          url.searchParams.set('from', fromISO);
-          url.searchParams.set('to', toISO);
-          const res = await fetch(url.toString(), { headers: { accept: 'application/json' } });
-          const text = await res.text();
-          let data = {};
-          try { data = JSON.parse(text); } catch (_) { /* ignore json parse error */ }
-          if (!res.ok) {
-            const message = data?.message || data?.error || res.statusText || text || 'Kunne ikke hente Tripletex-data';
-            throw new Error(message);
+        const sectionConfigRaw = tripletexSection.dataset.tripletexConfig || '{}';
+        let sectionConfig = {};
+        try { sectionConfig = JSON.parse(sectionConfigRaw); } catch (_) {
+          console.warn('Tripletex-config: kunne ikke tolke JSON');
+        }
+
+        const products = Object.entries(sectionConfig).map(([key, value]) => ({
+          key,
+          label: value?.label || key,
+          revenueAccount: value?.accounts?.revenue || null,
+          costAccount: value?.accounts?.cost || null,
+        })).filter((item) => item.revenueAccount || item.costAccount);
+
+        if (!products.length) {
+          products.push({ key: 'beer', label: 'Øl', revenueAccount: 'id-289896744', costAccount: null });
+        }
+
+        const accountsParam = [];
+        products.forEach((product) => {
+          if (product.revenueAccount) accountsParam.push(`${product.key}Revenue|${product.label} salg:${product.revenueAccount}`);
+          if (product.costAccount) accountsParam.push(`${product.key}Cost|${product.label} varekost:${product.costAccount}`);
+        });
+
+        const year = new Date().getFullYear();
+        const fromISO = `${year}-01-01`;
+        const lastDayFeb = new Date(year, 2, 0).getDate();
+        const toISO = `${year}-02-${String(lastDayFeb).padStart(2, '0')}`;
+
+        const updateProductHeader = (productKey, label) => {
+          const card = tripletexSection.querySelector(`[data-tripletex-product="${productKey}"]`);
+          const heading = card?.querySelector('[data-tripletex-label]');
+          if (card && heading) heading.textContent = `Tripletex · ${label}`;
+        };
+
+        products.forEach((product) => updateProductHeader(product.key, product.label));
+
+        const setStatus = (productKey, text, tone = 'muted') => {
+          const card = tripletexSection.querySelector(`[data-tripletex-product="${productKey}"]`);
+          const statusEl = card?.querySelector('[data-tripletex-status]');
+          if (statusEl) {
+            statusEl.textContent = text;
+            statusEl.dataset.tone = tone;
           }
-          const postings = Array.isArray(data.postings) ? data.postings : [];
-          const total = typeof data.totalBeerSales === 'number'
-            ? data.totalBeerSales
-            : postings.reduce((sum, entry) => sum + Math.abs(Number(entry.amount || 0)), 0);
-          return {
-            total,
-            from: data.dateFrom || fromISO,
-            to: data.dateTo || toISO
-          };
         };
 
-        const monthDefs = [
-          { key: 'jan', monthIndex: 0, label: 'Januar' },
-          { key: 'feb', monthIndex: 1, label: 'Februar' },
-        ];
-
-        const setTripletexAmount = (card, value) => {
-          const el = card.querySelector('[data-tripletex-amount]');
-          if (el) el.textContent = value;
-        };
-        const setTripletexStatus = (card, value) => {
-          const el = card.querySelector('[data-tripletex-status]');
-          if (el) el.textContent = value;
-        };
-
-        (async () => {
-          const year = new Date().getFullYear();
-          for (const def of monthDefs) {
-            const card = document.querySelector(`[data-tripletex-month="${def.key}"]`);
-            if (!card) continue;
-            setTripletexStatus(card, 'Henter …');
-            try {
-              const start = new Date(year, def.monthIndex, 1);
-              const end = new Date(year, def.monthIndex + 1, 0);
-              const { total } = await fetchTripletexRange(toISODate(start), toISODate(end));
-              setTripletexAmount(card, moneyFmt.format(total));
-              setTripletexStatus(card, `${def.label} ${year}`);
-            } catch (error) {
-              console.error('Tripletex KPI', error);
-              setTripletexAmount(card, '–');
-              setTripletexStatus(card, 'Kunne ikke hente Tripletex-data');
+        const setTable = (productKey, rows) => {
+          const card = tripletexSection.querySelector(`[data-tripletex-product="${productKey}"]`);
+          const body = card?.querySelector('[data-tripletex-table]');
+          if (!body) return;
+          body.innerHTML = '';
+          if (!rows.length) {
+            const emptyRow = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 4;
+            cell.className = 'muted';
+            cell.textContent = 'Ingen transaksjoner i perioden';
+            emptyRow.appendChild(cell);
+            body.appendChild(emptyRow);
+            return;
+          }
+          rows.forEach((row) => {
+            const tr = document.createElement('tr');
+            const monthCell = document.createElement('td');
+            monthCell.textContent = row.monthLabel;
+            const revenueCell = document.createElement('td');
+            revenueCell.className = 'numeric';
+            revenueCell.textContent = row.revenue;
+            const costCell = document.createElement('td');
+            costCell.className = 'numeric';
+            costCell.textContent = row.cost;
+            const marginCell = document.createElement('td');
+            marginCell.className = 'numeric';
+            if (row.margin == null) {
+              marginCell.classList.add('muted');
+              marginCell.textContent = '–';
+            } else {
+              if (row.margin >= 0) marginCell.classList.add('trend-positive');
+              else marginCell.classList.add('trend-negative');
+              marginCell.textContent = percentFmt.format(row.margin);
             }
+            tr.append(monthCell, revenueCell, costCell, marginCell);
+            body.appendChild(tr);
+          });
+        };
+
+        const load = async () => {
+          products.forEach((product) => setStatus(product.key, 'Henter …', 'muted'));
+          try {
+            const base = await resolveTripletexEndpoint();
+            const url = new URL(base, window.location.origin);
+            url.searchParams.set('from', fromISO);
+            url.searchParams.set('to', toISO);
+            url.searchParams.set('group', 'month');
+            accountsParam.forEach((entry) => url.searchParams.append('accounts', entry));
+            const res = await fetch(url.toString(), { headers: { accept: 'application/json' } });
+            const text = await res.text();
+            let data = {};
+            try { data = JSON.parse(text); } catch (_) {}
+            if (!res.ok) {
+              const message = data?.message || data?.error || res.statusText || text || 'Kunne ikke hente Tripletex-data';
+              throw new Error(message);
+            }
+            const aggregates = Array.isArray(data.accounts) ? data.accounts : [];
+            const aggregateMap = new Map(aggregates.map((entry) => [entry.key, entry]));
+            const monthSet = new Set();
+            aggregates.forEach((entry) => Object.keys(entry.months || {}).forEach((m) => monthSet.add(m)));
+            const sortedMonths = Array.from(monthSet).sort();
+            const monthLabelFmt = new Intl.DateTimeFormat('nb-NO', { month: 'long', year: 'numeric' });
+
+            products.forEach((product) => {
+              const revenue = product.revenueAccount ? aggregateMap.get(`${product.key}Revenue`) : null;
+              const cost = product.costAccount ? aggregateMap.get(`${product.key}Cost`) : null;
+              const rows = sortedMonths.map((monthKey) => {
+                if (!monthKey || monthKey === 'ukjent') return null;
+                const [yearPart, monthPart] = monthKey.split('-');
+                const monthDate = new Date(Number(yearPart), Number(monthPart) - 1, 1);
+                const monthLabel = monthLabelFmt.format(monthDate);
+                const revenueValue = revenue?.months?.[monthKey]?.totalAbsolute || 0;
+                const costValue = cost?.months?.[monthKey]?.totalAbsolute || 0;
+                const margin = revenueValue > 0 ? (revenueValue - costValue) / revenueValue : null;
+                return {
+                  monthKey,
+                  monthLabel,
+                  revenue: moneyFmt.format(revenueValue),
+                  cost: moneyFmt.format(costValue),
+                  margin,
+                };
+              }).filter(Boolean);
+
+              setTable(product.key, rows);
+              const statusText = `${dateFmtShort.format(new Date(fromISO))} – ${dateFmtShort.format(new Date(toISO))}`;
+              setStatus(product.key, statusText);
+            });
+          } catch (error) {
+            console.error('Tripletex aggregation', error);
+            products.forEach((product) => {
+              setTable(product.key, []);
+              setStatus(product.key, String(error.message || error), 'error');
+            });
           }
-        })();
+        };
+
+        load();
       }
 
       const navMobileToggle = document.querySelector('.nav-actions .mobile-toggle');
