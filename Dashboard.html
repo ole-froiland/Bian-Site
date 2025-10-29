@@ -796,6 +796,13 @@
       color:var(--text-muted);
       opacity:0.75;
     }
+    .empty-state--center{
+      justify-content:center;
+      text-align:center;
+      padding:2rem;
+      min-height:220px;
+    }
+    .empty-state__hint{margin-top:0.35rem;}
     .day-status{
       margin-top:var(--space-2);
       font-size:0.9rem;
@@ -917,56 +924,15 @@
   </nav>
   <main class="shell">
     <section class="tab-panel active" id="kpi" role="tabpanel" aria-labelledby="tab-kpi" tabindex="0">
-      <div class="stats-grid">
-        <article class="card stat">
-          <h2>Daglig omsetning</h2>
-          <p class="stat-number">134&nbsp;560 kr</p>
-          <p class="stat-sub">+12% siden i går</p>
-        </article>
-        <article class="card stat">
-          <h2>Gjennomsnittlig besøk</h2>
-          <p class="stat-number">286 gjester</p>
-          <p class="stat-sub">+8% siste uke</p>
-        </article>
-        <article class="card stat">
-          <h2>Snittordre</h2>
-          <p class="stat-number">472 kr</p>
-          <p class="stat-sub">+5% siste 14 dager</p>
-        </article>
-      </div>
-      <article class="card table-card">
-        <header>
-          <h2>Topp 3 produkter</h2>
-        </header>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Produkt</th>
-                <th>Solgt</th>
-                <th>Andel</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Grillet kveite</td>
-                <td>184</td>
-                <td>32%</td>
-              </tr>
-              <tr>
-                <td>Fersk blåskjell</td>
-                <td>156</td>
-                <td>27%</td>
-              </tr>
-              <tr>
-                <td>Bryggens burger</td>
-                <td>142</td>
-                <td>24%</td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="empty-state empty-state--center">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M4.75 5A2.75 2.75 0 0 1 7.5 2.25h9A2.75 2.75 0 0 1 19.25 5v14a.75.75 0 0 1-1.2.6l-5.05-3.79a1.25 1.25 0 0 0-1.5 0L6.45 19.6a.75.75 0 0 1-1.2-.6V5ZM7.5 3.75A1.25 1.25 0 0 0 6.25 5v12.54l3.8-2.85a2.75 2.75 0 0 1 3.3 0l3.8 2.85V5A1.25 1.25 0 0 0 16.5 3.75h-9Z"/>
+        </svg>
+        <div>
+          <p class="muted">Ingen KPI-data tilgjengelig akkurat nå.</p>
+          <p class="muted empty-state__hint">Velg en annen fane eller legg til datakilder for å vise nøkkeltall.</p>
         </div>
-      </article>
+      </div>
     </section>
     <section class="tab-panel" id="oversikt" role="tabpanel" aria-labelledby="tab-oversikt" tabindex="0" hidden>
       <article class="card chart-card">
