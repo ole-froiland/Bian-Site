@@ -1937,11 +1937,8 @@
 
           const revenues = days.map(d => Math.max(0, Number(d.revenue || 0)));
           const maxRevenue = Math.max(...revenues, 0) || 1;
-          const nonZeroRevenues = revenues.filter(n => n > 0);
-          const minRevenue = nonZeroRevenues.length ? Math.min(...nonZeroRevenues) : 0;
-          const stretchFactor = 0.6;
           const chartHeight = barChart.clientHeight || 240;
-          const maxBarHeight = chartHeight * 0.9;
+          const maxBarHeight = chartHeight * 0.8;
           const minBarHeight = Math.max(6, chartHeight * 0.05);
 
           barChart.removeAttribute('data-empty');
@@ -1972,18 +1969,13 @@
 
           days.forEach((day) => {
             const revenue = Math.max(0, Number(day.revenue || 0));
-            let ratio = 0;
-            if (revenue > 0) {
-              const scaled = (revenue - minRevenue) * stretchFactor;
-              ratio = (minRevenue + scaled) / Math.max(maxRevenue, 1);
-            }
-            ratio = Math.max(0, Math.min(1, ratio));
+            const ratio = maxRevenue > 0 ? Math.max(0, Math.min(1, revenue / maxRevenue)) : 0;
             const column = document.createElement('div');
             column.className = 'bar__column';
             const columnHeight = Math.max(minBarHeight, ratio * maxBarHeight);
             const fillHeight = Math.max(12, Math.min(maxBarHeight, columnHeight));
             column.style.setProperty('--fill-height', `${fillHeight}px`);
-            column.style.setProperty('--track-height', `${maxBarHeight + 12}px`);
+            column.style.setProperty('--track-height', `${chartHeight}px`);
             column.dataset.zero = revenue > 0 ? '0' : '1';
             const bar = document.createElement('div');
             bar.className = 'bar';
@@ -1992,7 +1984,6 @@
             const dayName = dayNameRaw ? dayNameRaw.replace('.', '').slice(0,3).toUpperCase() : '';
             const dateLabel = dateObj && !Number.isNaN(dateObj.getTime()) ? chartDateFmt.format(dateObj) : (day.date || '');
             const friendly = dateObj && !Number.isNaN(dateObj.getTime()) ? dateFmtLong.format(dateObj) : (day.date || '');
-            bar.title = `${friendly}: ${moneyFmt.format(revenue)}`;
             const label = document.createElement('span');
             label.className = 'bar__label';
             label.innerHTML = `<strong>${dayName}</strong><small>${dateLabel}</small>`;
