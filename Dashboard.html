@@ -492,8 +492,8 @@
       flex-direction:column;
       align-items:center;
       gap:0.6rem;
-      min-width:3.8rem;
-      flex:1 1 0;
+      min-width:5rem;
+      flex:1 1 5rem;
     }
     .bar__column{
       position:relative;
@@ -502,8 +502,8 @@
       display:flex;
       align-items:flex-end;
       justify-content:center;
-      padding:0.6rem;
-      border-radius:24px;
+      padding:0.25rem 0.4rem;
+      border-radius:28px;
       border:0;
       background:transparent;
       transition:transform 160ms ease;
@@ -513,9 +513,9 @@
       content:"";
       position:relative;
       display:block;
-      width:calc(100% - 1.2rem);
+      width:100%;
       height:var(--fill-height,22px);
-      border-radius:18px;
+      border-radius:22px;
       background:linear-gradient(180deg,var(--primary) 0%,var(--primary-hover) 100%);
       transition:height 200ms ease,transform 160ms ease;
     }
@@ -972,13 +972,13 @@
     <section class="tab-panel" id="oversikt" role="tabpanel" aria-labelledby="tab-oversikt" tabindex="0" hidden>
       <article class="card chart-card">
         <header>
-          <h2>Omsetning (14 dager)</h2>
+          <h2>Omsetning (7 dager)</h2>
           <div class="chart-nav">
-            <button type="button" class="chart-nav__btn" data-chart-nav="prev" aria-label="Forrige 14 dager">‹</button>
-            <button type="button" class="chart-nav__btn" data-chart-nav="next" aria-label="Neste 14 dager">›</button>
+            <button type="button" class="chart-nav__btn" data-chart-nav="prev" aria-label="Forrige uke">‹</button>
+            <button type="button" class="chart-nav__btn" data-chart-nav="next" aria-label="Neste uke">›</button>
           </div>
         </header>
-        <div class="bar-chart" data-daily-chart role="img" aria-live="polite" aria-label="Omsetning siste 14 dager"></div>
+        <div class="bar-chart" data-daily-chart role="img" aria-live="polite" aria-label="Omsetning siste 7 dager"></div>
         <div class="chart-tooltip" data-chart-tooltip hidden></div>
       </article>
       <article class="card daily-summary-card">
@@ -2040,7 +2040,25 @@
           dailyTableBody.appendChild(row);
         };
 
-      const chartWindowDays = 14;
+      const chartWindowDays = 7;
+
+        const startOfWeekISO = (iso) => {
+          const base = parseIsoDate(iso) || parseIsoDate(todayISO);
+          if (!base) return todayISO;
+          const day = base.getDay();
+          const offset = day === 0 ? -6 : (1 - day);
+          const monday = new Date(base);
+          monday.setDate(base.getDate() + offset);
+          return toISODate(monday);
+        };
+
+        const endOfWeekISO = (iso) => {
+          const monday = parseIsoDate(startOfWeekISO(iso));
+          if (!monday) return todayISO;
+          const sunday = new Date(monday);
+          sunday.setDate(monday.getDate() + (chartWindowDays - 1));
+          return toISODate(sunday);
+        };
 
         const addDaysISO = (iso, delta) => {
           const base = iso ? new Date(`${iso}T00:00:00`) : new Date(`${todayISO}T00:00:00`);
@@ -2050,21 +2068,32 @@
         };
 
         const clampCursorDate = (iso) => {
-          const latest = chartDataAll.length ? chartDataAll[0].date : todayISO;
-          const oldest = chartDataAll.length ? chartDataAll[chartDataAll.length - 1].date : latest;
-          const earliestEnd = chartDataAll.length >= chartWindowDays ? addDaysISO(oldest, chartWindowDays - 1) : latest;
-          let target = iso || latest;
-          if (target.localeCompare(latest) > 0) target = latest;
+          const latestActual = chartDataAll.length ? chartDataAll[0].date : todayISO;
+          const oldestActual = chartDataAll.length ? chartDataAll[chartDataAll.length - 1].date : latestActual;
+          const latestEnd = endOfWeekISO(latestActual);
+          const earliestCandidate = chartDataAll.length >= chartWindowDays
+            ? addDaysISO(oldestActual, chartWindowDays - 1)
+            : latestActual;
+          const earliestEnd = endOfWeekISO(earliestCandidate);
+          let target = iso || latestEnd;
+          if (target.localeCompare(latestEnd) > 0) target = latestEnd;
           if (target.localeCompare(earliestEnd) < 0) target = earliestEnd;
-          return target;
+          return endOfWeekISO(target);
         };
 
         const buildChartRange = (endIso) => {
           const cursor = clampCursorDate(endIso);
-          const endDate = new Date(`${cursor}T00:00:00`);
-          const startDate = new Date(endDate);
-          startDate.setDate(startDate.getDate() - (chartWindowDays - 1));
+          const endDate = parseIsoDate(cursor) || parseIsoDate(todayISO);
+          const startDate = (() => {
+            const monday = parseIsoDate(startOfWeekISO(cursor));
+            if (monday) return monday;
+            if (!endDate) return null;
+            const fallback = new Date(endDate);
+            fallback.setDate(endDate.getDate() - (chartWindowDays - 1));
+            return fallback;
+          })();
           const range = [];
+          if (!endDate || !startDate) return { cursor, range };
           for (let i = 0; i < chartWindowDays; i++) {
             const current = new Date(startDate);
             current.setDate(startDate.getDate() + i);
@@ -2082,11 +2111,16 @@
             chartNextBtn.disabled = true;
             return;
           }
-          const latest = chartDataAll[0]?.date || todayISO;
-          const oldest = chartDataAll[chartDataAll.length - 1]?.date || latest;
-          const earliestEnd = chartDataAll.length >= chartWindowDays ? addDaysISO(oldest, chartWindowDays - 1) : latest;
-          chartPrevBtn.disabled = chartCursorDate ? chartCursorDate.localeCompare(earliestEnd) <= 0 : true;
-          chartNextBtn.disabled = chartCursorDate ? chartCursorDate.localeCompare(latest) >= 0 : false;
+          const latestActual = chartDataAll[0]?.date || todayISO;
+          const oldestActual = chartDataAll[chartDataAll.length - 1]?.date || latestActual;
+          const latestEnd = endOfWeekISO(latestActual);
+          const earliestCandidate = chartDataAll.length >= chartWindowDays
+            ? addDaysISO(oldestActual, chartWindowDays - 1)
+            : latestActual;
+          const earliestEnd = endOfWeekISO(earliestCandidate);
+          const cursorEnd = chartCursorDate || latestEnd;
+          chartPrevBtn.disabled = cursorEnd.localeCompare(earliestEnd) <= 0;
+          chartNextBtn.disabled = cursorEnd.localeCompare(latestEnd) >= 0;
         };
 
         const renderChartWindow = (endIso, { isDemo = false } = {}) => {
