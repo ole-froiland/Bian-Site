@@ -492,8 +492,9 @@
       flex-direction:column;
       align-items:center;
       gap:0.6rem;
-      min-width:5rem;
-      flex:1 1 5rem;
+      min-width:4.4rem;
+      flex:1 1 4.4rem;
+      --bar-index:0;
     }
     .bar__column{
       position:relative;
@@ -502,7 +503,7 @@
       display:flex;
       align-items:flex-end;
       justify-content:center;
-      padding:0.25rem 0.4rem;
+      padding:0.35rem 0.35rem;
       border-radius:28px;
       border:0;
       background:transparent;
@@ -581,6 +582,53 @@
       transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
     }
     .chart-nav__btn:hover{background:color-mix(in srgb,var(--surface) 85%,var(--primary) 15%);border-color:var(--primary);}
+    .chart-card header{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:0.75rem 1rem;
+    }
+    .chart-card header h2{
+      margin:0;
+    }
+    .chart-header__main{
+      display:flex;
+      flex-direction:column;
+      gap:0.5rem;
+    }
+    .chart-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:0.45rem 1.2rem;
+      font-size:0.85rem;
+      color:var(--text-muted);
+    }
+    .chart-meta__week{
+      font-weight:600;
+      color:var(--text-strong);
+    }
+    .chart-meta__total{
+      font-weight:600;
+      color:var(--text-strong);
+    }
+    .bar-chart--slide-next .bar,
+    .bar-chart--slide-prev .bar{
+      animation-duration:280ms;
+      animation-timing-function:cubic-bezier(0.22,0.61,0.36,1);
+      animation-fill-mode:both;
+      animation-delay:calc(var(--bar-index) * 26ms);
+    }
+    .bar-chart--slide-next .bar{animation-name:chart-slide-next;}
+    .bar-chart--slide-prev .bar{animation-name:chart-slide-prev;}
+    @keyframes chart-slide-next{
+      from{opacity:0;transform:translateX(14%);}
+      to{opacity:1;transform:translateX(0);}
+    }
+    @keyframes chart-slide-prev{
+      from{opacity:0;transform:translateX(-14%);}
+      to{opacity:1;transform:translateX(0);}
+    }
     .chart-tooltip{
       position:absolute;
       transform:translate(-50%,calc(-100% - 18px));
@@ -972,7 +1020,13 @@
     <section class="tab-panel" id="oversikt" role="tabpanel" aria-labelledby="tab-oversikt" tabindex="0" hidden>
       <article class="card chart-card">
         <header>
-          <h2>Omsetning (7 dager)</h2>
+          <div class="chart-header__main">
+            <h2>Omsetning (7 dager)</h2>
+            <div class="chart-meta">
+              <span class="chart-meta__week" data-chart-week-label>Uke –</span>
+              <span class="chart-meta__total" data-chart-week-total>Totalt: –</span>
+            </div>
+          </div>
           <div class="chart-nav">
             <button type="button" class="chart-nav__btn" data-chart-nav="prev" aria-label="Forrige uke">‹</button>
             <button type="button" class="chart-nav__btn" data-chart-nav="next" aria-label="Neste uke">›</button>
@@ -1205,6 +1259,8 @@
       const barChart = document.querySelector('[data-daily-chart]');
       const chartPrevBtn = document.querySelector('[data-chart-nav="prev"]');
       const chartNextBtn = document.querySelector('[data-chart-nav="next"]');
+      const chartWeekLabel = document.querySelector('[data-chart-week-label]');
+      const chartWeekTotal = document.querySelector('[data-chart-week-total]');
       const chartTooltip = document.querySelector('[data-chart-tooltip]');
       const chartCard = barChart ? barChart.closest('.chart-card') : null;
       const weekdayFmt = new Intl.DateTimeFormat('nb-NO', { weekday: 'short' });
@@ -1292,6 +1348,18 @@
         if (!parsed) return '–';
         const formatted = dateFmtLong.format(parsed);
         return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      };
+
+      const getISOWeekInfo = (iso) => {
+        const parsed = parseIsoDate(iso);
+        if (!parsed) return null;
+        const target = new Date(parsed);
+        target.setHours(0, 0, 0, 0);
+        const day = target.getDay() === 0 ? 7 : target.getDay();
+        target.setDate(target.getDate() + 4 - day);
+        const yearStart = new Date(target.getFullYear(), 0, 1);
+        const week = Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
+        return { week, year: target.getFullYear() };
       };
 
       const shiftIsoDate = (iso, delta) => {
@@ -1913,7 +1981,8 @@
           dailyTableBody.appendChild(loadingRow);
         };
 
-      const renderChart = (days, { isDemo = false, message = '' } = {}) => {
+      const renderChart = (days, { isDemo = false, message = '', direction = '' } = {}) => {
+        updateWeekSummary(days);
         if (!barChart) return;
         barChart.innerHTML = '';
         if (chartTooltip) {
@@ -1966,7 +2035,7 @@
             }, 160);
           };
 
-          days.forEach((day) => {
+          days.forEach((day, index) => {
             const revenue = Math.max(0, Number(day.revenue || 0));
             const ratio = maxRevenue > 0 ? Math.max(0, Math.min(1, revenue / maxRevenue)) : 0;
             const column = document.createElement('div');
@@ -1989,6 +2058,7 @@
             label.className = 'bar__label';
             label.innerHTML = `<strong>${dayName}</strong><small>${dateLabel}</small>`;
             bar.append(column, label);
+            bar.style.setProperty('--bar-index', index);
             const eventTarget = column;
             const handleEnter = () => showTooltip(bar, friendly, revenue);
             const handleLeave = () => hideTooltip();
@@ -2000,6 +2070,7 @@
             eventTarget.setAttribute('aria-label', `${friendly}: ${moneyFmt.format(revenue)}`);
             barChart.appendChild(bar);
           });
+          triggerChartTransition(direction);
         };
 
         const renderRows = (days, { showDemoNotice = false } = {}) => {
@@ -2038,6 +2109,56 @@
           const row = document.createElement('tr');
           row.innerHTML = `<td colspan="3">${message}</td>`;
           dailyTableBody.appendChild(row);
+        };
+
+        const updateWeekSummary = (range = []) => {
+          if (!chartWeekLabel && !chartWeekTotal) return;
+          if (!Array.isArray(range) || !range.length) {
+            if (chartWeekLabel) chartWeekLabel.textContent = 'Uke –';
+            if (chartWeekTotal) chartWeekTotal.textContent = 'Totalt: –';
+            return;
+          }
+          const first = range[0];
+          const last = range[range.length - 1];
+          const rangeStart = first?.date ? parseIsoDate(first.date) : null;
+          const rangeEnd = last?.date ? parseIsoDate(last.date) : null;
+          const weekInfo = getISOWeekInfo(last?.date || first?.date);
+          const parts = [];
+          if (weekInfo) {
+            const weekNumber = String(weekInfo.week).padStart(2, '0');
+            parts.push(`Uke ${weekNumber}`);
+          }
+          if (rangeStart && rangeEnd) {
+            parts.push(`${dateFmtShort.format(rangeStart)} – ${dateFmtShort.format(rangeEnd)}`);
+          }
+          if (chartWeekLabel) {
+            chartWeekLabel.textContent = parts.length ? parts.join(' · ') : 'Uke –';
+          }
+          if (chartWeekTotal) {
+            const totalRevenue = range.reduce((sum, entry) => {
+              const value = Number(entry?.revenue || 0);
+              return sum + (Number.isFinite(value) ? Math.max(0, value) : 0);
+            }, 0);
+            chartWeekTotal.textContent = `Totalt: ${moneyFmt.format(totalRevenue)}`;
+          }
+        };
+
+        const triggerChartTransition = (direction) => {
+          if (!barChart || !direction) return;
+          const className = direction === 'next'
+            ? 'bar-chart--slide-next'
+            : direction === 'prev'
+              ? 'bar-chart--slide-prev'
+              : '';
+          if (!className) return;
+          barChart.classList.remove('bar-chart--slide-next', 'bar-chart--slide-prev');
+          void barChart.offsetWidth;
+          barChart.classList.add(className);
+          clearTimeout(barChart._slideTimer);
+          barChart._slideTimer = setTimeout(() => {
+            barChart.classList.remove(className);
+            barChart._slideTimer = null;
+          }, 360);
         };
 
       const chartWindowDays = 7;
@@ -2123,10 +2244,10 @@
           chartNextBtn.disabled = cursorEnd.localeCompare(latestEnd) >= 0;
         };
 
-        const renderChartWindow = (endIso, { isDemo = false } = {}) => {
+        const renderChartWindow = (endIso, { isDemo = false, direction = '' } = {}) => {
           const { cursor, range } = buildChartRange(endIso);
           chartCursorDate = cursor;
-          renderChart(range, { isDemo });
+          renderChart(range, { isDemo, direction });
           updateChartNavButtons();
         };
 
@@ -2134,11 +2255,18 @@
           if (!chartCursorDate) return;
           hideGlobalTooltip();
           const target = addDaysISO(chartCursorDate, offsetDays);
-          renderChartWindow(target, { isDemo: chartIsDemo });
+          const direction = offsetDays > 0 ? 'next' : offsetDays < 0 ? 'prev' : '';
+          renderChartWindow(target, { isDemo: chartIsDemo, direction });
         };
 
-        const fromDate = new Date(today);
-        fromDate.setDate(fromDate.getDate() - 60);
+        const fromDate = (() => {
+          const current = new Date(today);
+          const mayFirst = new Date(current.getFullYear(), 4, 1);
+          if (current < mayFirst) {
+            mayFirst.setFullYear(mayFirst.getFullYear() - 1);
+          }
+          return mayFirst;
+        })();
         const from = toISODate(fromDate);
 
         const fetchDaily = ({ demo = false } = {}) => {
@@ -2146,8 +2274,8 @@
           url.searchParams.set('from', from);
           url.searchParams.set('to', todayISO);
           url.searchParams.set('group', 'daily');
-          url.searchParams.set('limit', '90');
-          url.searchParams.set('window', '90');
+          url.searchParams.set('limit', '210');
+          url.searchParams.set('window', '210');
           if (demo) url.searchParams.set('demo', '1');
 
           return fetch(url.toString(), { headers: { accept: 'application/json' } })
