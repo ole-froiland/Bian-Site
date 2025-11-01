@@ -608,26 +608,25 @@
       font-weight:600;
       color:var(--text-strong);
     }
-    .chart-meta__total{
+    .chart-meta__total,
+    .chart-meta__average{
       font-weight:600;
       color:var(--text-strong);
     }
-    .bar-chart--slide-next .bar,
-    .bar-chart--slide-prev .bar{
-      animation-duration:280ms;
-      animation-timing-function:cubic-bezier(0.22,0.61,0.36,1);
-      animation-fill-mode:both;
-      animation-delay:calc(var(--bar-index) * 26ms);
+    .bar-chart__inner{
+      display:flex;
+      align-items:flex-end;
+      width:100%;
+      gap:inherit;
+      transition:transform 260ms cubic-bezier(0.22,0.61,0.36,1);
     }
-    .bar-chart--slide-next .bar{animation-name:chart-slide-next;}
-    .bar-chart--slide-prev .bar{animation-name:chart-slide-prev;}
-    @keyframes chart-slide-next{
-      from{opacity:0;transform:translateX(14%);}
-      to{opacity:1;transform:translateX(0);}
+    .bar-chart--slide-next .bar-chart__inner{
+      transform:translateX(-12%);
+      opacity:0.1;
     }
-    @keyframes chart-slide-prev{
-      from{opacity:0;transform:translateX(-14%);}
-      to{opacity:1;transform:translateX(0);}
+    .bar-chart--slide-prev .bar-chart__inner{
+      transform:translateX(12%);
+      opacity:0.1;
     }
     .chart-tooltip{
       position:absolute;
@@ -1022,9 +1021,10 @@
         <header>
           <div class="chart-header__main">
             <h2>Omsetning (7 dager)</h2>
+            <span class="chart-meta__week" data-chart-week-label>Uke –</span>
             <div class="chart-meta">
-              <span class="chart-meta__week" data-chart-week-label>Uke –</span>
               <span class="chart-meta__total" data-chart-week-total>Totalt: –</span>
+              <span class="chart-meta__average" data-chart-week-average>Snitt: –</span>
             </div>
           </div>
           <div class="chart-nav">
@@ -1261,6 +1261,7 @@
       const chartNextBtn = document.querySelector('[data-chart-nav="next"]');
       const chartWeekLabel = document.querySelector('[data-chart-week-label]');
       const chartWeekTotal = document.querySelector('[data-chart-week-total]');
+      const chartWeekAverage = document.querySelector('[data-chart-week-average]');
       const chartTooltip = document.querySelector('[data-chart-tooltip]');
       const chartCard = barChart ? barChart.closest('.chart-card') : null;
       const weekdayFmt = new Intl.DateTimeFormat('nb-NO', { weekday: 'short' });
@@ -1996,6 +1997,10 @@
           return;
           }
 
+          const inner = document.createElement('div');
+          inner.className = 'bar-chart__inner';
+          inner.style.gap = getComputedStyle(barChart).gap || '0.8rem';
+
           const revenues = days.map(d => Math.max(0, Number(d.revenue || 0)));
           const maxRevenue = Math.max(...revenues, 0) || 1;
           const chartHeight = barChart.clientHeight || 240;
@@ -2068,8 +2073,9 @@
             eventTarget.addEventListener('blur', handleLeave);
             eventTarget.tabIndex = 0;
             eventTarget.setAttribute('aria-label', `${friendly}: ${moneyFmt.format(revenue)}`);
-            barChart.appendChild(bar);
+            inner.appendChild(bar);
           });
+          barChart.appendChild(inner);
           triggerChartTransition(direction);
         };
 
@@ -2112,10 +2118,11 @@
         };
 
         const updateWeekSummary = (range = []) => {
-          if (!chartWeekLabel && !chartWeekTotal) return;
+          if (!chartWeekLabel && !chartWeekTotal && !chartWeekAverage) return;
           if (!Array.isArray(range) || !range.length) {
             if (chartWeekLabel) chartWeekLabel.textContent = 'Uke –';
             if (chartWeekTotal) chartWeekTotal.textContent = 'Totalt: –';
+            if (chartWeekAverage) chartWeekAverage.textContent = 'Snitt: –';
             return;
           }
           const first = range[0];
@@ -2123,23 +2130,21 @@
           const rangeStart = first?.date ? parseIsoDate(first.date) : null;
           const rangeEnd = last?.date ? parseIsoDate(last.date) : null;
           const weekInfo = getISOWeekInfo(last?.date || first?.date);
-          const parts = [];
-          if (weekInfo) {
-            const weekNumber = String(weekInfo.week).padStart(2, '0');
-            parts.push(`Uke ${weekNumber}`);
-          }
-          if (rangeStart && rangeEnd) {
-            parts.push(`${dateFmtShort.format(rangeStart)} – ${dateFmtShort.format(rangeEnd)}`);
-          }
+          const weekNumber = weekInfo ? String(weekInfo.week).padStart(2, '0') : null;
+          const year = weekInfo ? weekInfo.year : null;
           if (chartWeekLabel) {
-            chartWeekLabel.textContent = parts.length ? parts.join(' · ') : 'Uke –';
+            chartWeekLabel.textContent = weekNumber ? `Uke ${weekNumber}${year ? ` · ${year}` : ''}` : 'Uke –';
           }
+          const totalRevenue = range.reduce((sum, entry) => {
+            const value = Number(entry?.revenue || 0);
+            return sum + (Number.isFinite(value) ? Math.max(0, value) : 0);
+          }, 0);
           if (chartWeekTotal) {
-            const totalRevenue = range.reduce((sum, entry) => {
-              const value = Number(entry?.revenue || 0);
-              return sum + (Number.isFinite(value) ? Math.max(0, value) : 0);
-            }, 0);
             chartWeekTotal.textContent = `Totalt: ${moneyFmt.format(totalRevenue)}`;
+          }
+          if (chartWeekAverage) {
+            const average = range.length ? totalRevenue / range.length : 0;
+            chartWeekAverage.textContent = `Snitt: ${moneyFmt.format(average)}`;
           }
         };
 
