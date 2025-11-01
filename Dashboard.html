@@ -2115,6 +2115,9 @@
           dailyTableBody.appendChild(row);
         };
 
+        const FAST_SPAN_DAYS = 63;
+        let historyPrefetchPromise = null;
+
         const updateWeekSummary = (range = []) => {
           if (!chartWeekLabel && !chartWeekTotal && !chartWeekAverage) return;
           if (!Array.isArray(range) || !range.length) {
@@ -2159,6 +2162,25 @@
             barChart.classList.remove(className);
             barChart._slideTimer = null;
           }, 360);
+        };
+
+        const mergeDailyPayload = (payload, { replace = false } = {}) => {
+          const days = Array.isArray(payload?.daily) ? payload.daily : [];
+          const workingMap = replace ? new Map() : new Map(chartDataMap);
+          days.forEach((entry) => {
+            if (!entry?.date) return;
+            workingMap.set(entry.date, entry);
+          });
+          const sortedDesc = Array.from(workingMap.values())
+            .sort((a, b) => b.date.localeCompare(a.date));
+          chartDataAll = sortedDesc;
+          chartDataMap = new Map(sortedDesc.map((entry) => [entry.date, entry]));
+          chartLatestDate = sortedDesc.length ? sortedDesc[0].date : todayISO;
+          chartOldestDate = sortedDesc.length ? sortedDesc[sortedDesc.length - 1].date : chartLatestDate;
+          return {
+            sortedDesc,
+            isDemo: payload?.mode === 'demo',
+          };
         };
 
       const chartWindowDays = 7;
@@ -2330,8 +2352,8 @@
           }
         };
 
-        const fetchDaily = async ({ demo = false } = {}) => {
-          const baseRange = { fromISO: from, toISO: todayISO, demo };
+        const fetchDaily = async ({ demo = false, fromISO = from, toISO = todayISO } = {}) => {
+          const baseRange = { fromISO, toISO, demo };
           try {
             return await fetchDailyRange(baseRange);
           } catch (error) {
@@ -2340,8 +2362,8 @@
             }
           }
 
-          const startDate = parseIsoDate(from);
-          const endDate = parseIsoDate(todayISO);
+          const startDate = parseIsoDate(fromISO);
+          const endDate = parseIsoDate(toISO);
           if (!startDate || !endDate) {
             return fetchDailyRange(baseRange);
           }
@@ -2404,20 +2426,39 @@
         updateChartNavButtons();
 
         const load = (options = {}) => {
-          fetchDaily(options)
-            .then((data) => {
-              const days = Array.isArray(data?.daily) ? data.daily : [];
-              const isDemo = !!options.demo || data?.mode === 'demo';
-              const sortedDesc = [...days].sort((a, b) => b.date.localeCompare(a.date));
-              renderRows(sortedDesc, { showDemoNotice: isDemo });
-              chartDataAll = sortedDesc;
-              chartDataMap = new Map(sortedDesc.map(entry => [entry.date, entry]));
-              chartLatestDate = chartDataAll.length ? chartDataAll[0].date : todayISO;
-              chartOldestDate = chartDataAll.length ? chartDataAll[chartDataAll.length - 1].date : chartLatestDate;
-              chartIsDemo = isDemo;
-              renderChartWindow(chartLatestDate, { isDemo });
+          const demo = !!options.demo;
+          const initialCandidate = addDaysISO(todayISO, -(FAST_SPAN_DAYS - 1));
+          const initialFromISO = initialCandidate && initialCandidate.localeCompare(from) > 0 ? initialCandidate : from;
+          const needsHistoryPrefetch = initialFromISO.localeCompare(from) > 0;
+
+          fetchDaily({ demo, fromISO: initialFromISO, toISO: todayISO })
+            .then((payload) => {
+              const { sortedDesc, isDemo } = mergeDailyPayload(payload, { replace: true });
+              chartIsDemo = demo || isDemo;
+              renderRows(sortedDesc, { showDemoNotice: chartIsDemo });
+              renderChartWindow(chartLatestDate, { isDemo: chartIsDemo });
               if (revenueAnalysisContext?.date) {
                 renderRevenueAnalysis(revenueAnalysisContext);
+              }
+              updateChartNavButtons();
+
+              if (needsHistoryPrefetch && !historyPrefetchPromise) {
+                const historicalEnd = addDaysISO(initialFromISO, -1);
+                if (historicalEnd && historicalEnd.localeCompare(from) >= 0) {
+                  historyPrefetchPromise = fetchDaily({ demo, fromISO: from, toISO: historicalEnd })
+                    .then((historicalPayload) => {
+                      const { isDemo: historyDemo } = mergeDailyPayload(historicalPayload, { replace: false });
+                      chartIsDemo = chartIsDemo || demo || historyDemo;
+                      renderRows(chartDataAll, { showDemoNotice: chartIsDemo });
+                      updateChartNavButtons();
+                    })
+                    .catch((historyError) => {
+                      console.error('Kunne ikke hente historiske data:', historyError);
+                    })
+                    .finally(() => {
+                      historyPrefetchPromise = null;
+                    });
+                }
               }
             })
             .catch((error) => {
@@ -2434,15 +2475,14 @@
               }
               if (attemptedDemoFallback && options.demo) {
                 try {
-                  const days = error?.body?.daily || [];
-                  const sortedDesc = [...days].sort((a, b) => b.date.localeCompare(a.date));
+                  const { sortedDesc } = mergeDailyPayload(
+                    { daily: Array.isArray(error?.body?.daily) ? error.body.daily : [] },
+                    { replace: true }
+                  );
                   renderRows(sortedDesc, { showDemoNotice: true });
-                  chartDataAll = sortedDesc;
-                  chartDataMap = new Map(sortedDesc.map(entry => [entry.date, entry]));
-                  chartLatestDate = chartDataAll.length ? chartDataAll[0].date : todayISO;
-                  chartOldestDate = chartDataAll.length ? chartDataAll[chartDataAll.length - 1].date : chartLatestDate;
                   chartIsDemo = true;
                   renderChartWindow(chartLatestDate, { isDemo: true });
+                  updateChartNavButtons();
                   return;
                 } catch (_) {
                   /* fall through */
