@@ -2269,26 +2269,121 @@
         })();
         const from = toISODate(fromDate);
 
-        const fetchDaily = ({ demo = false } = {}) => {
+        const fetchDailyRange = async ({ fromISO, toISO, demo = false } = {}) => {
           const url = new URL('/.netlify/functions/lightspeed', apiBase);
-          url.searchParams.set('from', from);
-          url.searchParams.set('to', todayISO);
+          url.searchParams.set('from', fromISO);
+          url.searchParams.set('to', toISO);
           url.searchParams.set('group', 'daily');
-          url.searchParams.set('limit', '210');
-          url.searchParams.set('window', '210');
+          const fromDateParsed = parseIsoDate(fromISO);
+          const toDateParsed = parseIsoDate(toISO);
+          const spanDays = (fromDateParsed && toDateParsed)
+            ? Math.max(1, Math.round((toDateParsed - fromDateParsed) / 86400000) + 1)
+            : 60;
+          const windowSize = Math.min(90, Math.max(spanDays, 21));
+          url.searchParams.set('limit', String(windowSize));
+          url.searchParams.set('window', String(windowSize));
           if (demo) url.searchParams.set('demo', '1');
 
-          return fetch(url.toString(), { headers: { accept: 'application/json' } })
-            .then(async (response) => {
-              const payload = await response.json().catch(() => null);
-              if (!response.ok) {
-                const error = new Error(`HTTP ${response.status}`);
-                error.status = response.status;
-                error.body = payload;
-                throw error;
+          const response = await fetch(url.toString(), { headers: { accept: 'application/json' } });
+          const payload = await response.json().catch(() => null);
+          if (!response.ok) {
+            const error = new Error(`HTTP ${response.status}`);
+            error.status = response.status;
+            error.body = payload;
+            throw error;
+          }
+          return payload;
+        };
+
+        const fetchDailyWithSplit = async ({ fromISO, toISO, demo = false, depth = 0 } = {}) => {
+          try {
+            const payload = await fetchDailyRange({ fromISO, toISO, demo });
+            return [payload];
+          } catch (error) {
+            if (error?.status === 504 && depth < 4) {
+              const fromDateObj = parseIsoDate(fromISO);
+              const toDateObj = parseIsoDate(toISO);
+              if (fromDateObj && toDateObj && fromDateObj < toDateObj) {
+                const spanDays = Math.max(2, Math.round((toDateObj - fromDateObj) / 86400000) + 1);
+                const splitDays = Math.floor(spanDays / 2);
+                const midDate = new Date(fromDateObj);
+                midDate.setDate(midDate.getDate() + splitDays - 1);
+                if (midDate >= toDateObj) {
+                  midDate.setDate(toDateObj.getDate() - 1);
+                }
+                if (midDate < fromDateObj) {
+                  throw error;
+                }
+                const midISO = toISODate(midDate);
+                const nextStart = new Date(midDate);
+                nextStart.setDate(nextStart.getDate() + 1);
+                if (nextStart > toDateObj) {
+                  throw error;
+                }
+                const nextISO = toISODate(nextStart);
+                const firstHalf = await fetchDailyWithSplit({ fromISO, toISO: midISO, demo, depth: depth + 1 });
+                const secondHalf = await fetchDailyWithSplit({ fromISO: nextISO, toISO, demo, depth: depth + 1 });
+                return [...firstHalf, ...secondHalf];
               }
-              return payload;
+            }
+            throw error;
+          }
+        };
+
+        const fetchDaily = async ({ demo = false } = {}) => {
+          const startDate = parseIsoDate(from);
+          const endDate = parseIsoDate(todayISO);
+          if (!startDate || !endDate) {
+            return fetchDailyRange({ fromISO: from, toISO: todayISO, demo });
+          }
+
+          const ranges = [];
+          const chunkSize = 60;
+          let cursorStart = new Date(startDate);
+          while (cursorStart <= endDate) {
+            const chunkStart = new Date(cursorStart);
+            const chunkEnd = new Date(cursorStart);
+            chunkEnd.setDate(chunkEnd.getDate() + (chunkSize - 1));
+            if (chunkEnd > endDate) chunkEnd.setTime(endDate.getTime());
+            ranges.push({
+              fromISO: toISODate(chunkStart),
+              toISO: toISODate(chunkEnd),
             });
+            chunkEnd.setDate(chunkEnd.getDate() + 1);
+            cursorStart = new Date(chunkEnd);
+          }
+
+          const combinedMap = new Map();
+          let representativePayload = null;
+
+          for (const range of ranges) {
+            const payloads = await fetchDailyWithSplit({ ...range, demo });
+            payloads.forEach((payload) => {
+              if (!representativePayload) {
+                representativePayload = { ...payload };
+              } else if (payload && typeof payload === 'object') {
+                if (payload.mode) representativePayload.mode = payload.mode;
+                if (payload.statusMessage && !representativePayload.statusMessage) {
+                  representativePayload.statusMessage = payload.statusMessage;
+                }
+              }
+              if (Array.isArray(payload?.daily)) {
+                payload.daily.forEach((entry) => {
+                  if (!entry?.date) return;
+                  combinedMap.set(entry.date, entry);
+                });
+              }
+            });
+          }
+
+          const daily = Array.from(combinedMap.values())
+            .sort((a, b) => a.date.localeCompare(b.date));
+
+          if (!representativePayload) {
+            return { daily };
+          }
+          representativePayload.daily = daily;
+          return representativePayload;
         };
 
         let attemptedDemoFallback = false;
