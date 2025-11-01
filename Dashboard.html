@@ -1290,6 +1290,7 @@
       let chartLatestDate = todayISO;
       let chartOldestDate = todayISO;
       let chartIsDemo = false;
+      let chartNavBusy = false;
       let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
       const productChangeCardEl = document.querySelector('[data-product-change-card]');
       const productChangeDateEl = document.querySelector('[data-product-change-date]');
@@ -2116,6 +2117,7 @@
         };
 
         const FAST_SPAN_DAYS = 63;
+        const HISTORY_CHUNK_DAYS = 14;
         let historyPrefetchPromise = null;
 
         const updateWeekSummary = (range = []) => {
@@ -2181,6 +2183,32 @@
             sortedDesc,
             isDemo: payload?.mode === 'demo',
           };
+        };
+
+        const loadHistoricalData = async (minIso, { demo = chartIsDemo } = {}) => {
+          if (!minIso) return { isDemo: false };
+          if (!chartDataAll.length) return { isDemo: false };
+          let iterations = 0;
+          let encounteredDemo = false;
+          let currentOldest = chartOldestDate;
+          while (currentOldest && currentOldest.localeCompare(minIso) > 0 && iterations < 24) {
+            const chunkEnd = addDaysISO(currentOldest, -1);
+            if (!chunkEnd) break;
+            let chunkStart = addDaysISO(chunkEnd, -(HISTORY_CHUNK_DAYS - 1));
+            if (!chunkStart) break;
+            if (chunkStart.localeCompare(from) < 0) chunkStart = from;
+            const payload = await fetchDaily({ demo, fromISO: chunkStart, toISO: chunkEnd });
+            const previousOldest = currentOldest;
+            const { isDemo: chunkDemo } = mergeDailyPayload(payload, { replace: false });
+            if (chunkDemo) encounteredDemo = true;
+            const nextOldest = chartOldestDate;
+            iterations += 1;
+            if (!nextOldest || nextOldest.localeCompare(previousOldest) >= 0) {
+              break;
+            }
+            currentOldest = nextOldest;
+          }
+          return { isDemo: encounteredDemo };
         };
 
       const chartWindowDays = 7;
@@ -2249,6 +2277,11 @@
 
         const updateChartNavButtons = () => {
           if (!chartPrevBtn || !chartNextBtn) return;
+          if (chartNavBusy) {
+            chartPrevBtn.disabled = true;
+            chartNextBtn.disabled = true;
+            return;
+          }
           if (!chartDataAll.length) {
             chartPrevBtn.disabled = true;
             chartNextBtn.disabled = true;
@@ -2274,11 +2307,37 @@
         };
 
         const shiftChartWindow = (offsetDays) => {
-          if (!chartCursorDate) return;
+          if (!chartCursorDate || chartNavBusy) return;
+          chartNavBusy = true;
+          if (chartPrevBtn) chartPrevBtn.disabled = true;
+          if (chartNextBtn) chartNextBtn.disabled = true;
           hideGlobalTooltip();
-          const target = addDaysISO(chartCursorDate, offsetDays);
+          const targetRaw = addDaysISO(chartCursorDate, offsetDays);
           const direction = offsetDays > 0 ? 'next' : offsetDays < 0 ? 'prev' : '';
-          renderChartWindow(target, { isDemo: chartIsDemo, direction });
+          const perform = async () => {
+            let fetchDemo = chartIsDemo;
+            if (direction === 'prev') {
+              const weekStart = startOfWeekISO(targetRaw);
+              if (weekStart) {
+                if (historyPrefetchPromise) {
+                  try { await historyPrefetchPromise; } catch (_) { /* ignore */ }
+                }
+                const { isDemo: historyDemo } = await loadHistoricalData(weekStart, { demo: chartIsDemo });
+                if (historyDemo) fetchDemo = true;
+              }
+            }
+            chartIsDemo = chartIsDemo || fetchDemo;
+            renderRows(chartDataAll, { showDemoNotice: chartIsDemo });
+            renderChartWindow(targetRaw, { isDemo: chartIsDemo, direction });
+          };
+          perform()
+            .catch((error) => {
+              console.error('Kunne ikke bla i omsetningsdiagram:', error);
+            })
+            .finally(() => {
+              chartNavBusy = false;
+              updateChartNavButtons();
+            });
         };
 
         const fromDate = (() => {
@@ -2443,22 +2502,19 @@
               updateChartNavButtons();
 
               if (needsHistoryPrefetch && !historyPrefetchPromise) {
-                const historicalEnd = addDaysISO(initialFromISO, -1);
-                if (historicalEnd && historicalEnd.localeCompare(from) >= 0) {
-                  historyPrefetchPromise = fetchDaily({ demo, fromISO: from, toISO: historicalEnd })
-                    .then((historicalPayload) => {
-                      const { isDemo: historyDemo } = mergeDailyPayload(historicalPayload, { replace: false });
-                      chartIsDemo = chartIsDemo || demo || historyDemo;
-                      renderRows(chartDataAll, { showDemoNotice: chartIsDemo });
-                      updateChartNavButtons();
-                    })
-                    .catch((historyError) => {
-                      console.error('Kunne ikke hente historiske data:', historyError);
-                    })
-                    .finally(() => {
-                      historyPrefetchPromise = null;
-                    });
-                }
+                const scheduleHistoryFetch = async () => {
+                  const { isDemo: historyDemo } = await loadHistoricalData(from, { demo });
+                  if (historyDemo) chartIsDemo = true;
+                  renderRows(chartDataAll, { showDemoNotice: chartIsDemo });
+                  updateChartNavButtons();
+                };
+                historyPrefetchPromise = scheduleHistoryFetch()
+                  .catch((historyError) => {
+                    console.error('Kunne ikke hente historiske data:', historyError);
+                  })
+                  .finally(() => {
+                    historyPrefetchPromise = null;
+                  });
               }
             })
             .catch((error) => {
