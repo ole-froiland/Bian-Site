@@ -1069,59 +1069,6 @@
         </div>
         <p class="day-status" data-day-status></p>
       </article>
-      <article class="card table-card">
-        <header>
-          <h2>Omsetning per dag</h2>
-        </header>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Dato</th>
-                <th>Omsetning</th>
-                <th>Gjester</th>
-              </tr>
-            </thead>
-            <tbody id="daily-sales-body">
-              <tr class="demo-row">
-                <td>12. mai</td>
-                <td>128&nbsp;900 kr</td>
-                <td>302</td>
-              </tr>
-              <tr class="demo-row">
-                <td>11. mai</td>
-                <td>142&nbsp;100 kr</td>
-                <td>318</td>
-              </tr>
-              <tr class="demo-row">
-                <td>10. mai</td>
-                <td>119&nbsp;450 kr</td>
-                <td>276</td>
-              </tr>
-              <tr class="demo-row">
-                <td>9. mai</td>
-                <td>105&nbsp;780 kr</td>
-                <td>244</td>
-              </tr>
-              <tr class="demo-row">
-                <td>8. mai</td>
-                <td>131&nbsp;060 kr</td>
-                <td>289</td>
-              </tr>
-              <tr class="demo-row">
-                <td>7. mai</td>
-                <td>138&nbsp;500 kr</td>
-                <td>310</td>
-              </tr>
-              <tr class="demo-row">
-                <td>6. mai</td>
-                <td>114&nbsp;230 kr</td>
-                <td>268</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </article>
     </section>
     <section class="tab-panel" id="ai-tips" role="tabpanel" aria-labelledby="tab-ai" tabindex="0" hidden>
       <article class="card ai-insights-card">
@@ -1982,30 +1929,20 @@
         });
       }
 
-      const dailyTableBody = document.querySelector('#daily-sales-body');
-      if (dailyTableBody && typeof fetch === 'function') {
-        const fallbackHtml = dailyTableBody.innerHTML;
-
-        const renderLoading = () => {
-          const loadingRow = document.createElement('tr');
-          loadingRow.innerHTML = '<td colspan="3">Henter omsetning …</td>';
-          dailyTableBody.innerHTML = '';
-          dailyTableBody.appendChild(loadingRow);
-        };
-
-      const renderChart = (days, { isDemo = false, message = '', direction = '' } = {}) => {
-        updateWeekSummary(days);
-        if (!barChart) return;
-        barChart.innerHTML = '';
-        if (chartTooltip) {
-          chartTooltip.hidden = true;
-          chartTooltip.dataset.visible = '0';
-        }
-        if (!Array.isArray(days) || !days.length) {
-          barChart.dataset.empty = '1';
-          barChart.removeAttribute('data-demo');
-          barChart.innerHTML = `<div class="bar-chart__empty">${message || 'Ingen data for valgt dato.'}</div>`;
-          return;
+      if (typeof fetch === 'function') {
+        const renderChart = (days, { isDemo = false, message = '', direction = '' } = {}) => {
+          updateWeekSummary(days);
+          if (!barChart) return;
+          barChart.innerHTML = '';
+          if (chartTooltip) {
+            chartTooltip.hidden = true;
+            chartTooltip.dataset.visible = '0';
+          }
+          if (!Array.isArray(days) || !days.length) {
+            barChart.dataset.empty = '1';
+            barChart.removeAttribute('data-demo');
+            barChart.innerHTML = `<div class="bar-chart__empty">${message || 'Ingen data for valgt dato.'}</div>`;
+            return;
           }
 
           const revenues = days.map(d => Math.max(0, Number(d.revenue || 0)));
@@ -2066,9 +2003,9 @@
             column.style.setProperty('--track-height', `${chartHeight}px`);
             column.dataset.zero = revenue > 0 ? '0' : '1';
             if (highlightBest && revenue === maxPositive) {
-                column.dataset.tone = 'best';
+              column.dataset.tone = 'best';
             } else if (highlightWorst && revenue === minPositive) {
-                column.dataset.tone = 'worst';
+              column.dataset.tone = 'worst';
             }
             const bar = document.createElement('div');
             bar.className = 'bar';
@@ -2094,44 +2031,6 @@
             barChart.appendChild(bar);
           });
           triggerChartTransition(direction);
-        };
-
-        const renderRows = (days, { showDemoNotice = false } = {}) => {
-          dailyTableBody.innerHTML = '';
-          if (!Array.isArray(days) || !days.length) {
-            renderError('Ingen data for valgt dato.', { replace: true });
-            return;
-          }
-          if (showDemoNotice) {
-            const notice = document.createElement('tr');
-            notice.innerHTML = '<td colspan="3">Viser demo-data. Sett Lightspeed-nøkler i Netlify for ekte tall.</td>';
-            dailyTableBody.appendChild(notice);
-          }
-          days.slice(0, 7).forEach((entry) => {
-            const dateStr = typeof entry?.date === 'string' ? entry.date : null;
-            const displayDate = (() => {
-              if (!dateStr) return '–';
-              const parsed = new Date(`${dateStr}T00:00:00`);
-              if (Number.isNaN(parsed.getTime())) return dateStr;
-              return dateFmtShort.format(parsed);
-            })();
-            const revenue = Number(entry?.revenue || 0);
-            const guests = Number(entry?.guests || entry?.guestCount || 0);
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${displayDate}</td>
-              <td>${moneyFmt.format(revenue)}</td>
-              <td>${guests > 0 ? qtyFmt.format(guests) : '–'}</td>
-            `;
-            dailyTableBody.appendChild(row);
-          });
-        };
-
-        const renderError = (message, { replace = false } = {}) => {
-          if (replace) dailyTableBody.innerHTML = '';
-          const row = document.createElement('tr');
-          row.innerHTML = `<td colspan="3">${message}</td>`;
-          dailyTableBody.appendChild(row);
         };
 
         const FAST_SPAN_DAYS = 63;
@@ -2342,7 +2241,6 @@
               }
             }
             chartIsDemo = chartIsDemo || fetchDemo;
-            renderRows(chartDataAll, { showDemoNotice: chartIsDemo });
             renderChartWindow(targetRaw, { isDemo: chartIsDemo, direction });
           };
           perform()
@@ -2495,7 +2393,6 @@
         };
 
         let attemptedDemoFallback = false;
-        renderLoading();
         renderChart([], { message: 'Henter …' });
         updateChartNavButtons();
 
@@ -2507,9 +2404,8 @@
 
           fetchDaily({ demo, fromISO: initialFromISO, toISO: todayISO })
             .then((payload) => {
-              const { sortedDesc, isDemo } = mergeDailyPayload(payload, { replace: true });
+              const { isDemo } = mergeDailyPayload(payload, { replace: true });
               chartIsDemo = demo || isDemo;
-              renderRows(sortedDesc, { showDemoNotice: chartIsDemo });
               renderChartWindow(chartLatestDate, { isDemo: chartIsDemo });
               if (revenueAnalysisContext?.date) {
                 renderRevenueAnalysis(revenueAnalysisContext);
@@ -2520,7 +2416,6 @@
                 const scheduleHistoryFetch = async () => {
                   const { isDemo: historyDemo } = await loadHistoricalData(from, { demo });
                   if (historyDemo) chartIsDemo = true;
-                  renderRows(chartDataAll, { showDemoNotice: chartIsDemo });
                   updateChartNavButtons();
                 };
                 historyPrefetchPromise = scheduleHistoryFetch()
@@ -2540,17 +2435,16 @@
               );
               if (shouldTryDemo) {
                 attemptedDemoFallback = true;
-                renderLoading();
+                renderChart([], { message: 'Bytter til demo-data …' });
                 load({ demo: true });
                 return;
               }
               if (attemptedDemoFallback && options.demo) {
                 try {
-                  const { sortedDesc } = mergeDailyPayload(
+                  mergeDailyPayload(
                     { daily: Array.isArray(error?.body?.daily) ? error.body.daily : [] },
                     { replace: true }
                   );
-                  renderRows(sortedDesc, { showDemoNotice: true });
                   chartIsDemo = true;
                   renderChartWindow(chartLatestDate, { isDemo: true });
                   updateChartNavButtons();
@@ -2559,12 +2453,6 @@
                   /* fall through */
                 }
               }
-              dailyTableBody.innerHTML = fallbackHtml;
-              renderError(
-                (error?.body?.message) ? `Kunne ikke hente daglig omsetning: ${error.body.message}`
-                  : `Kunne ikke hente daglig omsetning. ${error?.message || ''}`,
-                { replace: false }
-              );
               chartDataAll = [];
               chartDataMap = new Map();
               chartCursorDate = null;
