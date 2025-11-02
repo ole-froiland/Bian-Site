@@ -454,8 +454,9 @@
     .chart-stats{
       display:grid;
       gap:var(--space-3);
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
       align-items:stretch;
+      width:100%;
     }
     .chart-stat-card{
       padding:var(--space-4);
@@ -482,9 +483,7 @@
       flex-direction:column;
       gap:var(--space-3);
     }
-    .chart-stat-card--today{
-      gap:var(--space-3);
-    }
+    .chart-stat-card--today{gap:var(--space-3);margin-inline:auto;width:100%;}
     .chart-stat-card--today .summary-card{
       background:color-mix(in srgb,var(--surface) 88%,rgba(15,23,42,0.12));
     }
