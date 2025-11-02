@@ -136,7 +136,7 @@
     button:focus-visible,[role="button"]:focus-visible,input:focus-visible,select:focus-visible{outline:none;box-shadow:var(--ring);}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
     .shell{width:100%;max-width:1160px;margin:0 auto;padding-inline:clamp(16px,4vw,56px);}
-    main.shell{padding-block:clamp(32px,5vw,64px);}
+    main.shell{padding-block:clamp(24px,4vw,56px);}
     .top-bar{
       position:sticky;
       top:0;
@@ -375,7 +375,8 @@
     .theme-switch input:focus-visible + .slider,
     .theme-switch .thumb:focus-visible{box-shadow:var(--ring);}
     nav.sub-nav{
-      padding-block:clamp(16px,3vw,24px);
+      padding-block-start:clamp(12px,2.4vw,20px);
+      padding-block-end:clamp(6px,1.6vw,12px);
       border-bottom:1px solid transparent;
       background:transparent;
     }
@@ -523,6 +524,12 @@
     .bar__column[data-zero="1"]::after{
       background:rgba(148,163,184,0.55);
       height:12px;
+    }
+    .bar__column[data-tone="best"]::after{
+      background:linear-gradient(180deg,#34d399 0%,#059669 100%);
+    }
+    .bar__column[data-tone="worst"]::after{
+      background:linear-gradient(180deg,#fda4af 0%,#ef4444 100%);
     }
     .bar__column:hover,
     .bar__column:focus-visible{
@@ -2002,7 +2009,10 @@
           }
 
           const revenues = days.map(d => Math.max(0, Number(d.revenue || 0)));
-          const maxRevenue = Math.max(...revenues, 0) || 1;
+          const maxRevenueRaw = Math.max(...revenues);
+          const minRevenue = Math.min(...revenues);
+          const highlightExtremes = Number.isFinite(maxRevenueRaw) && Number.isFinite(minRevenue) && maxRevenueRaw !== minRevenue;
+          const maxRevenue = maxRevenueRaw > 0 ? maxRevenueRaw : 1;
           const chartHeight = barChart.clientHeight || 240;
           const maxBarHeight = chartHeight * 0.8;
           const minBarHeight = Math.max(6, chartHeight * 0.05);
@@ -2052,6 +2062,13 @@
             column.style.setProperty('--fill-height', `${fillHeight}px`);
             column.style.setProperty('--track-height', `${chartHeight}px`);
             column.dataset.zero = revenue > 0 ? '0' : '1';
+            if (highlightExtremes) {
+              if (revenue === maxRevenueRaw) {
+                column.dataset.tone = 'best';
+              } else if (revenue === minRevenue) {
+                column.dataset.tone = 'worst';
+              }
+            }
             const bar = document.createElement('div');
             bar.className = 'bar';
             const dateObj = day.date ? new Date(`${day.date}T00:00:00`) : null;
