@@ -420,6 +420,7 @@
       gap:clamp(20px,3vw,32px);
     }
     .tab-panel[hidden]{display:none;}
+    .tab-panel > .chart-stats{grid-column:1 / -1;}
     .card{
       background:var(--surface);
       border:1px solid var(--border);
@@ -462,6 +463,37 @@
       flex-direction:column;
       gap:0.6rem;
     }
+    .chart-stat-card__header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:var(--space-2);
+      flex-wrap:wrap;
+    }
+    .chart-stat-card__title{
+      margin:0;
+      font-size:1.12rem;
+      font-weight:700;
+      color:var(--text-strong);
+      flex:1;
+    }
+    .chart-stat-card__body{
+      display:flex;
+      flex-direction:column;
+      gap:var(--space-3);
+    }
+    .chart-stat-card--today{
+      gap:var(--space-3);
+    }
+    .chart-stat-card--today .summary-card{
+      background:color-mix(in srgb,var(--surface) 88%,rgba(15,23,42,0.12));
+    }
+    .chart-stat-card--today .day-status{
+      margin:0;
+      font-size:0.85rem;
+      color:var(--text-muted);
+    }
+    .chart-stat-card--today .day-status[data-tone="error"]{color:#ef4444;}
     .chart-stat-card__eyebrow{
       font-size:0.82rem;
       letter-spacing:0.12em;
@@ -692,12 +724,14 @@
     .chart-tooltip[data-visible="1"]{opacity:1;}
     .chart-tooltip strong{display:block;font-size:0.88rem;margin-bottom:0.15rem;}
     .chart-tooltip span{font-size:0.88rem;display:block;}
-    .daily-summary-card .daily-summary{
+    .chart-stat-card--today .daily-summary{
       display:grid;
       gap:var(--space-3);
       grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
     }
-    .daily-summary__controls{display:flex;align-items:center;gap:0.5rem;}
+    .chart-stat-card__controls,
+    .daily-summary__controls{display:flex;align-items:center;gap:0.5rem;justify-content:flex-end;flex-shrink:0;}
+    .chart-stat-card__input,
     .daily-summary__input{
       appearance:none;
       background:var(--surface);
@@ -709,6 +743,7 @@
       box-shadow:var(--shadow-xs);
       transition:border-color var(--transition),box-shadow var(--transition);
     }
+    .chart-stat-card__input:focus-visible,
     .daily-summary__input:focus-visible{border-color:var(--primary);box-shadow:var(--ring);}
     .summary-card{
       background:color-mix(in srgb,var(--surface) 82%,rgba(108,99,255,0.06));
@@ -953,7 +988,7 @@
       }
       .ai-insights-card,
       .chart-card,
-      .daily-summary-card{
+      .chart-stat-card--today{
         grid-column:1 / -1;
       }
     }
@@ -1068,10 +1103,31 @@
           <p class="chart-stat-card__value" data-balance-value>–</p>
           <p class="chart-stat-card__status" data-balance-status data-tone="muted">Henter saldo …</p>
         </article>
-        <article class="card chart-stat-card" data-today-card>
-          <span class="chart-stat-card__eyebrow">Dagens omsetning</span>
-          <p class="chart-stat-card__value" data-today-revenue-value>–</p>
-          <p class="chart-stat-card__status" data-today-revenue-status data-tone="muted">Henter tall …</p>
+        <article class="card chart-stat-card chart-stat-card--today" data-today-card>
+          <header class="chart-stat-card__header">
+            <h2 class="chart-stat-card__title" data-day-heading>Tall hentet fra i dag</h2>
+            <div class="chart-stat-card__controls">
+              <label for="sales-day-picker" class="sr-only">Velg dato</label>
+              <input type="date" id="sales-day-picker" class="chart-stat-card__input" />
+            </div>
+          </header>
+          <div class="chart-stat-card__body">
+            <div class="daily-summary">
+              <article class="summary-card">
+                <span class="summary-card__label">Omsetning</span>
+                <p class="summary-card__value" data-day-revenue>–</p>
+              </article>
+              <article class="summary-card">
+                <span class="summary-card__label">Antall kvitteringer</span>
+                <p class="summary-card__value" data-day-receipts>–</p>
+              </article>
+              <article class="summary-card">
+                <span class="summary-card__label">Snitt per kjøp</span>
+                <p class="summary-card__value" data-day-average>–</p>
+              </article>
+            </div>
+            <p class="day-status" data-day-status></p>
+          </div>
         </article>
       </div>
       <article class="card chart-card">
@@ -1090,30 +1146,6 @@
         </header>
         <div class="bar-chart" data-daily-chart role="img" aria-live="polite" aria-label="Omsetning siste 7 dager"></div>
         <div class="chart-tooltip" data-chart-tooltip hidden></div>
-      </article>
-      <article class="card daily-summary-card">
-        <header>
-          <h2 data-day-heading>Dagens omsetning</h2>
-          <div class="daily-summary__controls">
-            <label for="sales-day-picker" class="sr-only">Velg dato</label>
-            <input type="date" id="sales-day-picker" class="daily-summary__input" />
-          </div>
-        </header>
-        <div class="daily-summary">
-          <article class="summary-card">
-            <span class="summary-card__label">Omsetning</span>
-            <p class="summary-card__value" data-day-revenue>–</p>
-          </article>
-          <article class="summary-card">
-            <span class="summary-card__label">Antall kvitteringer</span>
-            <p class="summary-card__value" data-day-receipts>–</p>
-          </article>
-          <article class="summary-card">
-            <span class="summary-card__label">Snitt per kjøp</span>
-            <p class="summary-card__value" data-day-average>–</p>
-          </article>
-        </div>
-        <p class="day-status" data-day-status></p>
       </article>
     </section>
     <section class="tab-panel" id="ai-tips" role="tabpanel" aria-labelledby="tab-ai" tabindex="0" hidden>
@@ -1261,8 +1293,6 @@
       const dayStatusEl = document.querySelector('[data-day-status]');
       const chartBalanceValueEl = document.querySelector('[data-balance-value]');
       const chartBalanceStatusEl = document.querySelector('[data-balance-status]');
-      const chartTodayValueEl = document.querySelector('[data-today-revenue-value]');
-      const chartTodayStatusEl = document.querySelector('[data-today-revenue-status]');
       const barChart = document.querySelector('[data-daily-chart]');
       const chartPrevBtn = document.querySelector('[data-chart-nav="prev"]');
       const chartNextBtn = document.querySelector('[data-chart-nav="next"]');
@@ -1295,8 +1325,6 @@
       let chartOldestDate = todayISO;
       let chartIsDemo = false;
       let chartNavBusy = false;
-      let todayCardHydrated = false;
-      let initialDayIso = null;
       let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
       const productChangeCardEl = document.querySelector('[data-product-change-card]');
       const productChangeDateEl = document.querySelector('[data-product-change-date]');
@@ -1837,29 +1865,7 @@
         chartTooltip.hidden = true;
       };
 
-      const defaultDayHeading = 'Dagens omsetning';
-
-      const updateTodayRevenueCard = ({ date = todayISO, revenue = 0 } = {}, { isDemo = false, message = null } = {}) => {
-        if (!chartTodayValueEl || !chartTodayStatusEl) return;
-        if (message) {
-          chartTodayValueEl.textContent = '–';
-          chartTodayValueEl.classList.remove('positive', 'negative');
-          chartTodayStatusEl.textContent = message;
-          chartTodayStatusEl.dataset.tone = 'error';
-          return;
-        }
-        const value = Number(revenue || 0);
-        chartTodayValueEl.textContent = moneyFmt.format(value);
-        chartTodayValueEl.classList.remove('positive', 'negative');
-        if (value > 0) chartTodayValueEl.classList.add('positive');
-        if (value < 0) chartTodayValueEl.classList.add('negative');
-        const iso = sanitizeIso(date) || todayISO;
-        const parsed = iso ? new Date(`${iso}T00:00:00`) : null;
-        const friendly = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : iso;
-        const statusLabel = friendly ? `Per ${friendly}` : 'Per i dag';
-        chartTodayStatusEl.textContent = isDemo ? `${statusLabel} · demo` : statusLabel;
-        chartTodayStatusEl.dataset.tone = 'muted';
-      };
+      const defaultDayHeading = 'Tall hentet fra i dag';
 
       const loadBalanceCard = () => {
         if (!chartBalanceValueEl) return;
@@ -1934,10 +1940,6 @@
             : headingFriendly;
           dayHeadingEl.textContent = `Tall hentet fra ${headingDisplay}`;
         }
-        if (sanitizeIso(date) === todayISO) {
-          updateTodayRevenueCard({ date, revenue: revenueValue }, { isDemo });
-          todayCardHydrated = true;
-        }
         renderDayStatus(isDemo ? `Viser demo for ${friendly} (mangler Lightspeed-nøkler).` : '');
       };
 
@@ -1968,6 +1970,7 @@
         dayReceiptsEl.textContent = '–';
         if (dayAverageEl) dayAverageEl.textContent = '–';
         if (dayHeadingEl) dayHeadingEl.textContent = defaultDayHeading;
+        renderDayStatus('Henter omsetning …');
         renderProductInsights(null, { date, state: 'loading' });
         renderRevenueAnalysisState('loading', { date });
         renderProductChangesState('loading', { date });
@@ -2003,10 +2006,7 @@
                 (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL');
               if (allowDemo) {
                 attemptedDemo = true;
-                if (sanitizeIso(date) === todayISO && chartTodayStatusEl) {
-                  chartTodayStatusEl.textContent = 'Bytter til demo-data …';
-                  chartTodayStatusEl.dataset.tone = 'muted';
-                }
+                renderDayStatus('Bytter til demo-data …');
                 renderProductInsights(null, { date, state: 'loading' });
                 renderRevenueAnalysisState('loading', { date });
                 renderProductChangesState('loading', { date });
@@ -2024,10 +2024,6 @@
                 return;
               }
               renderDayStatus(error?.body?.message || error?.message || 'Feil ved henting av omsetning', 'error');
-              if (sanitizeIso(date) === todayISO) {
-                updateTodayRevenueCard({}, { message: error?.body?.message || error?.message || 'Kunne ikke hente omsetning' });
-                todayCardHydrated = true;
-              }
               renderProductInsights(null, {
                 date,
                 state: 'error',
@@ -2041,30 +2037,6 @@
         attempt();
       };
 
-      const ensureTodayRevenueCard = () => {
-        if (!chartTodayValueEl || todayCardHydrated) return;
-        fetchDayTotals(todayISO)
-          .then((data) => {
-            const isDemo = data?.mode === 'demo';
-            let selected = data?.dayTotal || null;
-            const daily = Array.isArray(data?.daily) ? data.daily : [];
-            if (!selected && daily.length) {
-              selected = daily.find((entry) => sanitizeIso(entry?.date) === todayISO) || daily[0];
-            }
-            if (selected) {
-              updateTodayRevenueCard({ date: selected.date, revenue: selected.revenue }, { isDemo });
-            } else {
-              updateTodayRevenueCard({}, { message: 'Ingen omsetning registrert for i dag.' });
-            }
-            todayCardHydrated = true;
-          })
-          .catch((error) => {
-            console.error('Kunne ikke hente dagens omsetning for topplisten:', error);
-            updateTodayRevenueCard({}, { message: error?.body?.message || error?.message || 'Kunne ikke hente omsetning' });
-            todayCardHydrated = true;
-          });
-      };
-
       if (barChart) {
         barChart.addEventListener('mouseleave', hideGlobalTooltip);
       }
@@ -2072,7 +2044,6 @@
       if (dayPicker) {
         dayPicker.max = todayISO;
         if (!dayPicker.value) dayPicker.value = todayISO;
-        initialDayIso = sanitizeIso(dayPicker.value);
         loadDayTotals(dayPicker.value);
         dayPicker.addEventListener('change', () => {
           const date = dayPicker.value || todayISO;
@@ -2092,10 +2063,6 @@
           }
           loadDayTotals(date);
         });
-      }
-
-      if (chartTodayValueEl && (!initialDayIso || initialDayIso !== todayISO)) {
-        ensureTodayRevenueCard();
       }
 
       if (typeof fetch === 'function') {
