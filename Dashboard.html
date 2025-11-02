@@ -2135,7 +2135,7 @@
         };
 
         const FAST_SPAN_DAYS = 63;
-        const HISTORY_CHUNK_DAYS = 14;
+        const HISTORY_PREFETCH_BUFFER_DAYS = 21;
         let historyPrefetchPromise = null;
 
         const updateWeekSummary = (range = []) => {
@@ -2204,29 +2204,26 @@
         };
 
         const loadHistoricalData = async (minIso, { demo = chartIsDemo } = {}) => {
-          if (!minIso) return { isDemo: false };
-          if (!chartDataAll.length) return { isDemo: false };
-          let iterations = 0;
-          let encounteredDemo = false;
-          let currentOldest = chartOldestDate;
-          while (currentOldest && currentOldest.localeCompare(minIso) > 0 && iterations < 24) {
-            const chunkEnd = addDaysISO(currentOldest, -1);
-            if (!chunkEnd) break;
-            let chunkStart = addDaysISO(chunkEnd, -(HISTORY_CHUNK_DAYS - 1));
-            if (!chunkStart) break;
-            if (chunkStart.localeCompare(from) < 0) chunkStart = from;
-            const payload = await fetchDaily({ demo, fromISO: chunkStart, toISO: chunkEnd });
-            const previousOldest = currentOldest;
-            const { isDemo: chunkDemo } = mergeDailyPayload(payload, { replace: false });
-            if (chunkDemo) encounteredDemo = true;
-            const nextOldest = chartOldestDate;
-            iterations += 1;
-            if (!nextOldest || nextOldest.localeCompare(previousOldest) >= 0) {
-              break;
-            }
-            currentOldest = nextOldest;
+          if (!minIso || !chartDataAll.length) return { isDemo: false };
+          let normalizedMin = minIso;
+          if (normalizedMin.localeCompare(from) < 0) normalizedMin = from;
+          const currentOldest = chartOldestDate;
+          if (!currentOldest || currentOldest.localeCompare(normalizedMin) <= 0) {
+            return { isDemo: false };
           }
-          return { isDemo: encounteredDemo };
+          const buffered = addDaysISO(normalizedMin, -HISTORY_PREFETCH_BUFFER_DAYS);
+          if (buffered && buffered.localeCompare(from) > 0) {
+            normalizedMin = buffered;
+          } else {
+            normalizedMin = from;
+          }
+          const chunkEnd = addDaysISO(currentOldest, -1);
+          if (!chunkEnd || chunkEnd.localeCompare(normalizedMin) < 0) {
+            return { isDemo: false };
+          }
+          const payload = await fetchDaily({ demo, fromISO: normalizedMin, toISO: chunkEnd });
+          const { isDemo } = mergeDailyPayload(payload, { replace: false });
+          return { isDemo };
         };
 
       const chartWindowDays = 7;
