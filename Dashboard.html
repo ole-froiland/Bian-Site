@@ -1064,7 +1064,7 @@
     <section class="tab-panel" id="oversikt" role="tabpanel" aria-labelledby="tab-oversikt" tabindex="0" hidden>
       <div class="chart-stats">
         <article class="card chart-stat-card" data-balance-card>
-          <span class="chart-stat-card__eyebrow">Saldo 1920</span>
+          <span class="chart-stat-card__eyebrow">Saldo Driftskonto</span>
           <p class="chart-stat-card__value" data-balance-value>–</p>
           <p class="chart-stat-card__status" data-balance-status data-tone="muted">Henter saldo …</p>
         </article>
@@ -1880,7 +1880,7 @@
         const url = new URL('/.netlify/functions/tripletex', window.location.origin);
         url.searchParams.set('from', yearStartISO);
         url.searchParams.set('to', todayISO);
-        url.searchParams.set('accounts', 'balance1920|Saldo 1920:1920');
+        url.searchParams.set('accounts', 'balanceOperating|Saldo Driftskonto:id-289892105');
         fetch(url.toString(), { headers: { accept: 'application/json' } })
           .then(async (response) => {
             const payload = await response.json().catch(() => null);
@@ -1889,9 +1889,9 @@
               throw new Error(message);
             }
             const entry = Array.isArray(payload?.accounts)
-              ? payload.accounts.find((item) => item.key === 'balance1920')
+              ? payload.accounts.find((item) => item.key === 'balanceOperating')
               : null;
-            if (!entry) throw new Error('Fant ikke konto 1920 i Tripletex-responsen.');
+            if (!entry) throw new Error('Fant ikke driftskontoen i Tripletex-responsen.');
             const balance = Number(entry.total ?? entry.totalAbsolute ?? 0);
             chartBalanceValueEl.textContent = moneyFmt.format(balance);
             chartBalanceValueEl.classList.remove('positive', 'negative');
@@ -1903,7 +1903,7 @@
             }
           })
           .catch((error) => {
-            console.error('Kunne ikke hente saldo for konto 1920:', error);
+        console.error('Kunne ikke hente saldo for driftskonto:', error);
             chartBalanceValueEl.textContent = '–';
             chartBalanceValueEl.classList.remove('positive', 'negative');
             if (chartBalanceStatusEl) {
