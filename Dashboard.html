@@ -2010,8 +2010,11 @@
 
           const revenues = days.map(d => Math.max(0, Number(d.revenue || 0)));
           const maxRevenueRaw = Math.max(...revenues);
-          const minRevenue = Math.min(...revenues);
-          const highlightExtremes = Number.isFinite(maxRevenueRaw) && Number.isFinite(minRevenue) && maxRevenueRaw !== minRevenue;
+          const positiveRevenues = revenues.filter(value => value > 0);
+          const maxPositive = positiveRevenues.length ? Math.max(...positiveRevenues) : null;
+          const minPositive = positiveRevenues.length > 1 ? Math.min(...positiveRevenues) : null;
+          const highlightBest = Number.isFinite(maxPositive);
+          const highlightWorst = Number.isFinite(minPositive) && minPositive !== maxPositive;
           const maxRevenue = maxRevenueRaw > 0 ? maxRevenueRaw : 1;
           const chartHeight = barChart.clientHeight || 240;
           const maxBarHeight = chartHeight * 0.8;
@@ -2062,12 +2065,10 @@
             column.style.setProperty('--fill-height', `${fillHeight}px`);
             column.style.setProperty('--track-height', `${chartHeight}px`);
             column.dataset.zero = revenue > 0 ? '0' : '1';
-            if (highlightExtremes) {
-              if (revenue === maxRevenueRaw) {
+            if (highlightBest && revenue === maxPositive) {
                 column.dataset.tone = 'best';
-              } else if (revenue === minRevenue) {
+            } else if (highlightWorst && revenue === minPositive) {
                 column.dataset.tone = 'worst';
-              }
             }
             const bar = document.createElement('div');
             bar.className = 'bar';
