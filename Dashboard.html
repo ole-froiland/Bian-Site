@@ -450,6 +450,40 @@
       gap:var(--space-3);
       grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
     }
+    .chart-stats{
+      display:grid;
+      gap:var(--space-3);
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      align-items:stretch;
+    }
+    .chart-stat-card{
+      padding:var(--space-4);
+      display:flex;
+      flex-direction:column;
+      gap:0.6rem;
+    }
+    .chart-stat-card__eyebrow{
+      font-size:0.82rem;
+      letter-spacing:0.12em;
+      text-transform:uppercase;
+      color:var(--text-muted);
+      font-weight:600;
+    }
+    .chart-stat-card__value{
+      font-size:clamp(1.8rem,3vw,2.4rem);
+      font-weight:700;
+      color:var(--text-strong);
+      margin:0;
+      transition:color var(--transition);
+    }
+    .chart-stat-card__value.negative{color:#ef4444;}
+    .chart-stat-card__value.positive{color:#16a34a;}
+    .chart-stat-card__status{
+      margin:0;
+      font-size:0.9rem;
+      color:var(--text-muted);
+    }
+    .chart-stat-card__status[data-tone="error"]{color:#f87171;}
     .stat{padding:var(--space-4);}
     .stat h2{font-size:1rem;color:var(--text-muted);font-weight:600;}
     .stat-number{
@@ -1028,6 +1062,18 @@
       </div>
     </section>
     <section class="tab-panel" id="oversikt" role="tabpanel" aria-labelledby="tab-oversikt" tabindex="0" hidden>
+      <div class="chart-stats">
+        <article class="card chart-stat-card" data-balance-card>
+          <span class="chart-stat-card__eyebrow">Saldo 1920</span>
+          <p class="chart-stat-card__value" data-balance-value>–</p>
+          <p class="chart-stat-card__status" data-balance-status data-tone="muted">Henter saldo …</p>
+        </article>
+        <article class="card chart-stat-card" data-today-card>
+          <span class="chart-stat-card__eyebrow">Dagens omsetning</span>
+          <p class="chart-stat-card__value" data-today-revenue-value>–</p>
+          <p class="chart-stat-card__status" data-today-revenue-status data-tone="muted">Henter tall …</p>
+        </article>
+      </div>
       <article class="card chart-card">
         <header>
           <div class="chart-header__main">
@@ -1213,6 +1259,10 @@
       const dayReceiptsEl = document.querySelector('[data-day-receipts]');
       const dayAverageEl = document.querySelector('[data-day-average]');
       const dayStatusEl = document.querySelector('[data-day-status]');
+      const chartBalanceValueEl = document.querySelector('[data-balance-value]');
+      const chartBalanceStatusEl = document.querySelector('[data-balance-status]');
+      const chartTodayValueEl = document.querySelector('[data-today-revenue-value]');
+      const chartTodayStatusEl = document.querySelector('[data-today-revenue-status]');
       const barChart = document.querySelector('[data-daily-chart]');
       const chartPrevBtn = document.querySelector('[data-chart-nav="prev"]');
       const chartNextBtn = document.querySelector('[data-chart-nav="next"]');
@@ -1245,6 +1295,8 @@
       let chartOldestDate = todayISO;
       let chartIsDemo = false;
       let chartNavBusy = false;
+      let todayCardHydrated = false;
+      let initialDayIso = null;
       let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
       const productChangeCardEl = document.querySelector('[data-product-change-card]');
       const productChangeDateEl = document.querySelector('[data-product-change-date]');
@@ -1787,6 +1839,82 @@
 
       const defaultDayHeading = 'Dagens omsetning';
 
+      const updateTodayRevenueCard = ({ date = todayISO, revenue = 0 } = {}, { isDemo = false, message = null } = {}) => {
+        if (!chartTodayValueEl || !chartTodayStatusEl) return;
+        if (message) {
+          chartTodayValueEl.textContent = '–';
+          chartTodayValueEl.classList.remove('positive', 'negative');
+          chartTodayStatusEl.textContent = message;
+          chartTodayStatusEl.dataset.tone = 'error';
+          return;
+        }
+        const value = Number(revenue || 0);
+        chartTodayValueEl.textContent = moneyFmt.format(value);
+        chartTodayValueEl.classList.remove('positive', 'negative');
+        if (value > 0) chartTodayValueEl.classList.add('positive');
+        if (value < 0) chartTodayValueEl.classList.add('negative');
+        const iso = sanitizeIso(date) || todayISO;
+        const parsed = iso ? new Date(`${iso}T00:00:00`) : null;
+        const friendly = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : iso;
+        const statusLabel = friendly ? `Per ${friendly}` : 'Per i dag';
+        chartTodayStatusEl.textContent = isDemo ? `${statusLabel} · demo` : statusLabel;
+        chartTodayStatusEl.dataset.tone = 'muted';
+      };
+
+      const loadBalanceCard = () => {
+        if (!chartBalanceValueEl) return;
+        if (typeof fetch !== 'function') {
+          if (chartBalanceStatusEl) {
+            chartBalanceStatusEl.textContent = 'Nettleseren støtter ikke datahenting.';
+            chartBalanceStatusEl.dataset.tone = 'error';
+          }
+          return;
+        }
+        chartBalanceValueEl.textContent = '–';
+        chartBalanceValueEl.classList.remove('positive', 'negative');
+        if (chartBalanceStatusEl) {
+          chartBalanceStatusEl.textContent = 'Henter saldo …';
+          chartBalanceStatusEl.dataset.tone = 'muted';
+        }
+        const yearStartISO = `${today.getFullYear()}-01-01`;
+        const url = new URL('/.netlify/functions/tripletex', window.location.origin);
+        url.searchParams.set('from', yearStartISO);
+        url.searchParams.set('to', todayISO);
+        url.searchParams.set('accounts', 'balance1920|Saldo 1920:1920');
+        fetch(url.toString(), { headers: { accept: 'application/json' } })
+          .then(async (response) => {
+            const payload = await response.json().catch(() => null);
+            if (!response.ok) {
+              const message = payload?.message || payload?.error || `HTTP ${response.status}`;
+              throw new Error(message);
+            }
+            const entry = Array.isArray(payload?.accounts)
+              ? payload.accounts.find((item) => item.key === 'balance1920')
+              : null;
+            if (!entry) throw new Error('Fant ikke konto 1920 i Tripletex-responsen.');
+            const balance = Number(entry.total ?? entry.totalAbsolute ?? 0);
+            chartBalanceValueEl.textContent = moneyFmt.format(balance);
+            chartBalanceValueEl.classList.remove('positive', 'negative');
+            if (balance > 0) chartBalanceValueEl.classList.add('positive');
+            if (balance < 0) chartBalanceValueEl.classList.add('negative');
+            if (chartBalanceStatusEl) {
+              chartBalanceStatusEl.textContent = `Per ${dateFmtLong.format(today)}`;
+              chartBalanceStatusEl.dataset.tone = 'muted';
+            }
+          })
+          .catch((error) => {
+            console.error('Kunne ikke hente saldo for konto 1920:', error);
+            chartBalanceValueEl.textContent = '–';
+            chartBalanceValueEl.classList.remove('positive', 'negative');
+            if (chartBalanceStatusEl) {
+              chartBalanceStatusEl.textContent = error?.message || 'Kunne ikke hente saldo';
+              chartBalanceStatusEl.dataset.tone = 'error';
+            }
+          });
+      };
+
+      loadBalanceCard();
+
       const renderDayTotals = ({ date, revenue, receipts }, { isDemo = false } = {}) => {
         if (!dayRevenueEl) return;
         const parsed = date ? new Date(`${date}T00:00:00`) : null;
@@ -1805,6 +1933,10 @@
             ? headingFriendly.charAt(0).toUpperCase() + headingFriendly.slice(1)
             : headingFriendly;
           dayHeadingEl.textContent = `Tall hentet fra ${headingDisplay}`;
+        }
+        if (sanitizeIso(date) === todayISO) {
+          updateTodayRevenueCard({ date, revenue: revenueValue }, { isDemo });
+          todayCardHydrated = true;
         }
         renderDayStatus(isDemo ? `Viser demo for ${friendly} (mangler Lightspeed-nøkler).` : '');
       };
@@ -1871,6 +2003,10 @@
                 (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL');
               if (allowDemo) {
                 attemptedDemo = true;
+                if (sanitizeIso(date) === todayISO && chartTodayStatusEl) {
+                  chartTodayStatusEl.textContent = 'Bytter til demo-data …';
+                  chartTodayStatusEl.dataset.tone = 'muted';
+                }
                 renderProductInsights(null, { date, state: 'loading' });
                 renderRevenueAnalysisState('loading', { date });
                 renderProductChangesState('loading', { date });
@@ -1888,6 +2024,10 @@
                 return;
               }
               renderDayStatus(error?.body?.message || error?.message || 'Feil ved henting av omsetning', 'error');
+              if (sanitizeIso(date) === todayISO) {
+                updateTodayRevenueCard({}, { message: error?.body?.message || error?.message || 'Kunne ikke hente omsetning' });
+                todayCardHydrated = true;
+              }
               renderProductInsights(null, {
                 date,
                 state: 'error',
@@ -1901,6 +2041,30 @@
         attempt();
       };
 
+      const ensureTodayRevenueCard = () => {
+        if (!chartTodayValueEl || todayCardHydrated) return;
+        fetchDayTotals(todayISO)
+          .then((data) => {
+            const isDemo = data?.mode === 'demo';
+            let selected = data?.dayTotal || null;
+            const daily = Array.isArray(data?.daily) ? data.daily : [];
+            if (!selected && daily.length) {
+              selected = daily.find((entry) => sanitizeIso(entry?.date) === todayISO) || daily[0];
+            }
+            if (selected) {
+              updateTodayRevenueCard({ date: selected.date, revenue: selected.revenue }, { isDemo });
+            } else {
+              updateTodayRevenueCard({}, { message: 'Ingen omsetning registrert for i dag.' });
+            }
+            todayCardHydrated = true;
+          })
+          .catch((error) => {
+            console.error('Kunne ikke hente dagens omsetning for topplisten:', error);
+            updateTodayRevenueCard({}, { message: error?.body?.message || error?.message || 'Kunne ikke hente omsetning' });
+            todayCardHydrated = true;
+          });
+      };
+
       if (barChart) {
         barChart.addEventListener('mouseleave', hideGlobalTooltip);
       }
@@ -1908,6 +2072,7 @@
       if (dayPicker) {
         dayPicker.max = todayISO;
         if (!dayPicker.value) dayPicker.value = todayISO;
+        initialDayIso = sanitizeIso(dayPicker.value);
         loadDayTotals(dayPicker.value);
         dayPicker.addEventListener('change', () => {
           const date = dayPicker.value || todayISO;
@@ -1927,6 +2092,10 @@
           }
           loadDayTotals(date);
         });
+      }
+
+      if (chartTodayValueEl && (!initialDayIso || initialDayIso !== todayISO)) {
+        ensureTodayRevenueCard();
       }
 
       if (typeof fetch === 'function') {
