@@ -454,7 +454,7 @@
     .chart-stats{
       display:grid;
       gap:var(--space-3);
-      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
       align-items:stretch;
       width:100%;
     }
@@ -483,16 +483,16 @@
       flex-direction:column;
       gap:var(--space-3);
     }
-    .chart-stat-card--today{gap:var(--space-3);margin-inline:auto;width:100%;}
-    .chart-stat-card--today .summary-card{
-      background:color-mix(in srgb,var(--surface) 88%,rgba(15,23,42,0.12));
+    .chart-stat-card--metric{gap:0.4rem;padding:var(--space-3);}
+    .chart-stat-card--metric .chart-stat-card__value{font-size:clamp(1.5rem,2.6vw,2rem);}
+    .chart-stat-card--metric .chart-stat-card__status{margin:0;font-size:0.82rem;color:var(--text-muted);} 
+    .chart-stat-card--metric .chart-stat-card__status[data-tone="error"]{color:#ef4444;}
+    .chart-stat-card--metric .chart-stat-card__status[data-tone="warning"]{color:#fbbf24;}
+    .daily-summary-card .daily-summary{
+      display:grid;
+      gap:var(--space-3);
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
     }
-    .chart-stat-card--today .day-status{
-      margin:0;
-      font-size:0.85rem;
-      color:var(--text-muted);
-    }
-    .chart-stat-card--today .day-status[data-tone="error"]{color:#ef4444;}
     .chart-stat-card__eyebrow{
       font-size:0.82rem;
       letter-spacing:0.12em;
@@ -723,11 +723,6 @@
     .chart-tooltip[data-visible="1"]{opacity:1;}
     .chart-tooltip strong{display:block;font-size:0.88rem;margin-bottom:0.15rem;}
     .chart-tooltip span{font-size:0.88rem;display:block;}
-    .chart-stat-card--today .daily-summary{
-      display:grid;
-      gap:var(--space-3);
-      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-    }
     .chart-stat-card__controls,
     .daily-summary__controls{display:flex;align-items:center;gap:0.5rem;justify-content:flex-end;flex-shrink:0;}
     .chart-stat-card__input,
@@ -974,6 +969,7 @@
       .nav-controls.open{display:flex;}
       .segmented-control{width:100%;justify-content:space-between;}
       .theme-switch{align-self:flex-start;}
+      .chart-stats{grid-template-columns:1fr;}
     }
     @media (min-width:1024px){
       .tab-panel{
@@ -987,7 +983,7 @@
       }
       .ai-insights-card,
       .chart-card,
-      .chart-stat-card--today{
+      .daily-summary-card{
         grid-column:1 / -1;
       }
     }
@@ -1102,33 +1098,41 @@
           <p class="chart-stat-card__value" data-balance-value>–</p>
           <p class="chart-stat-card__status" data-balance-status data-tone="muted">Henter saldo …</p>
         </article>
-        <article class="card chart-stat-card chart-stat-card--today" data-today-card>
-          <header class="chart-stat-card__header">
-            <h2 class="chart-stat-card__title" data-day-heading>Tall hentet fra i dag</h2>
-            <div class="chart-stat-card__controls">
-              <label for="sales-day-picker" class="sr-only">Velg dato</label>
-              <input type="date" id="sales-day-picker" class="chart-stat-card__input" />
-            </div>
-          </header>
-          <div class="chart-stat-card__body">
-            <div class="daily-summary">
-              <article class="summary-card">
-                <span class="summary-card__label">Omsetning</span>
-                <p class="summary-card__value" data-day-revenue>–</p>
-              </article>
-              <article class="summary-card">
-                <span class="summary-card__label">Antall kvitteringer</span>
-                <p class="summary-card__value" data-day-receipts>–</p>
-              </article>
-              <article class="summary-card">
-                <span class="summary-card__label">Snitt per kjøp</span>
-                <p class="summary-card__value" data-day-average>–</p>
-              </article>
-            </div>
-            <p class="day-status" data-day-status></p>
-          </div>
+        <article class="card chart-stat-card chart-stat-card--metric">
+          <span class="chart-stat-card__eyebrow">Dagens omsetning</span>
+          <p class="chart-stat-card__value" data-day-revenue-quick>–</p>
+          <p class="chart-stat-card__status" data-day-revenue-quick-status data-tone="muted">Henter …</p>
+        </article>
+        <article class="card chart-stat-card chart-stat-card--metric">
+          <span class="chart-stat-card__eyebrow">Snitt per kjøp</span>
+          <p class="chart-stat-card__value" data-day-average-quick>–</p>
+          <p class="chart-stat-card__status" data-day-average-quick-status data-tone="muted">Henter …</p>
         </article>
       </div>
+      <article class="card daily-summary-card">
+        <header>
+          <h2 data-day-heading>Tall hentet fra i dag</h2>
+          <div class="daily-summary__controls">
+            <label for="sales-day-picker" class="sr-only">Velg dato</label>
+            <input type="date" id="sales-day-picker" class="daily-summary__input" />
+          </div>
+        </header>
+        <div class="daily-summary">
+          <article class="summary-card">
+            <span class="summary-card__label">Omsetning</span>
+            <p class="summary-card__value" data-day-revenue>–</p>
+          </article>
+          <article class="summary-card">
+            <span class="summary-card__label">Antall kvitteringer</span>
+            <p class="summary-card__value" data-day-receipts>–</p>
+          </article>
+          <article class="summary-card">
+            <span class="summary-card__label">Snitt per kjøp</span>
+            <p class="summary-card__value" data-day-average>–</p>
+          </article>
+        </div>
+        <p class="day-status" data-day-status></p>
+      </article>
       <article class="card chart-card">
         <header>
           <div class="chart-header__main">
@@ -1292,6 +1296,10 @@
       const dayStatusEl = document.querySelector('[data-day-status]');
       const chartBalanceValueEl = document.querySelector('[data-balance-value]');
       const chartBalanceStatusEl = document.querySelector('[data-balance-status]');
+      const dayRevenueQuickEl = document.querySelector('[data-day-revenue-quick]');
+      const dayRevenueQuickStatusEl = document.querySelector('[data-day-revenue-quick-status]');
+      const dayAverageQuickEl = document.querySelector('[data-day-average-quick]');
+      const dayAverageQuickStatusEl = document.querySelector('[data-day-average-quick-status]');
       const barChart = document.querySelector('[data-daily-chart]');
       const chartPrevBtn = document.querySelector('[data-chart-nav="prev"]');
       const chartNextBtn = document.querySelector('[data-chart-nav="next"]');
@@ -1324,6 +1332,7 @@
       let chartOldestDate = todayISO;
       let chartIsDemo = false;
       let chartNavBusy = false;
+      let lastDayTotals = null;
       let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
       const productChangeCardEl = document.querySelector('[data-product-change-card]');
       const productChangeDateEl = document.querySelector('[data-product-change-date]');
@@ -1920,7 +1929,7 @@
 
       loadBalanceCard();
 
-      const renderDayTotals = ({ date, revenue, receipts }, { isDemo = false } = {}) => {
+      const renderDayTotals = ({ date, revenue, receipts }, { isDemo = false, suppressStatus = false, cache = true } = {}) => {
         if (!dayRevenueEl) return;
         const parsed = date ? new Date(`${date}T00:00:00`) : null;
         const friendly = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : date || '–';
@@ -1928,9 +1937,18 @@
         const receiptsValue = Number(receipts || 0);
         const averageSale = receiptsValue > 0 ? revenueValue / receiptsValue : null;
         dayRevenueEl.textContent = moneyFmt.format(revenueValue);
-        dayReceiptsEl.textContent = qtyFmt.format(receiptsValue);
+        if (dayReceiptsEl) dayReceiptsEl.textContent = qtyFmt.format(receiptsValue);
         if (dayAverageEl) {
           dayAverageEl.textContent = averageSale != null ? moneyFmt.format(averageSale) : '–';
+        }
+        if (dayRevenueQuickEl) {
+          dayRevenueQuickEl.textContent = moneyFmt.format(revenueValue);
+          dayRevenueQuickEl.classList.remove('positive', 'negative');
+          if (revenueValue > 0) dayRevenueQuickEl.classList.add('positive');
+          if (revenueValue < 0) dayRevenueQuickEl.classList.add('negative');
+        }
+        if (dayAverageQuickEl) {
+          dayAverageQuickEl.textContent = averageSale != null ? moneyFmt.format(averageSale) : '–';
         }
         if (dayHeadingEl) {
           const headingFriendly = friendly && friendly !== '–' ? friendly : todayISO;
@@ -1939,7 +1957,20 @@
             : headingFriendly;
           dayHeadingEl.textContent = `Tall hentet fra ${headingDisplay}`;
         }
-        renderDayStatus(isDemo ? `Viser demo for ${friendly} (mangler Lightspeed-nøkler).` : '');
+        if (!suppressStatus) {
+          renderDayStatus(isDemo ? `Viser demo for ${friendly} (mangler Lightspeed-nøkler).` : '');
+        }
+        if (dayRevenueQuickStatusEl) {
+          dayRevenueQuickStatusEl.textContent = isDemo ? `Per ${friendly} · demo` : `Per ${friendly}`;
+          dayRevenueQuickStatusEl.dataset.tone = 'muted';
+        }
+        if (dayAverageQuickStatusEl) {
+          dayAverageQuickStatusEl.textContent = receiptsValue > 0 ? `${qtyFmt.format(receiptsValue)} kjøp` : 'Ingen kvitteringer';
+          dayAverageQuickStatusEl.dataset.tone = receiptsValue > 0 ? 'muted' : 'warning';
+        }
+        if (cache) {
+          lastDayTotals = { date, revenue: revenueValue, receipts: receiptsValue, isDemo };
+        }
       };
 
       const fetchDayTotals = (date, { demo = false } = {}) => {
@@ -1966,10 +1997,23 @@
           aiProductsPicker.value = date;
         }
         dayRevenueEl.textContent = '–';
-        dayReceiptsEl.textContent = '–';
+        if (dayReceiptsEl) dayReceiptsEl.textContent = '–';
         if (dayAverageEl) dayAverageEl.textContent = '–';
         if (dayHeadingEl) dayHeadingEl.textContent = defaultDayHeading;
         renderDayStatus('Henter omsetning …');
+        if (dayRevenueQuickEl) {
+          dayRevenueQuickEl.textContent = '–';
+          dayRevenueQuickEl.classList.remove('positive', 'negative');
+        }
+        if (dayAverageQuickEl) dayAverageQuickEl.textContent = '–';
+        if (dayRevenueQuickStatusEl) {
+          dayRevenueQuickStatusEl.textContent = 'Henter …';
+          dayRevenueQuickStatusEl.dataset.tone = 'muted';
+        }
+        if (dayAverageQuickStatusEl) {
+          dayAverageQuickStatusEl.textContent = 'Henter …';
+          dayAverageQuickStatusEl.dataset.tone = 'muted';
+        }
         renderProductInsights(null, { date, state: 'loading' });
         renderRevenueAnalysisState('loading', { date });
         renderProductChangesState('loading', { date });
@@ -2001,6 +2045,7 @@
             })
             .catch((error) => {
               console.error('Kunne ikke hente dagsomsetning:', error);
+              const isTimeout = error?.status === 408 || /408/.test(String(error?.message || ''));
               const allowDemo = !attemptedDemo && error?.status === 400 &&
                 (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL');
               if (allowDemo) {
@@ -2022,14 +2067,37 @@
                 loadProductChanges(productChangeContext);
                 return;
               }
-              renderDayStatus(error?.body?.message || error?.message || 'Feil ved henting av omsetning', 'error');
+              const fallbackMessage = isTimeout
+                ? 'Lightspeed brukte for lang tid. Viser siste kjente tall.'
+                : (error?.body?.message || error?.message || 'Feil ved henting av omsetning');
+              if (lastDayTotals && sanitizeIso(lastDayTotals.date) === sanitizeIso(date)) {
+                renderDayTotals(lastDayTotals, { isDemo: lastDayTotals.isDemo, suppressStatus: true, cache: false });
+                renderDayStatus(fallbackMessage, isTimeout ? 'warning' : 'error');
+              } else {
+                renderDayStatus(fallbackMessage, isTimeout ? 'warning' : 'error');
+              }
+              if (!lastDayTotals || sanitizeIso(lastDayTotals?.date) !== sanitizeIso(date)) {
+                if (dayRevenueQuickEl) {
+                  dayRevenueQuickEl.textContent = '–';
+                  dayRevenueQuickEl.classList.remove('positive', 'negative');
+                }
+                if (dayAverageQuickEl) dayAverageQuickEl.textContent = '–';
+              }
+              if (dayRevenueQuickStatusEl) {
+                dayRevenueQuickStatusEl.textContent = fallbackMessage;
+                dayRevenueQuickStatusEl.dataset.tone = isTimeout ? 'warning' : 'error';
+              }
+              if (dayAverageQuickStatusEl) {
+                dayAverageQuickStatusEl.textContent = fallbackMessage;
+                dayAverageQuickStatusEl.dataset.tone = isTimeout ? 'warning' : 'error';
+              }
               renderProductInsights(null, {
                 date,
                 state: 'error',
-                message: error?.body?.message || error?.message || 'Kunne ikke hente produktsalget. Prøv igjen senere.',
+                message: fallbackMessage,
               });
-              renderRevenueAnalysisState('error', { date, message: error?.body?.message || error?.message || 'Kunne ikke hente omsetningsanalyse.' });
-              renderProductChangesState('error', { date, message: error?.body?.message || error?.message || 'Kunne ikke beregne endringer.' });
+              renderRevenueAnalysisState('error', { date, message: fallbackMessage });
+              renderProductChangesState('error', { date, message: fallbackMessage });
             });
         };
 
@@ -2564,6 +2632,7 @@
             })
             .catch((error) => {
               console.error('Kunne ikke hente daglig omsetning:', error);
+              const isTimeout = error?.status === 408 || /408/.test(String(error?.message || ''));
               const shouldTryDemo = !attemptedDemoFallback && (
                 error?.status === 400 &&
                 (error?.body?.error === 'CONFIG_MISSING' || error?.body?.error === 'RECEIPTS_FAIL')
@@ -2588,13 +2657,21 @@
                   /* fall through */
                 }
               }
-              chartDataAll = [];
-              chartDataMap = new Map();
-              chartCursorDate = null;
-              chartLatestDate = todayISO;
-              chartOldestDate = todayISO;
-              chartIsDemo = false;
-              renderChart([], { message: error?.body?.message || error?.message || 'Feil ved henting' });
+              if (chartDataAll.length) {
+                const fallbackCursor = chartCursorDate || chartLatestDate;
+                renderChartWindow(fallbackCursor, { isDemo: chartIsDemo, direction: '' });
+              } else {
+                chartDataAll = [];
+                chartDataMap = new Map();
+                chartCursorDate = null;
+                chartLatestDate = todayISO;
+                chartOldestDate = todayISO;
+                chartIsDemo = false;
+                const chartMessage = isTimeout
+                  ? 'Lightspeed brukte for lang tid. Prøv igjen om litt.'
+                  : (error?.body?.message || error?.message || 'Feil ved henting');
+                renderChart([], { message: chartMessage });
+              }
               updateChartNavButtons();
             });
         };
