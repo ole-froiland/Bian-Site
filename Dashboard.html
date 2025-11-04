@@ -618,6 +618,72 @@
       gap:var(--space-3);
       grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
     }
+    .reports-toolbar{
+      display:flex;
+      flex-direction:column;
+      gap:var(--space-3);
+      margin-bottom:var(--space-3);
+      background:color-mix(in srgb,var(--surface) 85%,transparent);
+      border:1px solid var(--border);
+      border-radius:var(--radius-lg);
+      padding:var(--space-3);
+      box-shadow:var(--shadow-sm);
+    }
+    .reports-range{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;}
+    .reports-range__btn{
+      padding:0.45rem 1.1rem;
+      border-radius:var(--radius-pill);
+      border:1px solid var(--border);
+      background:color-mix(in srgb,var(--surface) 90%,transparent);
+      font-weight:600;
+      cursor:pointer;
+      transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
+    }
+    .reports-range__btn.active{
+      background:var(--primary);
+      color:var(--text-inverse);
+      border-color:var(--primary);
+      box-shadow:0 12px 28px rgba(108,99,255,0.32);
+    }
+    .reports-range__btn:focus-visible{outline:none;box-shadow:var(--ring);}
+    .reports-range__btn:not(.active):hover{border-color:var(--primary);color:var(--primary-hover);}
+    .reports-filter{display:flex;flex-direction:column;gap:var(--space-2);}
+    .reports-month-grid,
+    .reports-week-grid{display:grid;gap:var(--space-2);grid-template-columns:repeat(auto-fit,minmax(90px,1fr));}
+    .reports-month{
+      padding:0.5rem 0.75rem;
+      border-radius:var(--radius-md);
+      border:1px solid var(--border-subtle);
+      background:color-mix(in srgb,var(--surface) 92%,transparent);
+      font-weight:600;
+      cursor:pointer;
+      transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
+    }
+    .reports-month[data-active="true"],
+    .reports-week[data-active="true"]{
+      background:linear-gradient(120deg,#34d399,#10b981);
+      color:#0f172a;
+      border-color:transparent;
+      box-shadow:0 12px 28px rgba(16,185,129,0.24);
+    }
+    .reports-month[data-available="true"]:not([data-active="true"]),
+    .reports-week[data-available="true"]:not([data-active="true"]){
+      border-color:rgba(16,185,129,0.45);
+      color:#10b981;
+      background:color-mix(in srgb,#10b981 16%,var(--surface) 84%);
+    }
+    .reports-month:hover,
+    .reports-week:hover{border-color:var(--primary);}
+    .reports-week{
+      padding:0.5rem 0.75rem;
+      border-radius:var(--radius-md);
+      border:1px solid var(--border-subtle);
+      background:color-mix(in srgb,var(--surface) 92%,transparent);
+      font-weight:600;
+      cursor:pointer;
+      transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
+    }
+    .reports-hint{font-size:0.9rem;color:var(--text-muted);} 
     .tripletex-card h2{font-size:1.05rem;}
     .tripletex-status{font-size:0.85rem;color:var(--text-muted);margin:0;}
     .tripletex-status[data-tone="error"]{color:#dc2626;}
@@ -1047,6 +1113,35 @@
   </nav>
   <main class="shell">
     <section class="tab-panel active" id="kpi" role="tabpanel" aria-labelledby="tab-kpi" tabindex="0" data-tripletex-config='{"beer":{"label":"Øl","accounts":{"revenue":"id-289896744","cost":"id-289896742"}},"wine":{"label":"Vin","accounts":{"revenue":"id-289896745","cost":"id-289896743"}}}'>
+      <div class="reports-toolbar" data-reports-toolbar>
+        <div class="reports-range" role="tablist" aria-label="Rapporter periode">
+          <button type="button" class="reports-range__btn active" data-range="month" aria-selected="true">Måned</button>
+          <button type="button" class="reports-range__btn" data-range="week" aria-selected="false">Uke</button>
+          <button type="button" class="reports-range__btn" data-range="day" aria-selected="false">Dag</button>
+        </div>
+        <div class="reports-filter" data-range-panel="month">
+          <div class="reports-month-grid">
+            <button type="button" class="reports-month" data-month="01">Jan</button>
+            <button type="button" class="reports-month" data-month="02">Feb</button>
+            <button type="button" class="reports-month" data-month="03">Mar</button>
+            <button type="button" class="reports-month" data-month="04">Apr</button>
+            <button type="button" class="reports-month" data-month="05">Mai</button>
+            <button type="button" class="reports-month" data-month="06">Jun</button>
+            <button type="button" class="reports-month" data-month="07">Jul</button>
+            <button type="button" class="reports-month" data-month="08">Aug</button>
+            <button type="button" class="reports-month" data-month="09">Sep</button>
+            <button type="button" class="reports-month" data-month="10">Okt</button>
+            <button type="button" class="reports-month" data-month="11">Nov</button>
+            <button type="button" class="reports-month" data-month="12">Des</button>
+          </div>
+        </div>
+        <div class="reports-filter" data-range-panel="week" hidden>
+          <div class="reports-week-grid" data-week-grid></div>
+        </div>
+        <div class="reports-filter" data-range-panel="day" hidden>
+          <span class="reports-hint">Velg en dag via datovelgeren i kortet.</span>
+        </div>
+      </div>
       <div class="tripletex-grid">
         <article class="card tripletex-card" data-tripletex-product="beer">
           <header>
@@ -1289,8 +1384,9 @@
       const aiBottomListEl = document.querySelector('[data-ai-bottom-list]');
       const aiProductsStatusEl = document.querySelector('[data-ai-products-status]');
       const aiProductsDateEl = document.querySelector('[data-ai-products-date]');
-      const aiProductsPicker = document.querySelector('#ai-products-picker');
-      const aiTodayBtn = document.querySelector('[data-ai-today]');
+    const aiProductsPicker = document.querySelector('#ai-products-picker');
+    const aiTodayBtn = document.querySelector('[data-ai-today]');
+    const reportsToolbar = document.querySelector('[data-reports-toolbar]');
       const revenueCardEl = document.querySelector('[data-revenue-card]');
       const revenueDateEl = document.querySelector('[data-revenue-date]');
       const revenueComparisonEl = document.querySelector('[data-revenue-comparison]');
@@ -2696,10 +2792,46 @@
           if (product.costAccount) accountsParam.push(`${product.key}Cost|${product.label} varekost:${product.costAccount}`);
         });
 
-        const year = new Date().getFullYear();
-        const fromISO = `${year}-01-01`;
-        const lastDayFeb = new Date(year, 2, 0).getDate();
-        const toISO = `${year}-02-${String(lastDayFeb).padStart(2, '0')}`;
+        const todayDate = new Date();
+        const reportingYear = todayDate.getFullYear();
+        const fromISO = `${reportingYear}-01-01`;
+        const toISO = toISODate(todayDate);
+        const reportsToolbarEl = reportsToolbar;
+        const monthButtons = reportsToolbarEl ? Array.from(reportsToolbarEl.querySelectorAll('.reports-month')) : [];
+        const weekGrid = reportsToolbarEl ? reportsToolbarEl.querySelector('[data-week-grid]') : null;
+        const dayHintEl = reportsToolbarEl ? reportsToolbarEl.querySelector('[data-range-panel="day"] .reports-hint') : null;
+        const monthLabelFmt = new Intl.DateTimeFormat('nb-NO', { month: 'long', year: 'numeric' });
+        const weekRangeFmt = new Intl.DateTimeFormat('nb-NO', { day: '2-digit', month: 'short' });
+        const dayLabelFmt = new Intl.DateTimeFormat('nb-NO', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        const reportsState = {
+          activeRange: 'month',
+          data: { month: null, week: null, day: null },
+          selection: { month: null, week: null, day: null },
+          loading: { month: false, week: false, day: false },
+          error: { month: null, week: null, day: null },
+        };
+        if (dayPicker && dayPicker.value) {
+          const initialDay = sanitizeIso(dayPicker.value);
+          if (initialDay) reportsState.selection.day = initialDay;
+        }
+
+        const ensureWeekButtons = () => {
+          if (!weekGrid) return;
+          if (weekGrid.dataset.initialized === '1') return;
+          weekGrid.innerHTML = '';
+          for (let week = 1; week <= 53; week += 1) {
+            const weekKey = `${reportingYear}-W${String(week).padStart(2, '0')}`;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'reports-week';
+            button.textContent = `Uke ${String(week).padStart(2, '0')}`;
+            button.dataset.week = String(week);
+            button.dataset.weekKey = weekKey;
+            button.setAttribute('aria-pressed', 'false');
+            weekGrid.appendChild(button);
+          }
+          weekGrid.dataset.initialized = '1';
+        };
 
         const updateProductHeader = (productKey, label) => {
           const card = tripletexSection.querySelector(`[data-tripletex-product="${productKey}"]`);
@@ -2716,6 +2848,10 @@
             statusEl.textContent = text;
             statusEl.dataset.tone = tone;
           }
+        };
+
+        const setStatusAll = (text, tone = 'muted') => {
+          products.forEach((product) => setStatus(product.key, text, tone));
         };
 
         const setTable = (productKey, rows) => {
@@ -2735,8 +2871,9 @@
           }
           rows.forEach((row) => {
             const tr = document.createElement('tr');
-            const monthCell = document.createElement('td');
-            monthCell.textContent = row.monthLabel;
+            const periodCell = document.createElement('td');
+            periodCell.textContent = row.label || row.monthLabel || row.key || '–';
+            if (row.hint) periodCell.title = row.hint;
             const revenueCell = document.createElement('td');
             revenueCell.className = 'numeric';
             revenueCell.textContent = row.revenue;
@@ -2753,19 +2890,281 @@
               else marginCell.classList.add('trend-negative');
               marginCell.textContent = percentFmt.format(row.margin);
             }
-            tr.append(monthCell, revenueCell, costCell, marginCell);
+            tr.append(periodCell, revenueCell, costCell, marginCell);
             body.appendChild(tr);
           });
         };
 
-        const load = async () => {
-          products.forEach((product) => setStatus(product.key, 'Henter …', 'muted'));
+        const makeIsoDate = (yearVal, monthVal, dayVal) => `${String(yearVal).padStart(4, '0')}-${String(monthVal).padStart(2, '0')}-${String(dayVal).padStart(2, '0')}`;
+
+        const formatPeriodHint = (meta) => {
+          const start = meta?.start ? parseIsoDate(meta.start) : null;
+          const end = meta?.end ? parseIsoDate(meta.end) : null;
+          if (start && end) return `${dateFmtShort.format(start)} – ${dateFmtShort.format(end)}`;
+          if (start) return dateFmtShort.format(start);
+          return '';
+        };
+
+        const formatPeriodLabel = (rangeType, key, meta) => {
+          if (rangeType === 'month') {
+            const labelDate = meta?.start ? parseIsoDate(meta.start) : null;
+            if (labelDate) return monthLabelFmt.format(labelDate);
+            const [yearPart, monthPart] = key.split('-');
+            if (yearPart && monthPart) {
+              return monthLabelFmt.format(new Date(Number(yearPart), Number(monthPart) - 1, 1));
+            }
+          } else if (rangeType === 'week') {
+            const weekNumber = meta?.week || Number(String(key).split('-W')[1] || 0);
+            const start = meta?.start ? parseIsoDate(meta.start) : null;
+            const end = meta?.end ? parseIsoDate(meta.end) : null;
+            if (start && end) {
+              return `Uke ${String(weekNumber).padStart(2, '0')} · ${weekRangeFmt.format(start)} – ${weekRangeFmt.format(end)}`;
+            }
+            if (weekNumber) return `Uke ${String(weekNumber).padStart(2, '0')}`;
+          } else if (rangeType === 'day') {
+            const dateValue = meta?.date ? parseIsoDate(meta.date) : meta?.start ? parseIsoDate(meta.start) : parseIsoDate(key);
+            if (dateValue) return dayLabelFmt.format(dateValue);
+          }
+          return key;
+        };
+
+        const normalizeTripletexResponse = (payload, { rangeType, from, to, year }) => {
+          const aggregates = Array.isArray(payload?.accounts) ? payload.accounts : [];
+          const aggregateMap = new Map(aggregates.map((entry) => [entry.key, entry]));
+          const dataset = {
+            rangeType,
+            products: {},
+            availableKeys: new Set(),
+            meta: new Map(),
+            keyByMonth: new Map(),
+            summary: { start: from || null, end: to || null, label: '' },
+          };
+
+          const updateSummary = (value) => {
+            if (!value) return;
+            if (!dataset.summary.start || value < dataset.summary.start) dataset.summary.start = value;
+            if (!dataset.summary.end || value > dataset.summary.end) dataset.summary.end = value;
+          };
+
+          const ensureMeta = (key, bucket) => {
+            if (!key || key === 'ukjent') return null;
+            if (!dataset.meta.has(key)) {
+              const start = bucket?.meta?.start || bucket?.firstDate || null;
+              const end = bucket?.meta?.end || bucket?.lastDate || null;
+              const meta = {
+                key,
+                start,
+                end,
+                week: bucket?.meta?.week || null,
+                year: bucket?.meta?.year || null,
+                date: bucket?.meta?.date || null,
+              };
+              dataset.meta.set(key, meta);
+            } else {
+              const meta = dataset.meta.get(key);
+              const start = bucket?.meta?.start || bucket?.firstDate || null;
+              const end = bucket?.meta?.end || bucket?.lastDate || null;
+              if (start && (!meta.start || start < meta.start)) meta.start = start;
+              if (end && (!meta.end || end > meta.end)) meta.end = end;
+              if (!meta.week && bucket?.meta?.week) meta.week = bucket.meta.week;
+              if (!meta.year && bucket?.meta?.year) meta.year = bucket.meta.year;
+              if (!meta.date && bucket?.meta?.date) meta.date = bucket.meta.date;
+            }
+            return dataset.meta.get(key);
+          };
+
+          products.forEach((product) => {
+            const revenueEntry = product.revenueAccount ? aggregateMap.get(`${product.key}Revenue`) : null;
+            const costEntry = product.costAccount ? aggregateMap.get(`${product.key}Cost`) : null;
+            const revenueBuckets = revenueEntry?.periods || revenueEntry?.months || {};
+            const costBuckets = costEntry?.periods || costEntry?.months || {};
+            const periodKeys = new Set([
+              ...Object.keys(revenueBuckets || {}),
+              ...Object.keys(costBuckets || {}),
+            ]);
+            const rows = [];
+            periodKeys.forEach((periodKey) => {
+              if (!periodKey || periodKey === 'ukjent') return;
+              const revenueBucket = revenueBuckets?.[periodKey];
+              const costBucket = costBuckets?.[periodKey];
+              const meta = ensureMeta(periodKey, revenueBucket || costBucket || {});
+              if (meta) {
+                meta.label = meta.label || formatPeriodLabel(rangeType, periodKey, meta);
+                meta.hint = meta.hint || formatPeriodHint(meta);
+                updateSummary(meta.start);
+                updateSummary(meta.end);
+                if (rangeType === 'month') {
+                  const monthPart = periodKey.slice(5, 7);
+                  if (monthPart) dataset.keyByMonth.set(monthPart, periodKey);
+                }
+              }
+              const revenueAbs = Number(revenueBucket?.totalAbsolute || 0);
+              const costAbs = Number(costBucket?.totalAbsolute || 0);
+              const margin = revenueAbs > 0 ? (revenueAbs - costAbs) / revenueAbs : null;
+              rows.push({
+                key: periodKey,
+                label: meta?.label || periodKey,
+                hint: meta?.hint || '',
+                revenue: moneyFmt.format(revenueAbs),
+                cost: moneyFmt.format(costAbs),
+                revenueValue: revenueAbs,
+                costValue: costAbs,
+                margin,
+              });
+              if (revenueAbs > 0.001 || costAbs > 0.001) dataset.availableKeys.add(periodKey);
+            });
+            rows.sort((a, b) => a.key.localeCompare(b.key));
+            dataset.products[product.key] = { label: product.label, rows };
+          });
+
+          if (rangeType === 'month') {
+            for (let month = 1; month <= 12; month += 1) {
+              const monthPart = String(month).padStart(2, '0');
+              const key = `${year}-${monthPart}`;
+              if (!dataset.meta.has(key)) {
+                const start = makeIsoDate(year, month, 1);
+                const endDate = new Date(Date.UTC(year, month, 0));
+                const end = makeIsoDate(endDate.getUTCFullYear(), endDate.getUTCMonth() + 1, endDate.getUTCDate());
+                const labelDate = parseIsoDate(start);
+                dataset.meta.set(key, {
+                  key,
+                  start,
+                  end,
+                  label: labelDate ? monthLabelFmt.format(labelDate) : key,
+                  hint: formatPeriodHint({ start, end }),
+                });
+              }
+              if (!dataset.keyByMonth.has(monthPart)) {
+                dataset.keyByMonth.set(monthPart, key);
+              }
+            }
+          }
+
+          const metaValues = Array.from(dataset.meta.values()).sort((a, b) => a.key.localeCompare(b.key));
+          if (!dataset.summary.start && metaValues[0]?.start) dataset.summary.start = metaValues[0].start;
+          if (!dataset.summary.end && metaValues[metaValues.length - 1]?.end) dataset.summary.end = metaValues[metaValues.length - 1].end;
+          if (dataset.summary.start && dataset.summary.end) {
+            const startDate = parseIsoDate(dataset.summary.start);
+            const endDate = parseIsoDate(dataset.summary.end);
+            if (startDate && endDate) {
+              dataset.summary.label = `${dateFmtShort.format(startDate)} – ${dateFmtShort.format(endDate)}`;
+            }
+          }
+          return dataset;
+        };
+
+        const applyMonthSelectionState = () => {
+          if (!monthButtons.length) return;
+          const dataset = reportsState.data.month;
+          const available = dataset?.availableKeys || new Set();
+          const activeKey = reportsState.selection.month;
+          monthButtons.forEach((button) => {
+            const monthPart = button.dataset.month;
+            const periodKey = dataset?.keyByMonth?.get(monthPart) || `${reportingYear}-${monthPart}`;
+            button.dataset.periodKey = periodKey;
+            if (available.has(periodKey)) button.setAttribute('data-available', 'true');
+            else button.removeAttribute('data-available');
+            const isActive = Boolean(activeKey && activeKey === periodKey);
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            if (isActive) button.setAttribute('data-active', 'true');
+            else button.removeAttribute('data-active');
+            const meta = dataset?.meta?.get(periodKey);
+            if (meta?.hint) button.title = meta.hint;
+            else button.removeAttribute('title');
+          });
+        };
+
+        const ensureWeekButtonForKey = (key, meta) => {
+          if (!weekGrid) return null;
+          let button = weekGrid.querySelector(`[data-week-key="${key}"]`);
+          if (button) return button;
+          button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'reports-week';
+          button.dataset.weekKey = key;
+          button.setAttribute('aria-pressed', 'false');
+          const weekNumber = meta?.week || Number(String(key).split('-W')[1] || 0);
+          button.textContent = weekNumber ? `Uke ${String(weekNumber).padStart(2, '0')}` : key;
+          if (meta?.hint) button.title = meta.hint;
+          weekGrid.appendChild(button);
+          return button;
+        };
+
+        const updateWeekButtons = () => {
+          if (!weekGrid) return;
+          ensureWeekButtons();
+          const dataset = reportsState.data.week;
+          const available = dataset?.availableKeys || new Set();
+          const metaMap = dataset?.meta || new Map();
+          const activeKey = reportsState.selection.week;
+          metaMap.forEach((meta, key) => {
+            ensureWeekButtonForKey(key, meta);
+          });
+          const buttons = Array.from(weekGrid.querySelectorAll('.reports-week'));
+          buttons.forEach((button) => {
+            const key = button.dataset.weekKey;
+            const meta = metaMap.get(key);
+            if (meta?.label) button.textContent = meta.label.split('·')[0].trim();
+            if (meta?.hint) button.title = meta.hint;
+            if (available.has(key)) button.setAttribute('data-available', 'true');
+            else button.removeAttribute('data-available');
+            const isActive = Boolean(activeKey && activeKey === key);
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            if (isActive) button.setAttribute('data-active', 'true');
+            else button.removeAttribute('data-active');
+          });
+        };
+
+        const updateDayHint = () => {
+          if (!dayHintEl) return;
+          const dayKey = reportsState.selection.day;
+          if (!dayKey) {
+            dayHintEl.textContent = 'Velg en dag via datovelgeren i kortet.';
+            return;
+          }
+          const dateObj = parseIsoDate(dayKey);
+          if (!dateObj) {
+            dayHintEl.textContent = 'Velg en dag via datovelgeren i kortet.';
+            return;
+          }
+          dayHintEl.textContent = `Valgt dag: ${dayLabelFmt.format(dateObj)}`;
+        };
+
+        const renderTripletexTables = () => {
+          const range = reportsState.activeRange;
+          const dataset = reportsState.data[range];
+          if (!dataset) return;
+          const selectionKey = reportsState.selection[range];
+          products.forEach((product) => {
+            const rowsSource = dataset.products[product.key]?.rows || [];
+            const rows = selectionKey ? rowsSource.filter((row) => row.key === selectionKey) : rowsSource;
+            setTable(product.key, rows);
+            let statusText = dataset.summary.label;
+            if (selectionKey) {
+              const meta = dataset.meta.get(selectionKey);
+              statusText = meta?.label || meta?.hint || statusText || selectionKey;
+            }
+            setStatus(product.key, statusText || '');
+          });
+          if (range === 'month') applyMonthSelectionState();
+          if (range === 'week') updateWeekButtons();
+          if (range === 'day') updateDayHint();
+        };
+
+        const fetchTripletexRange = async (rangeType) => {
+          if (reportsState.loading[rangeType]) return;
+          reportsState.loading[rangeType] = true;
+          if (reportsState.activeRange === rangeType) {
+            setStatusAll('Henter …', 'muted');
+          }
           try {
             const base = await resolveTripletexEndpoint();
             const url = new URL(base, window.location.origin);
             url.searchParams.set('from', fromISO);
             url.searchParams.set('to', toISO);
-            url.searchParams.set('group', 'month');
+            if (['month', 'week', 'day'].includes(rangeType)) {
+              url.searchParams.set('group', rangeType);
+            }
             accountsParam.forEach((entry) => url.searchParams.append('accounts', entry));
             const res = await fetch(url.toString(), { headers: { accept: 'application/json' } });
             const text = await res.text();
@@ -2775,56 +3174,91 @@
               const message = data?.message || data?.error || res.statusText || text || 'Kunne ikke hente Tripletex-data';
               throw new Error(message);
             }
-            const aggregates = Array.isArray(data.accounts) ? data.accounts : [];
-            console.groupCollapsed('Tripletex aggregater');
-            console.table(aggregates.map((entry) => ({
-              key: entry.key,
-              label: entry.label,
-              total: entry.total,
-              totalAbsolute: entry.totalAbsolute,
-              months: Object.entries(entry.months || {}).map(([k, v]) => `${k}: ${v.total}`).join(', ')
-            })));
-            console.groupEnd();
-            const aggregateMap = new Map(aggregates.map((entry) => [entry.key, entry]));
-            const monthSet = new Set();
-            aggregates.forEach((entry) => Object.keys(entry.months || {}).forEach((m) => monthSet.add(m)));
-            const sortedMonths = Array.from(monthSet).sort();
-            const monthLabelFmt = new Intl.DateTimeFormat('nb-NO', { month: 'long', year: 'numeric' });
-
-            products.forEach((product) => {
-              const revenue = product.revenueAccount ? aggregateMap.get(`${product.key}Revenue`) : null;
-              const cost = product.costAccount ? aggregateMap.get(`${product.key}Cost`) : null;
-              const rows = sortedMonths.map((monthKey) => {
-                if (!monthKey || monthKey === 'ukjent') return null;
-                const [yearPart, monthPart] = monthKey.split('-');
-                const monthDate = new Date(Number(yearPart), Number(monthPart) - 1, 1);
-                const monthLabel = monthLabelFmt.format(monthDate);
-                const revenueValue = revenue?.months?.[monthKey]?.totalAbsolute || 0;
-                const costValue = cost?.months?.[monthKey]?.totalAbsolute || 0;
-                const margin = revenueValue > 0 ? (revenueValue - costValue) / revenueValue : null;
-                return {
-                  monthKey,
-                  monthLabel,
-                  revenue: moneyFmt.format(revenueValue),
-                  cost: moneyFmt.format(costValue),
-                  margin,
-                };
-              }).filter(Boolean);
-
-              setTable(product.key, rows);
-              const statusText = `${dateFmtShort.format(new Date(fromISO))} – ${dateFmtShort.format(new Date(toISO))}`;
-              setStatus(product.key, statusText);
-            });
+            const dataset = normalizeTripletexResponse(data, { rangeType, from: fromISO, to: toISO, year: reportingYear });
+            reportsState.data[rangeType] = dataset;
+            reportsState.error[rangeType] = null;
+            if (rangeType === 'month') applyMonthSelectionState();
+            if (rangeType === 'week') updateWeekButtons();
+            if (rangeType === 'day') {
+              if (!reportsState.selection.day) {
+                reportsState.selection.day = sanitizeIso(toISO);
+              }
+              updateDayHint();
+            }
+            if (reportsState.activeRange === rangeType) {
+              renderTripletexTables();
+            }
           } catch (error) {
-            console.error('Tripletex aggregation', error);
-            products.forEach((product) => {
-              setTable(product.key, []);
-              setStatus(product.key, String(error.message || error), 'error');
-            });
+            reportsState.error[rangeType] = error;
+            if (reportsState.activeRange === rangeType) {
+              products.forEach((product) => setTable(product.key, []));
+              setStatusAll(String(error.message || error), 'error');
+            }
+          } finally {
+            reportsState.loading[rangeType] = false;
           }
         };
 
-        load();
+        if (reportsToolbarEl) {
+          reportsToolbarEl.querySelectorAll('[data-range]').forEach((button) => {
+            button.addEventListener('click', () => {
+              const range = button.dataset.range;
+              if (!range || reportsState.activeRange === range) return;
+              reportsState.activeRange = range;
+              reportsToolbarEl.querySelectorAll('[data-range]').forEach((btn) => {
+                const isActive = btn.dataset.range === range;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+              });
+              reportsToolbarEl.querySelectorAll('[data-range-panel]').forEach((panel) => {
+                const shouldShow = panel.dataset.rangePanel === range;
+                panel.hidden = !shouldShow;
+              });
+              if (!reportsState.data[range] && !reportsState.loading[range]) {
+                fetchTripletexRange(range);
+              } else {
+                renderTripletexTables();
+              }
+            });
+          });
+
+          monthButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+              const periodKey = button.dataset.periodKey || `${reportingYear}-${button.dataset.month}`;
+              reportsState.selection.month = (reportsState.selection.month === periodKey) ? null : periodKey;
+              renderTripletexTables();
+            });
+          });
+
+          if (weekGrid) {
+            weekGrid.addEventListener('click', (event) => {
+              const trigger = event.target.closest('.reports-week');
+              if (!trigger || trigger.disabled) return;
+              const key = trigger.dataset.weekKey;
+              if (!key) return;
+              reportsState.selection.week = (reportsState.selection.week === key) ? null : key;
+              renderTripletexTables();
+            });
+          }
+        }
+
+        if (dayPicker) {
+          dayPicker.addEventListener('change', () => {
+            const value = sanitizeIso(dayPicker.value);
+            reportsState.selection.day = value;
+            if (!reportsState.data.day && !reportsState.loading.day) {
+              fetchTripletexRange('day');
+            } else if (reportsState.activeRange === 'day') {
+              renderTripletexTables();
+            } else {
+              updateDayHint();
+            }
+          });
+        }
+
+        applyMonthSelectionState();
+        ensureWeekButtons();
+        fetchTripletexRange('month');
       }
 
       const navMobileToggle = document.querySelector('.nav-actions .mobile-toggle');

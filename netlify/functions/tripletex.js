@@ -24,6 +24,30 @@ function normDate(s){
   return null;
 }
 
+function getISOWeekInfo(dateStr) {
+  if (!dateStr) return null;
+  const parsed = new Date(dateStr);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const d = new Date(Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const year = d.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(year, 0, 1));
+  const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  const key = `${year}-W${String(week).padStart(2, '0')}`;
+  const weekStartUTC = new Date(d);
+  weekStartUTC.setUTCDate(d.getUTCDate() - 3);
+  const weekEndUTC = new Date(weekStartUTC);
+  weekEndUTC.setUTCDate(weekStartUTC.getUTCDate() + 6);
+  return {
+    year,
+    week,
+    key,
+    start: toYMD(weekStartUTC.getUTCFullYear(), weekStartUTC.getUTCMonth() + 1, weekStartUTC.getUTCDate()),
+    end: toYMD(weekEndUTC.getUTCFullYear(), weekEndUTC.getUTCMonth() + 1, weekEndUTC.getUTCDate())
+  };
+}
+
 // Lager session-token: PUT+query for TEST, POST+JSON for PROD
 async function createSession() {
   const base = FALLBACK.baseUrl.replace(/\/+$/,'');
@@ -148,6 +172,8 @@ function aggregatePostings(postings, accountConfigs, { group } = {}) {
     accountNumber: cfg.accountNumber ? String(cfg.accountNumber) : null
   }));
 
+  const normalizedGroup = ['month', 'week', 'day'].includes(group) ? group : null;
+
   postings.forEach((posting) => {
     const accountId = posting.accountId ? String(posting.accountId) : null;
     const accountNumber = posting.accountNumber ? String(posting.accountNumber) : null;
@@ -174,13 +200,60 @@ function aggregatePostings(postings, accountConfigs, { group } = {}) {
       const abs = Math.abs(signed);
       entry.total += signed;
       entry.totalAbsolute += abs;
-      if (group === 'month') {
-        const monthKey = (posting.date || '').slice(0, 7) || 'ukjent';
-        if (!entry.months[monthKey]) {
-          entry.months[monthKey] = { total: 0, totalAbsolute: 0 };
+      if (normalizedGroup) {
+        if (!entry.periods) entry.periods = Object.create(null);
+        let bucketKey = 'ukjent';
+        let meta = null;
+        if (normalizedGroup === 'month') {
+          bucketKey = (posting.date || '').slice(0, 7) || 'ukjent';
+          if (bucketKey !== 'ukjent') {
+            const [yearPart, monthPart] = bucketKey.split('-');
+            const yearInt = Number(yearPart);
+            const monthInt = Number(monthPart);
+            if (!Number.isNaN(yearInt) && !Number.isNaN(monthInt)) {
+              const endDate = new Date(Date.UTC(yearInt, monthInt, 0));
+              meta = {
+                year: yearInt,
+                month: monthInt,
+                key: bucketKey,
+                start: toYMD(yearInt, monthInt, 1),
+                end: toYMD(endDate.getUTCFullYear(), endDate.getUTCMonth() + 1, endDate.getUTCDate())
+              };
+            }
+          }
+        } else if (normalizedGroup === 'day') {
+          bucketKey = (posting.date || '').slice(0, 10) || 'ukjent';
+          if (bucketKey !== 'ukjent') {
+            meta = { date: bucketKey, key: bucketKey };
+          }
+        } else if (normalizedGroup === 'week') {
+          const info = getISOWeekInfo(posting.date);
+          bucketKey = info?.key || 'ukjent';
+          meta = info;
         }
-        entry.months[monthKey].total += signed;
-        entry.months[monthKey].totalAbsolute += abs;
+        if (!entry.periods[bucketKey]) {
+          entry.periods[bucketKey] = {
+            total: 0,
+            totalAbsolute: 0,
+            firstDate: posting.date || null,
+            lastDate: posting.date || null,
+            meta
+          };
+        } else {
+          const existing = entry.periods[bucketKey];
+          if (posting.date) {
+            if (!existing.firstDate || posting.date < existing.firstDate) existing.firstDate = posting.date;
+            if (!existing.lastDate || posting.date > existing.lastDate) existing.lastDate = posting.date;
+          }
+        }
+        entry.periods[bucketKey].total += signed;
+        entry.periods[bucketKey].totalAbsolute += abs;
+        if (normalizedGroup === 'month') {
+          entry.months[bucketKey] = {
+            total: entry.periods[bucketKey].total,
+            totalAbsolute: entry.periods[bucketKey].totalAbsolute
+          };
+        }
       }
     });
   });
@@ -223,8 +296,8 @@ exports.handler = async (event) => {
     if (q.accounts) accountParamsRaw.push(q.accounts);
     const accountConfigs = parseAccountsParams(accountParamsRaw);
     const groupMode = String(q.group || '').toLowerCase();
-
-    const wantsAggregation = accountConfigs.length > 0 || groupMode === 'month';
+    const allowedGroups = new Set(['month', 'week', 'day']);
+    const wantsAggregation = accountConfigs.length > 0 || allowedGroups.has(groupMode);
 
     // demo data
     if(q.demo==='1'){
@@ -280,7 +353,11 @@ exports.handler = async (event) => {
       ? accountConfigs
       : [{ key: 'beerRevenue', label: 'Øl salg', accountId: DEFAULT_BEER_ACCOUNT_ID }];
 
-    const aggregates = aggregatePostings(postings, effectiveAccounts, { group: groupMode === 'month' ? 'month' : undefined });
+    const aggregates = aggregatePostings(
+      postings,
+      effectiveAccounts,
+      { group: allowedGroups.has(groupMode) ? groupMode : undefined }
+    );
 
     const totalBeer = aggregates.find((item) => item.accountId === DEFAULT_BEER_ACCOUNT_ID || item.accountNumber === '3003');
     const defaultPostings = aggregates.length === 1
@@ -298,6 +375,7 @@ exports.handler = async (event) => {
       count: postings.length,
       totalBeerSales: totalBeer ? totalBeer.totalAbsolute : 0,
       accounts: aggregates,
+      group: allowedGroups.has(groupMode) ? groupMode : null,
       postings: defaultPostings,
     });
   }catch(e){
