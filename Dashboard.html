@@ -754,7 +754,6 @@
       gap:var(--space-3);
       grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
     }
-    .ai-insights__header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);flex-wrap:wrap;}
     .ai-insights__column h3{font-size:0.95rem;font-weight:600;color:var(--text-muted);}
     .ai-insights__list{
       display:flex;
@@ -762,8 +761,9 @@
       gap:0.75rem;
       margin-top:var(--space-2);
     }
-    .ai-insights__meta{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;}
-    .ai-insights__today{
+    .ai-section-header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-3);}
+    .ai-section-header__meta{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;}
+    .ai-section-header__today{
       padding:0.45rem 0.9rem;
       border-radius:var(--radius-pill);
       border:1px solid var(--border);
@@ -773,8 +773,8 @@
       cursor:pointer;
       transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
     }
-    .ai-insights__today:hover{background:color-mix(in srgb,var(--surface) 80%,var(--primary-hover) 20%);border-color:var(--primary);color:var(--text-strong);}
-    .ai-insights__today:focus-visible{outline:none;box-shadow:var(--ring);}
+    .ai-section-header__today:hover{background:color-mix(in srgb,var(--surface) 80%,var(--primary-hover) 20%);border-color:var(--primary);color:var(--text-strong);}
+    .ai-section-header__today:focus-visible{outline:none;box-shadow:var(--ring);}
     .ai-insights__list:empty{
       border:1px dashed var(--border);
       border-radius:var(--radius-md);
@@ -1131,16 +1131,16 @@
       </article>
     </section>
     <section class="tab-panel" id="ai-tips" role="tabpanel" aria-labelledby="tab-ai" tabindex="0" hidden>
+      <div class="ai-section-header">
+        <h2>AI-tips</h2>
+        <div class="ai-section-header__meta">
+          <span data-ai-products-date>–</span>
+          <label for="ai-products-picker" class="sr-only">Velg dato for AI-tips</label>
+          <input type="date" id="ai-products-picker" class="daily-summary__input ai-insights__input" />
+          <button type="button" class="ai-section-header__today" data-ai-today>i dag</button>
+        </div>
+      </div>
       <article class="card ai-insights-card">
-        <header class="ai-insights__header">
-          <h2>AI-tips</h2>
-          <div class="ai-insights__meta">
-            <span data-ai-products-date>–</span>
-            <label for="ai-products-picker" class="sr-only">Velg dato for AI-tips</label>
-            <input type="date" id="ai-products-picker" class="daily-summary__input ai-insights__input" />
-            <button type="button" class="ai-insights__today" data-ai-today>i dag</button>
-          </div>
-        </header>
         <div class="ai-insights" data-ai-insights>
           <div class="ai-insights__column">
             <h3>Mest solgte produkter</h3>
