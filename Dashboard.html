@@ -3069,6 +3069,54 @@
           return dataset;
         };
 
+        const getSortedRangeKeys = (rangeType) => {
+          const dataset = reportsState.data[rangeType];
+          if (!dataset) return [];
+          const metaKeys = Array.from(dataset.meta?.keys?.() || []);
+          metaKeys.sort((a, b) => a.localeCompare(b));
+          if (dataset.availableKeys && dataset.availableKeys.size) {
+            const filtered = metaKeys.filter((key) => dataset.availableKeys.has(key));
+            if (filtered.length) return filtered;
+          }
+          return metaKeys;
+        };
+
+        const setRangeSelection = (rangeType, key) => {
+          reportsState.selection[rangeType] = key || null;
+          if (rangeType === 'day' && dayPicker) {
+            dayPicker.value = key || '';
+          }
+        };
+
+        const cycleRangeSelection = (rangeType, direction = 1) => {
+          const keys = getSortedRangeKeys(rangeType);
+          if (!keys.length) return;
+          const current = reportsState.selection[rangeType];
+          let index = current ? keys.indexOf(current) : -1;
+          if (index === -1) {
+            index = direction > 0 ? -1 : 0;
+          }
+          const nextIndex = (index + direction + keys.length) % keys.length;
+          const nextKey = keys[nextIndex];
+          setRangeSelection(rangeType, nextKey);
+          renderTripletexTables();
+        };
+
+        const pickInitialSelection = (rangeType) => {
+          const keys = getSortedRangeKeys(rangeType);
+          if (!keys.length) return null;
+          if (rangeType === 'month') {
+            const currentMonthKey = todayISO.slice(0, 7);
+            if (keys.includes(currentMonthKey)) return currentMonthKey;
+          } else if (rangeType === 'week') {
+            const info = getISOWeekInfo(todayISO);
+            if (info?.key && keys.includes(info.key)) return info.key;
+          } else if (rangeType === 'day') {
+            if (keys.includes(todayISO)) return todayISO;
+          }
+          return keys[keys.length - 1];
+        };
+
         const applyMonthSelectionState = () => {
           if (!monthButtons.length) return;
           const dataset = reportsState.data.month;
@@ -3151,6 +3199,9 @@
           const dataset = reportsState.data[range];
           if (!dataset) return;
           const selectionKey = reportsState.selection[range];
+          if (range === 'day' && dayPicker) {
+            dayPicker.value = selectionKey || '';
+          }
           products.forEach((product) => {
             const rowsSource = dataset.products[product.key]?.rows || [];
             const rows = selectionKey ? rowsSource.filter((row) => row.key === selectionKey) : rowsSource;
@@ -3193,11 +3244,15 @@
             const dataset = normalizeTripletexResponse(data, { rangeType, from: fromISO, to: toISO, year: reportingYear });
             reportsState.data[rangeType] = dataset;
             reportsState.error[rangeType] = null;
+            if (!reportsState.selection[rangeType]) {
+              const initialKey = pickInitialSelection(rangeType);
+              if (initialKey) setRangeSelection(rangeType, initialKey);
+            }
             if (rangeType === 'month') applyMonthSelectionState();
             if (rangeType === 'week') updateWeekButtons();
             if (rangeType === 'day') {
               if (!reportsState.selection.day) {
-                reportsState.selection.day = sanitizeIso(toISO);
+                setRangeSelection('day', sanitizeIso(toISO));
               }
               updateDayHint();
             }
@@ -3219,7 +3274,16 @@
           reportsToolbarEl.querySelectorAll('[data-range]').forEach((button) => {
             button.addEventListener('click', () => {
               const range = button.dataset.range;
-              if (!range || reportsState.activeRange === range) return;
+              if (!range) return;
+              if (reportsState.activeRange === range) {
+                if (reportsState.loading[range]) return;
+                if (!reportsState.data[range]) {
+                  fetchTripletexRange(range);
+                  return;
+                }
+                cycleRangeSelection(range);
+                return;
+              }
               reportsState.activeRange = range;
               reportsToolbarEl.querySelectorAll('[data-range]').forEach((btn) => {
                 const isActive = btn.dataset.range === range;
@@ -3233,6 +3297,10 @@
               if (!reportsState.data[range] && !reportsState.loading[range]) {
                 fetchTripletexRange(range);
               } else {
+                if (!reportsState.selection[range]) {
+                  const initialKey = pickInitialSelection(range);
+                  if (initialKey) setRangeSelection(range, initialKey);
+                }
                 renderTripletexTables();
               }
             });
@@ -3241,7 +3309,8 @@
           monthButtons.forEach((button) => {
             button.addEventListener('click', () => {
               const periodKey = button.dataset.periodKey || `${reportingYear}-${button.dataset.month}`;
-              reportsState.selection.month = (reportsState.selection.month === periodKey) ? null : periodKey;
+              const isActive = reportsState.selection.month === periodKey;
+              setRangeSelection('month', isActive ? null : periodKey);
               renderTripletexTables();
             });
           });
@@ -3252,7 +3321,8 @@
               if (!trigger || trigger.disabled) return;
               const key = trigger.dataset.weekKey;
               if (!key) return;
-              reportsState.selection.week = (reportsState.selection.week === key) ? null : key;
+              const isActive = reportsState.selection.week === key;
+              setRangeSelection('week', isActive ? null : key);
               renderTripletexTables();
             });
           }
@@ -3261,7 +3331,7 @@
         if (dayPicker) {
           dayPicker.addEventListener('change', () => {
             const value = sanitizeIso(dayPicker.value);
-            reportsState.selection.day = value;
+            setRangeSelection('day', value);
             if (!reportsState.data.day && !reportsState.loading.day) {
               fetchTripletexRange('day');
             } else if (reportsState.activeRange === 'day') {
