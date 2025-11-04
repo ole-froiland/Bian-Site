@@ -661,19 +661,22 @@
     }
     .reports-filter[data-open]{
       position:absolute;
-      top:calc(100% + var(--space-2));
+      top:calc(100% + var(--space-1));
       left:0;
       background:var(--surface-elevated);
       border:1px solid var(--border);
       border-radius:var(--radius-lg);
       padding:var(--space-3);
       box-shadow:var(--shadow-lg);
-      width:min(100%,520px);
+      width:min(100%,360px);
       z-index:50;
       gap:var(--space-2);
     }
     .reports-filter[data-open][data-range-panel="week"]{
-      width:min(100%,600px);
+      width:min(100%,420px);
+    }
+    .reports-filter[data-open][data-range-panel="day"]{
+      width:min(100%,340px);
     }
     .reports-month-grid,
     .reports-week-grid{
@@ -694,12 +697,21 @@
       display:flex;
       flex-direction:column;
       gap:var(--space-1);
-      max-height:300px;
-      padding-right:0.35rem;
+      max-height:280px;
+      padding-right:0.25rem;
       overflow-y:auto;
       overflow-x:hidden;
       flex-wrap:nowrap;
       scroll-snap-type:none;
+    }
+    .reports-filter[data-open] .reports-day-grid{
+      display:flex;
+      flex-direction:column;
+      gap:var(--space-1);
+      max-height:280px;
+      padding-right:0.25rem;
+      overflow-y:auto;
+      overflow-x:hidden;
     }
     .reports-month{
       padding:0.35rem 0.5rem;
@@ -737,6 +749,54 @@
       cursor:pointer;
       transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
     }
+    .reports-day{
+      padding:0.45rem 0.6rem;
+      border-radius:var(--radius-md);
+      border:1px solid var(--border-subtle);
+      background:color-mix(in srgb,var(--surface) 95%,transparent);
+      font-weight:600;
+      font-size:0.85rem;
+      cursor:pointer;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
+    }
+    .reports-day[data-active="true"]{
+      background:color-mix(in srgb,var(--primary) 20%,var(--surface) 80%);
+      color:var(--text-strong);
+      border-color:var(--primary);
+      box-shadow:0 6px 18px rgba(0,0,0,0.16);
+    }
+    .reports-day:hover{border-color:var(--primary);}
+    .reports-day small{
+      font-weight:500;
+      color:var(--text-muted);
+    }
+    .reports-day-controls{
+      display:flex;
+      gap:var(--space-1);
+      width:100%;
+      align-items:center;
+    }
+    .reports-day-input{
+      flex:1;
+      padding:0.45rem 0.6rem;
+      border-radius:var(--radius-sm);
+      border:1px solid var(--border-subtle);
+      background:color-mix(in srgb,var(--surface) 95%,transparent);
+      color:var(--text);
+    }
+    .reports-day-today{
+      padding:0.45rem 0.75rem;
+      border-radius:var(--radius-sm);
+      border:1px solid var(--border);
+      background:color-mix(in srgb,var(--surface) 90%,transparent);
+      font-weight:600;
+      cursor:pointer;
+      transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
+    }
+    .reports-day-today:hover{border-color:var(--primary);color:var(--primary-hover);}
     .reports-hint{font-size:0.9rem;color:var(--text-muted);} 
     .tripletex-card h2{font-size:1.05rem;}
     .tripletex-status{font-size:0.85rem;color:var(--text-muted);margin:0;}
@@ -1193,7 +1253,13 @@
           <div class="reports-week-grid" data-week-grid></div>
         </div>
         <div class="reports-filter" data-range-panel="day" hidden>
-          <span class="reports-hint">Velg en dag via datovelgeren i kortet.</span>
+          <div class="reports-day-controls">
+            <label class="sr-only" for="reports-day-picker">Velg dato</label>
+            <input type="date" id="reports-day-picker" class="reports-day-input" data-range-day-input />
+            <button type="button" class="reports-day-today" data-range-day-today>I dag</button>
+          </div>
+          <div class="reports-day-grid" data-day-grid></div>
+          <span class="reports-hint">Velg en dag via listen eller dato-feltet.</span>
         </div>
       </div>
       <div class="tripletex-grid">
@@ -2853,6 +2919,9 @@
         const reportsToolbarEl = reportsToolbar;
         const monthButtons = reportsToolbarEl ? Array.from(reportsToolbarEl.querySelectorAll('.reports-month')) : [];
         const weekGrid = reportsToolbarEl ? reportsToolbarEl.querySelector('[data-week-grid]') : null;
+        const dayGrid = reportsToolbarEl ? reportsToolbarEl.querySelector('[data-day-grid]') : null;
+        const dayPanelInput = reportsToolbarEl ? reportsToolbarEl.querySelector('[data-range-day-input]') : null;
+        const dayPanelToday = reportsToolbarEl ? reportsToolbarEl.querySelector('[data-range-day-today]') : null;
         const dayHintEl = reportsToolbarEl ? reportsToolbarEl.querySelector('[data-range-panel="day"] .reports-hint') : null;
         const monthLabelFmt = new Intl.DateTimeFormat('nb-NO', { month: 'long', year: 'numeric' });
         const weekRangeFmt = new Intl.DateTimeFormat('nb-NO', { day: '2-digit', month: 'short' });
@@ -2867,6 +2936,9 @@
         if (dayPicker && dayPicker.value) {
           const initialDay = sanitizeIso(dayPicker.value);
           if (initialDay) reportsState.selection.day = initialDay;
+        }
+        if (dayPanelInput && reportsState.selection.day) {
+          dayPanelInput.value = reportsState.selection.day;
         }
 
         const ensureWeekButtons = () => {
@@ -3164,6 +3236,9 @@
           if (rangeType === 'day' && dayPicker) {
             dayPicker.value = key || '';
           }
+          if (rangeType === 'day' && dayPanelInput) {
+            dayPanelInput.value = key || '';
+          }
         };
 
         const cycleRangeSelection = (rangeType, direction = 1) => {
@@ -3259,11 +3334,52 @@
           });
         };
 
+        const updateDayButtons = () => {
+          if (!dayGrid) return;
+          const dataset = reportsState.data.day;
+          const keys = getSortedRangeKeys('day').slice().sort((a, b) => b.localeCompare(a));
+          const activeKey = reportsState.selection.day;
+          dayGrid.innerHTML = '';
+          if (!dataset || !keys.length) {
+            if (dayPanelInput) {
+              dayPanelInput.value = reportsState.selection.day || '';
+            }
+            return;
+          }
+          keys.forEach((key) => {
+            const meta = dataset.meta?.get(key);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'reports-day';
+            button.dataset.dayKey = key;
+            const isActive = activeKey === key;
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            if (isActive) button.dataset.active = 'true';
+            else delete button.dataset.active;
+            const label = meta?.label || formatFriendlyDate(key);
+            const caption = meta?.hint && meta.hint !== label ? meta.hint : '';
+            button.textContent = '';
+            const labelSpan = document.createElement('span');
+            labelSpan.textContent = label;
+            button.appendChild(labelSpan);
+            if (caption) {
+              const hint = document.createElement('small');
+              hint.textContent = caption;
+              button.appendChild(hint);
+            }
+            dayGrid.appendChild(button);
+            if (activeKey === key) scrollIntoViewQuietly(button);
+          });
+          if (dayPanelInput) {
+            dayPanelInput.value = activeKey || '';
+          }
+        };
+
         const updateDayHint = () => {
           if (!dayHintEl) return;
           const dayKey = reportsState.selection.day;
           if (!dayKey) {
-            dayHintEl.textContent = 'Velg en dag via datovelgeren i kortet.';
+            dayHintEl.textContent = 'Velg en dag fra listen eller angi dato.';
             return;
           }
           const dateObj = parseIsoDate(dayKey);
@@ -3295,7 +3411,10 @@
           });
           if (range === 'month') applyMonthSelectionState();
           if (range === 'week') updateWeekButtons();
-          if (range === 'day') updateDayHint();
+          if (range === 'day') {
+            updateDayButtons();
+            updateDayHint();
+          }
         };
 
         const fetchTripletexRange = async (rangeType) => {
@@ -3334,6 +3453,7 @@
               if (!reportsState.selection.day) {
                 setRangeSelection('day', sanitizeIso(toISO));
               }
+              updateDayButtons();
               updateDayHint();
             }
             if (reportsState.activeRange === rangeType) {
@@ -3413,16 +3533,41 @@
                 if (!reportsState.data[range]) {
                   fetchTripletexRange(range);
                   return;
+              }
+              cycleRangeSelection(range);
+              return;
+            }
+
+            if (range === 'day') {
+              if (!isActive) {
+                reportsState.activeRange = range;
+                setRangePanelsVisibility('day');
+                if (!reportsState.data[range] && !reportsState.loading[range]) {
+                  fetchTripletexRange(range);
+                } else {
+                  if (!reportsState.selection[range]) {
+                    const initialKey = pickInitialSelection(range);
+                    if (initialKey) setRangeSelection(range, initialKey);
+                  }
+                  updateDayButtons();
+                  renderTripletexTables();
                 }
-                cycleRangeSelection(range);
                 return;
               }
+              if (!panelVisible) {
+                setRangePanelsVisibility('day');
+                updateDayButtons();
+                return;
+              }
+              hideRangePanel('day');
+              return;
+            }
 
-              reportsState.activeRange = range;
-              setRangePanelsVisibility(null);
-              if (!reportsState.data[range] && !reportsState.loading[range]) {
-                fetchTripletexRange(range);
-              } else {
+            reportsState.activeRange = range;
+            setRangePanelsVisibility(null);
+            if (!reportsState.data[range] && !reportsState.loading[range]) {
+              fetchTripletexRange(range);
+            } else {
                 if (!reportsState.selection[range]) {
                   const initialKey = pickInitialSelection(range);
                   if (initialKey) setRangeSelection(range, initialKey);
@@ -3456,22 +3601,61 @@
             });
           }
 
+          if (dayGrid) {
+            dayGrid.addEventListener('click', (event) => {
+              const trigger = event.target.closest('.reports-day');
+              if (!trigger) return;
+              const key = trigger.dataset.dayKey;
+              if (!key) return;
+              setRangeSelection('day', key);
+              updateDayButtons();
+              renderTripletexTables();
+              hideRangePanel('day');
+            });
+          }
+
+          if (dayPanelInput) {
+            dayPanelInput.addEventListener('change', () => {
+              const value = sanitizeIso(dayPanelInput.value);
+              if (!value) return;
+              setRangeSelection('day', value);
+              updateDayButtons();
+              renderTripletexTables();
+            });
+          }
+
+          if (dayPanelToday) {
+            dayPanelToday.addEventListener('click', () => {
+              setRangeSelection('day', todayISO);
+              updateDayButtons();
+              renderTripletexTables();
+              hideRangePanel('day');
+            });
+          }
+
           document.addEventListener('click', (event) => {
-            const monthPanel = getRangePanel('month');
-            if (!monthPanel || monthPanel.hidden) return;
-            const monthButton = getRangeButton('month');
-            if (monthPanel.contains(event.target)) return;
-            if (monthButton && monthButton.contains(event.target)) return;
-            hideRangePanel('month');
+            ['month', 'day'].forEach((range) => {
+              const panel = getRangePanel(range);
+              if (!panel || panel.hidden) return;
+              const button = getRangeButton(range);
+              if (panel.contains(event.target)) return;
+              if (button && button.contains(event.target)) return;
+              hideRangePanel(range);
+            });
           });
 
           document.addEventListener('keydown', (event) => {
             if (event.key !== 'Escape') return;
-            const monthPanel = getRangePanel('month');
-            if (!monthPanel || monthPanel.hidden) return;
-            hideRangePanel('month');
-            const monthButton = getRangeButton('month');
-            if (monthButton) monthButton.focus();
+            let handled = false;
+            ['month', 'day'].forEach((range) => {
+              if (handled) return;
+              const panel = getRangePanel(range);
+              if (!panel || panel.hidden) return;
+              hideRangePanel(range);
+              const button = getRangeButton(range);
+              if (button) button.focus();
+              handled = true;
+            });
           });
         }
 
