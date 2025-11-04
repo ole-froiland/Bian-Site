@@ -659,10 +659,17 @@
     }
     .reports-month-grid,
     .reports-week-grid{
-      display:grid;
+      display:flex;
+      align-items:center;
       gap:var(--space-1);
-      grid-template-columns:repeat(auto-fit,minmax(68px,1fr));
-      max-width:min(100%,640px);
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      padding-bottom:0.35rem;
+      margin-bottom:-0.35rem;
+      width:100%;
+      scrollbar-width:thin;
+      scroll-snap-type:x proximity;
+      -webkit-overflow-scrolling:touch;
     }
     .reports-month{
       padding:0.35rem 0.5rem;
@@ -672,6 +679,7 @@
       font-weight:600;
       font-size:0.82rem;
       cursor:pointer;
+      scroll-snap-align:start;
       transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
     }
     .reports-month[data-active="true"],
@@ -2962,9 +2970,9 @@
             if (!dataset.summary.end || value > dataset.summary.end) dataset.summary.end = value;
           };
 
-          const ensureMeta = (key, bucket) => {
-            if (!key || key === 'ukjent') return null;
-            if (!dataset.meta.has(key)) {
+        const ensureMeta = (key, bucket) => {
+          if (!key || key === 'ukjent') return null;
+          if (!dataset.meta.has(key)) {
               const start = bucket?.meta?.start || bucket?.firstDate || null;
               const end = bucket?.meta?.end || bucket?.lastDate || null;
               const meta = {
@@ -3069,6 +3077,11 @@
           return dataset;
         };
 
+        const scrollIntoViewQuietly = (element) => {
+          if (!element || typeof element.scrollIntoView !== 'function') return;
+          element.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+        };
+
         const getSortedRangeKeys = (rangeType) => {
           const dataset = reportsState.data[rangeType];
           if (!dataset) return [];
@@ -3135,6 +3148,7 @@
             const meta = dataset?.meta?.get(periodKey);
             if (meta?.hint) button.title = meta.hint;
             else button.removeAttribute('title');
+            if (isActive) scrollIntoViewQuietly(button);
           });
         };
 
@@ -3176,6 +3190,7 @@
             button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
             if (isActive) button.setAttribute('data-active', 'true');
             else button.removeAttribute('data-active');
+            if (isActive) scrollIntoViewQuietly(button);
           });
         };
 
