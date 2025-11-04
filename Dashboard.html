@@ -1131,11 +1131,11 @@
     <section class="tab-panel active" id="kpi" role="tabpanel" aria-labelledby="tab-kpi" tabindex="0" data-tripletex-config='{"beer":{"label":"Øl","accounts":{"revenue":"id-289896744","cost":"id-289896742"}},"wine":{"label":"Vin","accounts":{"revenue":"id-289896745","cost":"id-289896743"}}}'>
       <div class="reports-toolbar" data-reports-toolbar>
         <div class="reports-range" role="tablist" aria-label="Rapporter periode">
-          <button type="button" class="reports-range__btn active" data-range="month" aria-selected="true">Måned</button>
+          <button type="button" class="reports-range__btn" data-range="month" aria-selected="false">Måned</button>
           <button type="button" class="reports-range__btn" data-range="week" aria-selected="false">Uke</button>
           <button type="button" class="reports-range__btn" data-range="day" aria-selected="false">Dag</button>
         </div>
-        <div class="reports-filter" data-range-panel="month">
+        <div class="reports-filter" data-range-panel="month" hidden>
           <div class="reports-month-grid">
             <button type="button" class="reports-month" data-month="01">Jan</button>
             <button type="button" class="reports-month" data-month="02">Feb</button>
@@ -2820,7 +2820,7 @@
         const weekRangeFmt = new Intl.DateTimeFormat('nb-NO', { day: '2-digit', month: 'short' });
         const dayLabelFmt = new Intl.DateTimeFormat('nb-NO', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
         const reportsState = {
-          activeRange: 'month',
+          activeRange: null,
           data: { month: null, week: null, day: null },
           selection: { month: null, week: null, day: null },
           loading: { month: false, week: false, day: false },
@@ -3342,9 +3342,15 @@
           });
         }
 
-        applyMonthSelectionState();
-        ensureWeekButtons();
-        fetchTripletexRange('month');
+        if (reportsToolbarEl) {
+          reportsToolbarEl.querySelectorAll('[data-range]').forEach((btn) => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+          });
+          reportsToolbarEl.querySelectorAll('[data-range-panel]').forEach((panel) => {
+            panel.hidden = true;
+          });
+        }
       }
 
       const navMobileToggle = document.querySelector('.nav-actions .mobile-toggle');
