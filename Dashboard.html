@@ -416,11 +416,12 @@
     }
     .tab-button:focus-visible{box-shadow:var(--ring);}
     .tab-panel{
-      display:grid;
-      gap:clamp(20px,3vw,32px);
+      display:flex;
+      flex-direction:column;
+      gap:clamp(24px,4vw,36px);
     }
     .tab-panel[hidden]{display:none;}
-    .tab-panel > .chart-stats{grid-column:1 / -1;}
+    .tab-panel> *{width:100%;}
     .card{
       background:var(--surface);
       border:1px solid var(--border);
@@ -967,19 +968,7 @@
       .chart-stats{grid-template-columns:1fr;}
     }
     @media (min-width:1024px){
-      .tab-panel{
-        grid-template-columns:repeat(2,1fr);
-      }
-      .tab-panel > *{
-        min-width:0;
-      }
-      .tab-panel > .stats-grid{
-        grid-column:1 / -1;
-      }
-      .ai-insights-card,
-      .chart-card{
-        grid-column:1 / -1;
-      }
+      .tab-panel{flex-direction:column;}
     }
   </style>
 </head>
