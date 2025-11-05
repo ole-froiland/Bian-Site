@@ -730,6 +730,13 @@
       flex-wrap:nowrap;
       scroll-snap-type:none;
     }
+    .reports-filter[data-open] .reports-month-grid{
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+    }
+    .reports-filter[data-open] .reports-month-grid::-webkit-scrollbar{
+      display:none;
+    }
     .reports-filter[data-open] .reports-day-grid{
       display:flex;
       flex-direction:column;
