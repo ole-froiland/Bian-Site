@@ -660,7 +660,8 @@
       cursor:pointer;
       transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
     }
-    .reports-range__btn.active{
+    .reports-range__btn.active,
+    .reports-range__btn[data-selected="true"]{
       background:var(--primary);
       color:var(--text-inverse);
       border-color:var(--primary);
@@ -1524,6 +1525,27 @@
         const monthButtons = Array.from(monthPanel.querySelectorAll('.reports-month'));
         const defaultLabel = monthButton.textContent.trim();
         let selectedMonth = null;
+        let selectedMonthLabel = '';
+
+        const getSelectedMonthLabel = () => {
+          if (!selectedMonth) return '';
+          if (selectedMonthLabel) return selectedMonthLabel;
+          const match = monthButtons.find((btn) => btn.dataset.month === selectedMonth);
+          return match ? match.textContent.trim() : selectedMonth;
+        };
+
+        const updateMonthTriggerState = () => {
+          const hasSelection = Boolean(selectedMonth);
+          const label = getSelectedMonthLabel();
+          if (hasSelection) {
+            const suffix = label ? label : selectedMonth;
+            monthButton.textContent = `${defaultLabel} · ${suffix}`;
+            monthButton.setAttribute('data-selected', 'true');
+          } else {
+            monthButton.textContent = defaultLabel;
+            monthButton.removeAttribute('data-selected');
+          }
+        };
 
         const syncMonthButtonStates = () => {
           monthButtons.forEach((btn) => {
@@ -1531,6 +1553,7 @@
             btn.classList.toggle('selected', isSelected);
             btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
           });
+          updateMonthTriggerState();
         };
 
         const closeMonthMenu = () => {
@@ -1548,6 +1571,7 @@
           syncMonthButtonStates();
         };
 
+        syncMonthButtonStates();
         closeMonthMenu();
 
         monthButton.addEventListener('click', (event) => {
@@ -1564,7 +1588,7 @@
           const trigger = event.target.closest('.reports-month');
           if (!trigger) return;
           selectedMonth = trigger.dataset.month;
-          monthButton.textContent = `${defaultLabel} · ${trigger.textContent}`;
+          selectedMonthLabel = trigger.textContent.trim();
           syncMonthButtonStates();
           closeMonthMenu();
         });
@@ -3047,6 +3071,49 @@
         const getRangePanel = (range) => reportsToolbarEl ? reportsToolbarEl.querySelector(`[data-range-panel="${range}"]`) : null;
         const getRangeButton = (range) => reportsToolbarEl ? reportsToolbarEl.querySelector(`[data-range="${range}"]`) : null;
 
+        const rangeButtonDefaults = new Map();
+        if (reportsToolbarEl) {
+          reportsToolbarEl.querySelectorAll('[data-range]').forEach((btn) => {
+            const range = btn.dataset.range;
+            if (range && !rangeButtonDefaults.has(range)) {
+              rangeButtonDefaults.set(range, btn.textContent.trim());
+            }
+          });
+        }
+
+        const resolveMonthLabelFromKey = (periodKey) => {
+          if (!periodKey) return '';
+          const dataset = reportsState.data.month;
+          const metaLabel = dataset?.meta?.get(periodKey)?.label;
+          if (metaLabel) {
+            const clean = metaLabel.split('·')[0].trim();
+            if (clean) return clean;
+          }
+          const [year, month] = String(periodKey).split('-');
+          if (year && month) {
+            const parsed = new Date(`${year}-${month}-01T00:00:00`);
+            if (!Number.isNaN(parsed.getTime())) {
+              return monthLabelFmt.format(parsed);
+            }
+          }
+          return periodKey;
+        };
+
+        const updateMonthRangeButton = () => {
+          const button = getRangeButton('month');
+          if (!button) return;
+          const defaultLabel = rangeButtonDefaults.get('month') || button.textContent.trim();
+          const selectionKey = reportsState.selection.month;
+          if (selectionKey) {
+            const label = resolveMonthLabelFromKey(selectionKey);
+            button.textContent = label ? `${defaultLabel} · ${label}` : `${defaultLabel} · ${selectionKey}`;
+            button.setAttribute('data-selected', 'true');
+          } else {
+            button.textContent = defaultLabel;
+            button.removeAttribute('data-selected');
+          }
+        };
+
         const updateRangeButtonsState = () => {
           if (!reportsToolbarEl) return;
           reportsToolbarEl.querySelectorAll('[data-range]').forEach((btn) => {
@@ -3078,6 +3145,8 @@
           panel.removeAttribute('data-open');
           updateRangeButtonsState();
         };
+
+        updateMonthRangeButton();
 
         const setStatus = (productKey, text, tone = 'muted') => {
           const card = tripletexSection.querySelector(`[data-tripletex-product="${productKey}"]`);
@@ -3316,6 +3385,9 @@
           if (rangeType === 'day' && dayPanelInput) {
             dayPanelInput.value = key || '';
           }
+          if (rangeType === 'month') {
+            updateMonthRangeButton();
+          }
         };
 
         const cycleRangeSelection = (rangeType, direction = 1) => {
@@ -3367,6 +3439,7 @@
             else button.removeAttribute('title');
             if (isActive) scrollIntoViewQuietly(button);
           });
+          updateMonthRangeButton();
         };
 
         const ensureWeekButtonForKey = (key, meta) => {
