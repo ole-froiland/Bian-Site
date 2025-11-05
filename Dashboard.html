@@ -725,6 +725,7 @@
       transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
     }
     .reports-month[data-active="true"],
+    .reports-month.selected,
     .reports-week[data-active="true"]{
       background:color-mix(in srgb,var(--primary) 20%,var(--surface) 80%);
       color:var(--text-strong);
@@ -1227,7 +1228,7 @@
   </nav>
   <main class="shell">
     <section class="tab-panel active" id="kpi" role="tabpanel" aria-labelledby="tab-kpi" tabindex="0" data-tripletex-config='{"beer":{"label":"Øl","accounts":{"revenue":"id-289896744","cost":"id-289896742"}},"wine":{"label":"Vin","accounts":{"revenue":"id-289896745","cost":"id-289896743"}}}'>
-      <div class="reports-toolbar" data-reports-toolbar>
+      <div class="reports-toolbar" data-reports-toolbar data-toolbar-mode="simple">
         <div class="reports-range" role="tablist" aria-label="Rapporter periode">
           <button type="button" class="reports-range__btn" data-range="month" aria-expanded="false">Måned</button>
           <button type="button" class="reports-range__btn" data-range="week" aria-expanded="false">Uke</button>
@@ -1494,7 +1495,76 @@
       const aiProductsDateEl = document.querySelector('[data-ai-products-date]');
     const aiProductsPicker = document.querySelector('#ai-products-picker');
     const aiTodayBtn = document.querySelector('[data-ai-today]');
-    const reportsToolbar = document.querySelector('[data-reports-toolbar]');
+    const rawReportsToolbar = document.querySelector('[data-reports-toolbar]');
+    const isSimpleReportsToolbar = rawReportsToolbar?.dataset.toolbarMode === 'simple';
+    const reportsToolbar = isSimpleReportsToolbar ? null : rawReportsToolbar;
+
+    if (isSimpleReportsToolbar && rawReportsToolbar) {
+      const monthButton = rawReportsToolbar.querySelector('[data-range="month"]');
+      const monthPanel = rawReportsToolbar.querySelector('[data-range-panel="month"]');
+      if (monthButton && monthPanel) {
+        const monthButtons = Array.from(monthPanel.querySelectorAll('.reports-month'));
+        const defaultLabel = monthButton.textContent.trim();
+        let selectedMonth = null;
+
+        const syncMonthButtonStates = () => {
+          monthButtons.forEach((btn) => {
+            const isSelected = selectedMonth && btn.dataset.month === selectedMonth;
+            btn.classList.toggle('selected', isSelected);
+            btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+          });
+        };
+
+        const closeMonthMenu = () => {
+          monthPanel.hidden = true;
+          monthPanel.removeAttribute('data-open');
+          monthButton.classList.remove('active');
+          monthButton.setAttribute('aria-expanded', 'false');
+        };
+
+        const openMonthMenu = () => {
+          monthPanel.hidden = false;
+          monthPanel.dataset.open = 'true';
+          monthButton.classList.add('active');
+          monthButton.setAttribute('aria-expanded', 'true');
+          syncMonthButtonStates();
+        };
+
+        closeMonthMenu();
+
+        monthButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const isOpen = !monthPanel.hidden;
+          if (isOpen) {
+            closeMonthMenu();
+          } else {
+            openMonthMenu();
+          }
+        });
+
+        monthPanel.addEventListener('click', (event) => {
+          const trigger = event.target.closest('.reports-month');
+          if (!trigger) return;
+          selectedMonth = trigger.dataset.month;
+          monthButton.textContent = `${defaultLabel} · ${trigger.textContent}`;
+          syncMonthButtonStates();
+          closeMonthMenu();
+        });
+
+        document.addEventListener('click', (event) => {
+          if (!rawReportsToolbar.contains(event.target)) {
+            closeMonthMenu();
+          }
+        });
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key !== 'Escape') return;
+          if (monthPanel.hidden) return;
+          closeMonthMenu();
+          monthButton.focus();
+        });
+      }
+    }
       const revenueCardEl = document.querySelector('[data-revenue-card]');
       const revenueDateEl = document.querySelector('[data-revenue-date]');
       const revenueComparisonEl = document.querySelector('[data-revenue-comparison]');
@@ -2904,6 +2974,7 @@
         const reportingYear = todayDate.getFullYear();
         const fromISO = `${reportingYear}-01-01`;
         const toISO = toISODate(todayDate);
+      if (reportsToolbar) {
         const reportsToolbarEl = reportsToolbar;
         const monthButtons = reportsToolbarEl ? Array.from(reportsToolbarEl.querySelectorAll('.reports-month')) : [];
         const weekGrid = reportsToolbarEl ? reportsToolbarEl.querySelector('[data-week-grid]') : null;
@@ -3664,6 +3735,7 @@
         if (reportsToolbarEl) {
           setRangePanelsVisibility(null);
         }
+      }
       }
 
       const navMobileToggle = document.querySelector('.nav-actions .mobile-toggle');
