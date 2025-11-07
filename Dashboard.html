@@ -974,6 +974,138 @@
     .summary-card__value{font-size:1.4rem;font-weight:700;color:var(--text-strong);}
     .summary-card__value.fade{color:var(--text-muted);}
     .summary-card__meta{font-size:0.85rem;color:var(--text-muted);}
+    .ai-hourly-card{
+      background:linear-gradient(140deg,#0b1324,#0f1c3a);
+      border:1px solid rgba(255,255,255,0.08);
+      position:relative;
+      overflow:hidden;
+    }
+    .ai-hourly-card__header{
+      display:flex;
+      justify-content:space-between;
+      gap:var(--space-3);
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+    .ai-hourly-card__eyebrow{
+      display:inline-flex;
+      align-items:center;
+      padding:0.2rem 0.75rem;
+      border-radius:999px;
+      font-size:0.75rem;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      background:rgba(255,255,255,0.08);
+      color:rgba(255,255,255,0.85);
+      margin-bottom:0.65rem;
+    }
+    .ai-hourly-card__sub{
+      color:var(--text-muted);
+      margin-top:0.35rem;
+      font-size:0.9rem;
+    }
+    .ai-hourly-card__meta{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:0.5rem;
+      min-width:160px;
+    }
+    .ai-hourly-card__tag{
+      padding:0.2rem 0.65rem;
+      border-radius:999px;
+      font-size:0.75rem;
+      background:rgba(233,84,84,0.15);
+      color:#ffa7a7;
+    }
+    .ai-hourly-card__legend{
+      display:flex;
+      gap:0.85rem;
+      flex-wrap:wrap;
+      font-size:0.85rem;
+      color:rgba(255,255,255,0.75);
+    }
+    .ai-hourly-card__dot{
+      width:0.5rem;
+      height:0.5rem;
+      border-radius:999px;
+      display:inline-flex;
+      margin-right:0.35rem;
+    }
+    .ai-hourly-card__dot--current{background:#56d3ff;box-shadow:0 0 12px rgba(86,211,255,0.6);}
+    .ai-hourly-card__dot--previous{background:rgba(255,255,255,0.55);}
+    .ai-hourly-card__chart{
+      margin-top:var(--space-3);
+      position:relative;
+    }
+    .ai-hourly-card__chart canvas{
+      width:100%;
+      height:280px;
+      display:block;
+    }
+    .ai-hourly-card__empty{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:600;
+      color:rgba(255,255,255,0.7);
+      backdrop-filter:blur(6px);
+      background:rgba(8,11,20,0.65);
+    }
+    .ai-hourly-card__footer{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:var(--space-3);
+      margin-top:var(--space-3);
+      flex-wrap:wrap;
+    }
+    .ai-hourly-card__focus{
+      display:flex;
+      gap:var(--space-3);
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .ai-hourly-card__focus-label{
+      font-weight:600;
+      color:rgba(255,255,255,0.85);
+      min-width:120px;
+    }
+    .ai-hourly-card__focus-metric{
+      display:flex;
+      flex-direction:column;
+      gap:0.2rem;
+      min-width:110px;
+      color:rgba(255,255,255,0.75);
+    }
+    .ai-hourly-card__focus-metric strong{
+      font-size:1.2rem;
+      color:#fff;
+    }
+    .ai-hourly-card__pill{
+      padding:0.35rem 0.7rem;
+      border-radius:999px;
+      background:rgba(0,0,0,0.35);
+      color:#fff;
+      font-weight:600;
+      font-size:0.85rem;
+    }
+    .ai-hourly-card__note{
+      color:rgba(255,255,255,0.75);
+      font-size:0.85rem;
+      flex:1;
+      text-align:right;
+    }
+    .ai-hourly-card[data-tone="positive"] .ai-hourly-card__tag{
+      background:rgba(34,197,94,0.18);
+      color:#86ffc9;
+    }
+    .ai-hourly-card[data-tone="positive"] .ai-hourly-card__pill{
+      background:rgba(34,197,94,0.25);
+      color:#86ffc9;
+    }
     .ai-insights-card .ai-insights{
       display:grid;
       gap:var(--space-3);
@@ -1404,6 +1536,41 @@
         </div>
         <p class="ai-insights__status" data-ai-products-status></p>
       </article>
+      <article class="card ai-hourly-card" data-ai-hourly-card hidden>
+        <header class="ai-hourly-card__header">
+          <div>
+            <span class="ai-hourly-card__eyebrow">Info</span>
+            <h2>Salg per tidspunkt på dagen</h2>
+            <p class="ai-hourly-card__sub">Oppdatert automatisk sammenlignet med samme ukedag forrige uke.</p>
+          </div>
+          <div class="ai-hourly-card__meta">
+            <span class="ai-hourly-card__tag" data-hourly-tag>Ingen trenddata</span>
+            <div class="ai-hourly-card__legend">
+              <span><span class="ai-hourly-card__dot ai-hourly-card__dot--current"></span>I dag</span>
+              <span><span class="ai-hourly-card__dot ai-hourly-card__dot--previous"></span>Samme dag forrige uke</span>
+            </div>
+          </div>
+        </header>
+        <div class="ai-hourly-card__chart">
+          <canvas data-hourly-chart width="800" height="280" role="img" aria-label="Salg per time"></canvas>
+          <div class="ai-hourly-card__empty" data-hourly-empty hidden>Ingen timetall tilgjengelig ennå.</div>
+        </div>
+        <footer class="ai-hourly-card__footer">
+          <div class="ai-hourly-card__focus">
+            <p class="ai-hourly-card__focus-label" data-hourly-focus-label>–</p>
+            <div class="ai-hourly-card__focus-metric">
+              <span>I dag</span>
+              <strong data-hourly-focus-current>–</strong>
+            </div>
+            <div class="ai-hourly-card__focus-metric">
+              <span>Samme dag forrige uke</span>
+              <strong data-hourly-focus-previous>–</strong>
+            </div>
+            <span class="ai-hourly-card__pill" data-hourly-focus-delta>–</span>
+          </div>
+          <p class="ai-hourly-card__note" data-hourly-note></p>
+        </footer>
+      </article>
       <article class="revenue-card" data-revenue-card>
         <header>
           <h2 class="revenue-card__title">Omsetningsanalyse</h2>
@@ -1542,6 +1709,15 @@
       const aiProductsDateEl = document.querySelector('[data-ai-products-date]');
     const aiProductsPicker = document.querySelector('#ai-products-picker');
     const aiTodayBtn = document.querySelector('[data-ai-today]');
+    const hourlyCardEl = document.querySelector('[data-ai-hourly-card]');
+    const hourlyCanvas = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-chart]') : null;
+    const hourlyEmptyEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-empty]') : null;
+    const hourlyTagEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-tag]') : null;
+    const hourlyFocusLabelEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-label]') : null;
+    const hourlyFocusCurrentEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-current]') : null;
+    const hourlyFocusPreviousEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-previous]') : null;
+    const hourlyFocusDeltaEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-delta]') : null;
+    const hourlyNoteEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-note]') : null;
     const rawReportsToolbar = document.querySelector('[data-reports-toolbar]');
     const isSimpleReportsToolbar = rawReportsToolbar?.dataset.toolbarMode === 'simple';
     const reportsToolbar = isSimpleReportsToolbar ? null : rawReportsToolbar;
@@ -1801,6 +1977,8 @@
       let chartNavBusy = false;
       let lastDayTotals = null;
       let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
+      const hourlySeriesCache = new Map();
+      let hourlyChartState = null;
       const productChangeCardEl = document.querySelector('[data-product-change-card]');
       const productChangeDateEl = document.querySelector('[data-product-change-date]');
       const productChangeCompareEl = document.querySelector('[data-product-change-compare]');
@@ -2045,7 +2223,7 @@
           quantity: Number(entry?.quantity ?? entry?.qty ?? 0),
         })) : [];
 
-        const meaningful = processed.filter((entry) => entry.revenue !== 0 || entry.quantity !== 0);
+      const meaningful = processed.filter((entry) => entry.revenue !== 0 || entry.quantity !== 0);
 
         if (!meaningful.length) {
           setAiProductsStatus(message || 'Ingen data for valgt dato.');
@@ -2076,6 +2254,242 @@
           bottomItems.forEach((item) => aiBottomListEl.appendChild(buildProductListItem(item)));
         }
       };
+
+      const HOURLY_HOURS = Array.from({ length: 24 }, (_, index) => index);
+
+      const parseHourlySeries = (raw) => {
+        if (raw == null) return null;
+        const series = Array.from({ length: 24 }, () => 0);
+        const assign = (hourCandidate, valueCandidate) => {
+          if (hourCandidate == null) return;
+          const hour = Number(hourCandidate);
+          if (!Number.isFinite(hour) || hour < 0 || hour > 23) return;
+          const numericValue = Number(valueCandidate);
+          if (!Number.isFinite(numericValue) || numericValue < 0) return;
+          series[hour] = numericValue;
+        };
+        if (Array.isArray(raw)) {
+          raw.forEach((entry, index) => {
+            if (typeof entry === 'number') assign(index, entry);
+            else if (entry && typeof entry === 'object') {
+              assign(entry.hour ?? entry.h ?? entry.time ?? index, entry.value ?? entry.revenue ?? entry.amount ?? entry.total ?? entry.qty ?? 0);
+            }
+          });
+        } else if (typeof raw === 'object') {
+          Object.entries(raw).forEach(([key, value]) => assign(key, value));
+        } else if (typeof raw === 'number') {
+          assign(0, raw);
+        }
+        const hasValues = series.some((value) => Number(value || 0) > 0);
+        return hasValues ? series : null;
+      };
+
+      const hourlySeriesTotal = (series) => {
+        if (!Array.isArray(series)) return 0;
+        return series.reduce((sum, value) => sum + (Number(value) || 0), 0);
+      };
+
+      const pickSeriesFocusHour = (series) => {
+        if (!Array.isArray(series) || !series.length) return 17;
+        for (let hour = series.length - 1; hour >= 0; hour -= 1) {
+          if (Number(series[hour] || 0) > 0) return hour;
+        }
+        let maxIndex = 0;
+        let maxValue = -Infinity;
+        series.forEach((value, index) => {
+          if (Number(value) > maxValue) {
+            maxValue = Number(value);
+            maxIndex = index;
+          }
+        });
+        return maxIndex;
+      };
+
+      const formatHourLabel = (hour) => {
+        const safeHour = Math.max(0, Math.min(23, Number(hour) || 0));
+        return `kl ${String(safeHour).padStart(2, '0')}`;
+      };
+
+      const drawHourlyChart = (state) => {
+        if (!hourlyCanvas || !hourlyCardEl) return;
+        const ctx = hourlyCanvas.getContext('2d');
+        if (!ctx) return;
+        const width = hourlyCanvas.clientWidth || 800;
+        const height = hourlyCanvas.clientHeight || 280;
+        const dpr = window.devicePixelRatio || 1;
+        hourlyCanvas.width = width * dpr;
+        hourlyCanvas.height = height * dpr;
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, width, height);
+
+        const padding = { top: 20, right: 20, bottom: 40, left: 48 };
+        const chartWidth = width - padding.left - padding.right;
+        const chartHeight = height - padding.top - padding.bottom;
+
+        const allValues = [...state.current, ...(state.comparison || [])];
+        const maxValue = Math.max(20, ...allValues);
+        const yStepRaw = maxValue / 4;
+        const yStep = Math.max(20, Math.ceil(yStepRaw / 10) * 10);
+
+        const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartHeight);
+        gradient.addColorStop(0, 'rgba(16, 58, 104, 0.5)');
+        gradient.addColorStop(1, 'rgba(7, 18, 41, 0.3)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        for (let value = 0; value <= maxValue; value += yStep) {
+          const y = padding.top + chartHeight - (value / maxValue) * chartHeight;
+          ctx.beginPath();
+          ctx.moveTo(padding.left, y);
+          ctx.lineTo(padding.left + chartWidth, y);
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,0.3)';
+          ctx.font = '10px/1 "Inter",system-ui,sans-serif';
+          ctx.fillText(moneyFmt.format(value).replace(/\sNOK/, ''), 4, y + 4);
+        }
+
+        const getPoint = (hourIndex, value) => {
+          const x = padding.left + (hourIndex / (HOURLY_HOURS.length - 1)) * chartWidth;
+          const y = padding.top + chartHeight - (value / maxValue) * chartHeight;
+          return [x, y];
+        };
+
+        const drawSeries = (series, { color, width: lineWidth = 2, dash = [], pointFill = color, pointStroke = '#0d1b2e' }) => {
+          if (!series) return;
+          ctx.save();
+          ctx.strokeStyle = color;
+          ctx.lineWidth = lineWidth;
+          ctx.setLineDash(dash);
+          ctx.beginPath();
+          series.forEach((value, index) => {
+            const [x, y] = getPoint(index, Number(value) || 0);
+            if (index === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+          ctx.setLineDash([]);
+          series.forEach((value, index) => {
+            const numeric = Number(value) || 0;
+            if (numeric <= 0) return;
+            const [x, y] = getPoint(index, numeric);
+            ctx.beginPath();
+            ctx.arc(x, y, index === state.focusHour ? 5 : 4, 0, Math.PI * 2);
+            ctx.fillStyle = pointFill;
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = pointStroke;
+            ctx.stroke();
+          });
+          ctx.restore();
+        };
+
+        drawSeries(state.comparison, {
+          color: 'rgba(255,255,255,0.45)',
+          lineWidth: 2,
+          dash: [6, 6],
+          pointFill: 'rgba(255,255,255,0.55)',
+        });
+        drawSeries(state.current, {
+          color: '#5fd8ff',
+          lineWidth: 3,
+          pointFill: '#5fd8ff',
+        });
+
+        ctx.restore();
+      };
+
+      const updateHourlyFocus = (state) => {
+        if (!hourlyCardEl) return;
+        const focusHour = Math.max(0, Math.min(23, state.focusHour ?? pickSeriesFocusHour(state.current || [])));
+        const currentValue = state.current?.[focusHour] || 0;
+        const previousValue = state.comparison?.[focusHour] || 0;
+        const delta = previousValue > 0 ? (currentValue - previousValue) / previousValue : null;
+
+        if (hourlyFocusLabelEl) {
+          hourlyFocusLabelEl.textContent = `${formatFriendlyDate(state.date)} ${formatHourLabel(focusHour)}`;
+        }
+        if (hourlyFocusCurrentEl) {
+          hourlyFocusCurrentEl.textContent = moneyFmt.format(currentValue);
+        }
+        if (hourlyFocusPreviousEl) {
+          hourlyFocusPreviousEl.textContent = previousValue > 0 ? moneyFmt.format(previousValue) : '–';
+        }
+        if (hourlyFocusDeltaEl) {
+          hourlyFocusDeltaEl.textContent = delta != null ? formatSignedPercent(delta) : '–';
+        }
+
+        if (hourlyTagEl) {
+          const cutoff = 15;
+          const sliceCurrent = (state.current || []).slice(0, cutoff).reduce((sum, value) => sum + Number(value || 0), 0);
+          const slicePrev = (state.comparison || []).slice(0, cutoff).reduce((sum, value) => sum + Number(value || 0), 0);
+          const sliceDelta = slicePrev > 0 ? (sliceCurrent - slicePrev) / slicePrev : null;
+          if (sliceDelta != null) {
+            hourlyTagEl.textContent = `Før ${formatHourLabel(cutoff)} ${formatSignedPercent(sliceDelta)}`;
+            hourlyCardEl.dataset.tone = sliceDelta >= 0 ? 'positive' : 'negative';
+          } else {
+            hourlyTagEl.textContent = 'Ingen trenddata';
+            hourlyCardEl.removeAttribute('data-tone');
+          }
+        }
+
+        if (hourlyNoteEl) {
+          const totalCurrent = hourlySeriesTotal(state.current);
+          const totalPrev = hourlySeriesTotal(state.comparison);
+          if (totalPrev > 0) {
+            const diff = totalCurrent - totalPrev;
+            const pct = diff / totalPrev;
+            hourlyNoteEl.textContent = `Totalt ${moneyFmt.format(totalCurrent)} (${formatSignedPercent(pct)} vs forrige uke)`;
+          } else if (totalCurrent > 0) {
+            hourlyNoteEl.textContent = `Totalt ${moneyFmt.format(totalCurrent)} i dag.`;
+          } else {
+            hourlyNoteEl.textContent = 'Ingen timetall for valgt dato.';
+          }
+        }
+      };
+
+      const renderHourlyInsights = ({ date, isDemo = false } = {}) => {
+        if (!hourlyCardEl) return;
+        const iso = sanitizeIso(date);
+        const currentSeries = hourlySeriesCache.get(iso);
+        const comparisonIso = iso ? sanitizeIso(shiftIsoDate(iso, -7)) : null;
+        const comparisonSeries = comparisonIso ? hourlySeriesCache.get(comparisonIso) : null;
+        if (!currentSeries) {
+          hourlyCardEl.hidden = true;
+          hourlyChartState = null;
+          return;
+        }
+        hourlyCardEl.hidden = false;
+        if (hourlyEmptyEl) hourlyEmptyEl.hidden = true;
+        const focusHour = pickSeriesFocusHour(currentSeries);
+        hourlyChartState = {
+          date: iso,
+          current: currentSeries,
+          comparison: comparisonSeries,
+          compareIso: comparisonIso,
+          focusHour,
+          isDemo,
+        };
+        drawHourlyChart(hourlyChartState);
+        updateHourlyFocus(hourlyChartState);
+      };
+
+      const ingestHourlySeries = (hourlyMap = {}) => {
+        if (!hourlyMap || typeof hourlyMap !== 'object') return;
+        Object.entries(hourlyMap).forEach(([key, rawSeries]) => {
+          const iso = sanitizeIso(key);
+          const parsed = parseHourlySeries(rawSeries);
+          if (iso && parsed) {
+            hourlySeriesCache.set(iso, parsed);
+          }
+        });
+      };
+
+      window.addEventListener('resize', () => {
+        if (hourlyChartState) drawHourlyChart(hourlyChartState);
+      });
 
       const getDailyEntry = (iso, fallback = []) => {
         if (!iso) return null;
@@ -2458,6 +2872,11 @@
           dayReceiptsStatusEl.textContent = 'Henter …';
           dayReceiptsStatusEl.dataset.tone = 'muted';
         }
+        if (hourlyCardEl) {
+          hourlyCardEl.hidden = true;
+          hourlyCardEl.removeAttribute('data-tone');
+        }
+        hourlyChartState = null;
         renderProductInsights(null, { date, state: 'loading' });
         renderRevenueAnalysisState('loading', { date });
         renderProductChangesState('loading', { date });
@@ -2490,6 +2909,14 @@
               renderRevenueAnalysis(revenueAnalysisContext);
               productChangeContext = { date, items, options, isDemo };
               loadProductChanges(productChangeContext);
+              ingestHourlySeries(data?.hourlyByDay || {});
+              if (selected?.hourly) {
+                const parsedHourly = parseHourlySeries(selected.hourly);
+                if (parsedHourly) {
+                  hourlySeriesCache.set(sanitizeIso(selected.date || date) || date, parsedHourly);
+                }
+              }
+              renderHourlyInsights({ date, isDemo });
             })
             .catch((error) => {
               console.error('Kunne ikke hente dagsomsetning:', error);
@@ -2513,6 +2940,14 @@
                 renderRevenueAnalysis(revenueAnalysisContext);
                 productChangeContext = { date, items, options, isDemo: true };
                 loadProductChanges(productChangeContext);
+                ingestHourlySeries(error?.body?.hourlyByDay || {});
+                if (error.body.dayTotal?.hourly) {
+                  const parsedHourly = parseHourlySeries(error.body.dayTotal.hourly);
+                  if (parsedHourly) {
+                    hourlySeriesCache.set(sanitizeIso(error.body.dayTotal.date || date) || date, parsedHourly);
+                  }
+                }
+                renderHourlyInsights({ date, isDemo: true });
                 return;
               }
               const fallbackMessage = isTimeout
@@ -2544,6 +2979,7 @@
               });
               renderRevenueAnalysisState('error', { date, message: fallbackMessage });
               renderProductChangesState('error', { date, message: fallbackMessage });
+              renderHourlyInsights({ date, isDemo: lastDayTotals?.isDemo });
             });
         };
 

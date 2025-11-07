@@ -322,6 +322,47 @@ function normalizeDateValue(value){
   return null;
 }
 
+function normalizeHourValue(value){
+  if (value == null) return null;
+  if (value instanceof Date) {
+    const hours = value.getHours();
+    return Number.isFinite(hours) ? hours : null;
+  }
+  if (typeof value === 'number') {
+    if (value >= 0 && value < 24) return Math.floor(value);
+    if (value >= 24 && value < 2400) return Math.floor(value / 100);
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const match = trimmed.match(/(\d{1,2})(?::\d{2})?/);
+    if (match) {
+      const hour = Number(match[1]);
+      if (hour >= 0 && hour < 24) return hour;
+    }
+    const digits = trimmed.replace(/\D/g, '');
+    if (digits.length >= 2) {
+      const hour = Number(digits.slice(0, 2));
+      if (hour >= 0 && hour < 24) return hour;
+    }
+  }
+  return null;
+}
+
+function buildHourlyProfile(total=0){
+  const weights = [
+    0.005,0.005,0.004,0.004,
+    0.01,0.015,0.025,0.04,
+    0.055,0.065,0.07,0.065,
+    0.055,0.045,0.04,0.035,
+    0.04,0.06,0.075,0.085,
+    0.06,0.03,0.01,0.006
+  ];
+  const sum = weights.reduce((acc,val)=>acc+val,0);
+  const safeTotal = Number(total) || 0;
+  return weights.map((weight)=> Math.max(0, Math.round((safeTotal * weight) / sum)));
+}
+
 function formatDateKey(date){
   const y = date.getFullYear();
   const m = String(date.getMonth()+1).padStart(2,'0');
@@ -357,6 +398,7 @@ function summarizePeriodSalesFromData(data={}){
   let totalRevenue = 0;
   const items = Object.create(null);
   const dailyTotals = new Map();
+  const hourlyTotals = new Map();
 
   for (const txn of transactions) {
     const head = txn?.head || {};
@@ -391,6 +433,23 @@ function summarizePeriodSalesFromData(data={}){
       dailyTotals.set(dayKey, bucket);
     }
 
+    if (dayKey) {
+      let hourIndex = dateObj ? dateObj.getHours() : null;
+      if (hourIndex == null) {
+        hourIndex = normalizeHourValue(
+          head?.businessTime ??
+          head?.receiptTime ??
+          head?.time ??
+          head?.timestamp ??
+          null
+        );
+      }
+      if (hourIndex == null || hourIndex < 0 || hourIndex > 23) hourIndex = 0;
+      const hourlySeries = hourlyTotals.get(dayKey) || Array.from({ length: 24 }, () => 0);
+      hourlySeries[hourIndex] += netTotal;
+      hourlyTotals.set(dayKey, hourlySeries);
+    }
+
     for (const record of lineRecords) {
       const scaledRevenue = scale ? record.revenue * scale : 0;
       if (scaledRevenue <= 0) continue;
@@ -407,10 +466,16 @@ function summarizePeriodSalesFromData(data={}){
     totalRevenue += netTotal;
   }
 
+  const hourlyByDay = {};
+  hourlyTotals.forEach((series, key) => {
+    hourlyByDay[key] = series.map((value) => Number((value || 0).toFixed(2)));
+  });
+
   return {
     totalRevenue,
     items,
-    daily: Array.from(dailyTotals.values()).sort((a,b)=> b.date.localeCompare(a.date))
+    daily: Array.from(dailyTotals.values()).sort((a,b)=> b.date.localeCompare(a.date)),
+    hourlyByDay
   };
 }
 
@@ -640,9 +705,16 @@ exports.handler = async (event) => {
       });
       const items = aggregateTopProducts(demoReceipts, metric);
       const daily = summarizeReceiptsByDay(demoReceipts);
+      const hourlyByDay = daily.reduce((acc, entry) => {
+        acc[entry.date] = buildHourlyProfile(entry.revenue);
+        return acc;
+      }, {});
       const limit = Math.max(1, Math.min(50, Number(q.limit||3)|0));
-      const dayTotal = singleDate ? (daily.find((d) => d.date === singleDate) || { date: singleDate, revenue: 0, guests: 0, receipts: 0 }) : undefined;
-      return ok({ from, to, endpoint: BUSINESS_PERIODS_ENDPOINT, count: demoReceipts.length, top: items.slice(0,limit), items, daily, dayTotal, mode: 'demo' });
+      const dayTotal = singleDate ? ((daily.find((d) => d.date === singleDate) || { date: singleDate, revenue: 0, guests: 0, receipts: 0 })) : undefined;
+      if (dayTotal && hourlyByDay[dayTotal.date]) {
+        dayTotal.hourly = hourlyByDay[dayTotal.date];
+      }
+      return ok({ from, to, endpoint: BUSINESS_PERIODS_ENDPOINT, count: demoReceipts.length, top: items.slice(0,limit), items, daily, hourlyByDay, dayTotal, mode: 'demo' });
     }
 
     if(!CFG.xToken || !CFG.businessId){
@@ -690,7 +762,11 @@ exports.handler = async (event) => {
     let dayTotal = null;
     if (singleDate) {
       const match = (daily || []).find((d) => d.date === singleDate);
-      dayTotal = match || { date: singleDate, revenue: 0, guests: 0, receipts: 0 };
+      const baseTotal = match || { date: singleDate, revenue: 0, guests: 0, receipts: 0 };
+      dayTotal = { ...baseTotal };
+      if (summary.hourlyByDay && summary.hourlyByDay[singleDate]) {
+        dayTotal.hourly = summary.hourlyByDay[singleDate];
+      }
     }
 
     return ok({
@@ -702,6 +778,7 @@ exports.handler = async (event) => {
       items: itemsArray,
       totalRevenue: Number(summary.totalRevenue || 0),
       daily,
+      hourlyByDay: summary.hourlyByDay,
       dayTotal
     });
   }catch(e){
