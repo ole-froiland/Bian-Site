@@ -1978,6 +1978,11 @@
       let lastDayTotals = null;
       let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
       const hourlySeriesCache = new Map();
+      const defaultHourlySeriesSeeds = {
+        '2024-07-19': [45,48,55,60,78,110,140,165,182,190,176,165,150,138,133,128,148,190,215,208,175,125,82,60],
+        '2024-07-12': [40,44,58,65,90,120,155,180,195,205,190,178,162,150,145,140,155,182,200,194,168,130,95,70],
+      };
+      const hourlySeedDates = new Set(Object.keys(defaultHourlySeriesSeeds));
       let hourlyChartState = null;
       const productChangeCardEl = document.querySelector('[data-product-change-card]');
       const productChangeDateEl = document.querySelector('[data-product-change-date]');
@@ -2284,6 +2289,11 @@
         return hasValues ? series : null;
       };
 
+      Object.entries(defaultHourlySeriesSeeds).forEach(([seedIso, seedSeries]) => {
+        const parsedSeed = parseHourlySeries(seedSeries);
+        if (parsedSeed) hourlySeriesCache.set(seedIso, parsedSeed);
+      });
+
       const hourlySeriesTotal = (series) => {
         if (!Array.isArray(series)) return 0;
         return series.reduce((sum, value) => sum + (Number(value) || 0), 0);
@@ -2447,6 +2457,9 @@
           } else {
             hourlyNoteEl.textContent = 'Ingen timetall for valgt dato.';
           }
+          if (state.isDemo && hourlyNoteEl.textContent) {
+            hourlyNoteEl.textContent = `${hourlyNoteEl.textContent} · demo`;
+          }
         }
       };
 
@@ -2464,13 +2477,14 @@
         hourlyCardEl.hidden = false;
         if (hourlyEmptyEl) hourlyEmptyEl.hidden = true;
         const focusHour = pickSeriesFocusHour(currentSeries);
+        const demoFlag = isDemo || hourlySeedDates.has(iso);
         hourlyChartState = {
           date: iso,
           current: currentSeries,
           comparison: comparisonSeries,
           compareIso: comparisonIso,
           focusHour,
-          isDemo,
+          isDemo: demoFlag,
         };
         drawHourlyChart(hourlyChartState);
         updateHourlyFocus(hourlyChartState);
@@ -2872,11 +2886,15 @@
           dayReceiptsStatusEl.textContent = 'Henter …';
           dayReceiptsStatusEl.dataset.tone = 'muted';
         }
-        if (hourlyCardEl) {
-          hourlyCardEl.hidden = true;
-          hourlyCardEl.removeAttribute('data-tone');
-        }
         hourlyChartState = null;
+        if (hourlyCardEl) {
+          if (hourlySeriesCache.has(date)) {
+            renderHourlyInsights({ date, isDemo: hourlySeedDates.has(date) });
+          } else {
+            hourlyCardEl.hidden = true;
+            hourlyCardEl.removeAttribute('data-tone');
+          }
+        }
         renderProductInsights(null, { date, state: 'loading' });
         renderRevenueAnalysisState('loading', { date });
         renderProductChangesState('loading', { date });
