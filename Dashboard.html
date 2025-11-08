@@ -3380,6 +3380,7 @@
         dayRevenueEl.classList.remove('positive', 'negative');
         if (revenueValue > 0) dayRevenueEl.classList.add('positive');
         if (revenueValue < 0) dayRevenueEl.classList.add('negative');
+        scaleHourlySeriesToTotal(date, revenueValue, { comparison: false });
         if (dayAverageEl) {
           dayAverageEl.textContent = averageSale != null ? moneyFmt.format(averageSale) : '–';
         }
@@ -3489,11 +3490,11 @@
                 renderDayTotals(selected, { isDemo });
               } else {
                 renderDayStatus('Ingen omsetning funnet for valgt dato.', 'warning');
-                if (dayReceiptsStatusEl) {
-                  dayReceiptsStatusEl.textContent = 'Ingen kvitteringer';
-                  dayReceiptsStatusEl.dataset.tone = 'warning';
-                }
-              }
+          if (dayReceiptsStatusEl) {
+            dayReceiptsStatusEl.textContent = 'Ingen kvitteringer';
+            dayReceiptsStatusEl.dataset.tone = 'warning';
+          }
+        }
               renderProductInsights(items, { date, isDemo, message: 'Ingen data for valgt dato.' });
               revenueAnalysisContext = { date, fallbackDaily: daily, entry: selected };
               renderRevenueAnalysis(revenueAnalysisContext);
