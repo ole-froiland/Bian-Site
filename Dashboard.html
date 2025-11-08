@@ -2392,11 +2392,11 @@
         return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
       };
 
-      const mergePreviewDayTotals = (entry, forcedIso = null) => {
+      const mergePreviewDayTotals = (entry, forcedIso = null, { enabled = true } = {}) => {
         if (!entry && !forcedIso) return null;
         const base = entry ? { ...entry } : { date: forcedIso };
         const iso = sanitizeIso(base.date || forcedIso);
-        if (!iso) return base;
+        if (!iso || !enabled) return base;
         const preview = PREVIEW_DAY_TOTALS[iso];
         return preview ? { ...base, ...preview } : base;
       };
@@ -3191,12 +3191,12 @@
           });
         };
 
-        const hydrateComparisonHourly = (payload) => {
+        const hydrateComparisonHourly = (payload, { isDemo: comparisonIsDemo = false } = {}) => {
           if (!payload || !compareIso) return;
           const compareDay = payload.dayTotal && sanitizeIso(payload.dayTotal.date) === compareIso
             ? payload.dayTotal
             : (Array.isArray(payload.daily) ? payload.daily.find((entry) => entry?.date === compareIso) : null);
-          const compareEntry = mergePreviewDayTotals(compareDay, compareIso);
+          const compareEntry = mergePreviewDayTotals(compareDay, compareIso, { enabled: comparisonIsDemo });
           syncHourlyPayload({
             iso: compareIso,
             revenue: compareEntry?.revenue,
@@ -3217,9 +3217,10 @@
 
         fetchDayTotals(compareIso, options)
           .then((data) => {
-            hydrateComparisonHourly(data);
+            const compareIsDemo = !!options.demo || data?.mode === 'demo';
+            hydrateComparisonHourly(data, { isDemo: compareIsDemo });
             const previousItems = pickItemsFromResponse(data);
-            applyResult(previousItems, !!options.demo || data?.mode === 'demo');
+            applyResult(previousItems, compareIsDemo);
           })
           .catch((error) => {
             const shouldDemo = !options.demo && error?.status === 400 &&
@@ -3227,7 +3228,7 @@
             if (shouldDemo) {
               fetchDayTotals(compareIso, { demo: true })
                 .then((demoData) => {
-                  hydrateComparisonHourly(demoData);
+                  hydrateComparisonHourly(demoData, { isDemo: true });
                   const previousItems = pickItemsFromResponse(demoData);
                   applyResult(previousItems, true);
                 })
@@ -3439,7 +3440,7 @@
         const attempt = (options = {}) => {
           fetchDayTotals(date, options)
             .then((data) => {
-              const isDemo = !!options.demo;
+              const isDemo = !!options.demo || data?.mode === 'demo';
               const items = Array.isArray(data?.items) ? data.items : Array.isArray(data?.top) ? data.top : [];
               let selected = data?.dayTotal || null;
               const daily = Array.isArray(data?.daily) ? data.daily : [];
@@ -3447,7 +3448,7 @@
                 selected = daily.find((d) => d.date === date) || daily[0];
               }
               if (selected) {
-                selected = mergePreviewDayTotals(selected);
+                selected = mergePreviewDayTotals(selected, null, { enabled: isDemo });
                 renderDayTotals(selected, { isDemo });
               } else {
                 renderDayStatus('Ingen omsetning funnet for valgt dato.', 'warning');
@@ -3491,7 +3492,7 @@
                 return;
               }
               if (attemptedDemo && options.demo && error?.body?.dayTotal) {
-                const dayPayload = mergePreviewDayTotals(error.body.dayTotal, date);
+                const dayPayload = mergePreviewDayTotals(error.body.dayTotal, date, { enabled: true });
                 renderDayTotals(dayPayload, { isDemo: true });
                 const items = Array.isArray(error?.body?.items) ? error.body.items : Array.isArray(error?.body?.top) ? error.body.top : [];
                 renderProductInsights(items, { date, isDemo: true });
