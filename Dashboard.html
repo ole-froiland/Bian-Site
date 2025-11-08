@@ -2091,7 +2091,9 @@
           highlightNetValueEl.classList.toggle('negative', net < 0);
         }
         if (highlightNetMetaEl) {
-          highlightNetMetaEl.textContent = `Bankkonto ${moneyFmt.format(latestBankBalance)} − forfall ${moneyFmt.format(dueAmountNext3Days)}`;
+          highlightNetMetaEl.textContent = dueAmountNext3Days > 0
+            ? `Bankkonto ${moneyFmt.format(latestBankBalance)} − forfall ${moneyFmt.format(dueAmountNext3Days)}`
+            : '';
         }
       };
       const setDueHighlight = (value = 0, metaText = '') => {
@@ -2102,11 +2104,11 @@
           highlightDueValueEl.classList.toggle('negative', dueAmountNext3Days > latestBankBalance);
         }
         if (highlightDueMetaEl) {
-          highlightDueMetaEl.textContent = metaText || (dueAmountNext3Days ? 'Planlagte betalinger' : 'Ingen forfall registrert');
+          highlightDueMetaEl.textContent = dueAmountNext3Days > 0 ? (metaText || 'Planlagte betalinger') : '';
         }
         updateNetHighlight();
       };
-      setDueHighlight(0, 'Ingen forfall registrert');
+      setDueHighlight(0, '');
       if (typeof window !== 'undefined' && Number.isFinite(window.DASHBOARD_DUE_AMOUNT)) {
         setDueHighlight(window.DASHBOARD_DUE_AMOUNT, 'Planlagte betalinger');
       }
