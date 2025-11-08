@@ -1569,6 +1569,41 @@
           <p class="overview-highlight__meta" data-day-average-status data-tone="muted"></p>
         </article>
       </div>
+      <article class="card ai-hourly-card overview-hourly" data-ai-hourly-card hidden>
+        <header class="ai-hourly-card__header">
+          <div>
+            <span class="ai-hourly-card__eyebrow">Info</span>
+            <h2>Salg per tidspunkt på dagen</h2>
+            <p class="ai-hourly-card__sub">Oppdatert automatisk sammenlignet med samme ukedag forrige uke.</p>
+          </div>
+          <div class="ai-hourly-card__meta">
+            <span class="ai-hourly-card__tag" data-hourly-tag>Ingen trenddata</span>
+            <div class="ai-hourly-card__legend">
+              <span><span class="ai-hourly-card__dot ai-hourly-card__dot--current"></span>I dag</span>
+              <span><span class="ai-hourly-card__dot ai-hourly-card__dot--previous"></span>Samme dag forrige uke</span>
+            </div>
+          </div>
+        </header>
+        <div class="ai-hourly-card__chart">
+          <canvas data-hourly-chart width="800" height="280" role="img" aria-label="Salg per time"></canvas>
+          <div class="ai-hourly-card__empty" data-hourly-empty hidden>Ingen timetall tilgjengelig ennå.</div>
+        </div>
+        <footer class="ai-hourly-card__footer">
+          <div class="ai-hourly-card__focus">
+            <p class="ai-hourly-card__focus-label" data-hourly-focus-label>–</p>
+            <div class="ai-hourly-card__focus-metric">
+              <span>I dag</span>
+              <strong data-hourly-focus-current>–</strong>
+            </div>
+            <div class="ai-hourly-card__focus-metric">
+              <span>Samme dag forrige uke</span>
+              <strong data-hourly-focus-previous>–</strong>
+            </div>
+            <span class="ai-hourly-card__pill" data-hourly-focus-delta>–</span>
+          </div>
+          <p class="ai-hourly-card__note" data-hourly-note></p>
+        </footer>
+      </article>
       <article class="card chart-card">
         <header>
           <div class="chart-header__main">
@@ -1609,41 +1644,6 @@
           </div>
         </div>
         <p class="ai-insights__status" data-ai-products-status></p>
-      </article>
-      <article class="card ai-hourly-card" data-ai-hourly-card hidden>
-        <header class="ai-hourly-card__header">
-          <div>
-            <span class="ai-hourly-card__eyebrow">Info</span>
-            <h2>Salg per tidspunkt på dagen</h2>
-            <p class="ai-hourly-card__sub">Oppdatert automatisk sammenlignet med samme ukedag forrige uke.</p>
-          </div>
-          <div class="ai-hourly-card__meta">
-            <span class="ai-hourly-card__tag" data-hourly-tag>Ingen trenddata</span>
-            <div class="ai-hourly-card__legend">
-              <span><span class="ai-hourly-card__dot ai-hourly-card__dot--current"></span>I dag</span>
-              <span><span class="ai-hourly-card__dot ai-hourly-card__dot--previous"></span>Samme dag forrige uke</span>
-            </div>
-          </div>
-        </header>
-        <div class="ai-hourly-card__chart">
-          <canvas data-hourly-chart width="800" height="280" role="img" aria-label="Salg per time"></canvas>
-          <div class="ai-hourly-card__empty" data-hourly-empty hidden>Ingen timetall tilgjengelig ennå.</div>
-        </div>
-        <footer class="ai-hourly-card__footer">
-          <div class="ai-hourly-card__focus">
-            <p class="ai-hourly-card__focus-label" data-hourly-focus-label>–</p>
-            <div class="ai-hourly-card__focus-metric">
-              <span>I dag</span>
-              <strong data-hourly-focus-current>–</strong>
-            </div>
-            <div class="ai-hourly-card__focus-metric">
-              <span>Samme dag forrige uke</span>
-              <strong data-hourly-focus-previous>–</strong>
-            </div>
-            <span class="ai-hourly-card__pill" data-hourly-focus-delta>–</span>
-          </div>
-          <p class="ai-hourly-card__note" data-hourly-note></p>
-        </footer>
       </article>
       <article class="revenue-card" data-revenue-card>
         <header>
