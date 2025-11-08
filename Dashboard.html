@@ -2678,6 +2678,15 @@
         return hasValues ? series : null;
       };
 
+      const trimLeadingZeros = (series = []) => {
+        if (!Array.isArray(series)) return null;
+        let firstIndex = series.findIndex((value) => Number(value || 0) > 0);
+        if (firstIndex === -1) firstIndex = 0;
+        if (firstIndex === 0) return series;
+        const trimmed = series.slice(firstIndex);
+        return trimmed.length ? trimmed : series;
+      };
+
       Object.entries(defaultHourlySeriesSeeds).forEach(([seedIso, seedSeries]) => {
         const parsedSeed = parseHourlySeries(seedSeries);
         if (parsedSeed) hourlySeriesCache.set(seedIso, parsedSeed);
@@ -2926,18 +2935,20 @@
         if (!hourlyCardEl) return;
         const iso = sanitizeIso(date);
         const currentSeries = hourlySeriesCache.get(iso);
+        const trimmedCurrent = Array.isArray(currentSeries) ? trimLeadingZeros(currentSeries) : null;
         const comparisonIso = iso ? sanitizeIso(shiftIsoDate(iso, -7)) : null;
         if (comparisonIso && hourlySeedDates.has(comparisonIso) && hourlySeriesCache.has(comparisonIso)) {
           syncHourlyPayload({ iso: comparisonIso, comparison: true });
         }
-        const comparisonSeries = comparisonIso ? hourlySeriesCache.get(comparisonIso) : null;
-        if (!currentSeries) {
+        const rawComparison = comparisonIso ? hourlySeriesCache.get(comparisonIso) : null;
+        const comparisonSeries = Array.isArray(rawComparison) ? trimLeadingZeros(rawComparison) : null;
+        if (!trimmedCurrent) {
           hourlyCardEl.hidden = true;
           hourlyChartState = null;
           return;
         }
         hourlyCardEl.hidden = false;
-        const hasCurrentData = Array.isArray(currentSeries) && currentSeries.some((value) => Number(value || 0) > 0);
+        const hasCurrentData = Array.isArray(trimmedCurrent) && trimmedCurrent.some((value) => Number(value || 0) > 0);
         if (hourlyEmptyEl) {
           if (hasCurrentData) {
             hourlyEmptyEl.hidden = true;
@@ -2947,11 +2958,11 @@
             hourlyEmptyEl.style.display = 'flex';
           }
         }
-        const defaultFocusHour = pickSeriesFocusHour(currentSeries);
+        const defaultFocusHour = pickSeriesFocusHour(trimmedCurrent);
         const demoFlag = isDemo || hourlySeedDates.has(iso);
         hourlyChartState = {
           date: iso,
-          current: currentSeries,
+          current: trimmedCurrent,
           comparison: comparisonSeries,
           compareIso: comparisonIso,
           focusHour: defaultFocusHour,
