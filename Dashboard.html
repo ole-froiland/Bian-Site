@@ -974,6 +974,52 @@
     .summary-card__value{font-size:1.4rem;font-weight:700;color:var(--text-strong);}
     .summary-card__value.fade{color:var(--text-muted);}
     .summary-card__meta{font-size:0.85rem;color:var(--text-muted);}
+    .overview-highlights{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:var(--space-2);
+      margin-bottom:var(--space-3);
+    }
+    .overview-highlight{
+      background:linear-gradient(160deg,rgba(16,23,44,0.95),rgba(8,13,26,0.92));
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:var(--radius-xl);
+      padding:var(--space-3);
+      min-height:120px;
+      display:flex;
+      flex-direction:column;
+      gap:0.35rem;
+      box-shadow:0 12px 30px rgba(0,0,0,0.35);
+    }
+    .overview-highlight__eyebrow{
+      font-size:0.72rem;
+      text-transform:uppercase;
+      letter-spacing:0.14em;
+      color:rgba(255,255,255,0.72);
+    }
+    .overview-highlight__value{
+      font-size:1.6rem;
+      font-weight:700;
+      color:var(--text-strong);
+    }
+    .overview-highlight__value.positive{color:#16a34a;}
+    .overview-highlight__value.negative{color:#ef4444;}
+    .overview-highlight__meta{
+      font-size:0.85rem;
+      color:rgba(255,255,255,0.72);
+    }
+    .overview-highlight__pill{
+      display:inline-flex;
+      align-items:center;
+      gap:0.4rem;
+      font-size:0.82rem;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:999px;
+      padding:0.25rem 0.75rem;
+      width:fit-content;
+      color:rgba(255,255,255,0.8);
+    }
     .ai-hourly-card{
       background:linear-gradient(140deg,#0b1324,#0f1c3a);
       border:1px solid rgba(255,255,255,0.08);
@@ -1472,6 +1518,24 @@
       </div>
     </section>
     <section class="tab-panel" id="oversikt" role="tabpanel" aria-labelledby="tab-oversikt" tabindex="0" hidden>
+      <div class="overview-highlights" aria-label="Nøkkeltall">
+        <article class="overview-highlight">
+          <span class="overview-highlight__eyebrow">Saldo driftskonto</span>
+          <p class="overview-highlight__value" data-balance-highlight>–</p>
+          <p class="overview-highlight__meta" data-balance-highlight-meta>Henter …</p>
+        </article>
+        <article class="overview-highlight">
+          <span class="overview-highlight__eyebrow">Dagens omsetning</span>
+          <span class="overview-highlight__pill" data-day-highlight-date>–</span>
+          <p class="overview-highlight__value" data-day-highlight>–</p>
+          <p class="overview-highlight__meta" data-day-highlight-meta>Henter …</p>
+        </article>
+        <article class="overview-highlight">
+          <span class="overview-highlight__eyebrow">Snitt per kjøp</span>
+          <p class="overview-highlight__value" data-average-highlight>–</p>
+          <p class="overview-highlight__meta" data-average-highlight-meta>Henter …</p>
+        </article>
+      </div>
       <div class="chart-stats">
         <article class="card chart-stat-card" data-balance-card>
           <span class="chart-stat-card__eyebrow">Saldo Driftskonto</span>
@@ -1701,6 +1765,13 @@
       const dayReceiptsStatusEl = document.querySelector('[data-day-receipts-status]');
       const chartBalanceValueEl = document.querySelector('[data-balance-value]');
       const chartBalanceStatusEl = document.querySelector('[data-balance-status]');
+      const balanceHighlightValueEl = document.querySelector('[data-balance-highlight]');
+      const balanceHighlightMetaEl = document.querySelector('[data-balance-highlight-meta]');
+      const dayHighlightValueEl = document.querySelector('[data-day-highlight]');
+      const dayHighlightMetaEl = document.querySelector('[data-day-highlight-meta]');
+      const dayHighlightDateEl = document.querySelector('[data-day-highlight-date]');
+      const averageHighlightValueEl = document.querySelector('[data-average-highlight]');
+      const averageHighlightMetaEl = document.querySelector('[data-average-highlight-meta]');
       const barChart = document.querySelector('[data-daily-chart]');
       const chartPrevBtn = document.querySelector('[data-chart-nav="prev"]');
       const chartNextBtn = document.querySelector('[data-chart-nav="next"]');
@@ -2797,6 +2868,8 @@
           chartBalanceStatusEl.textContent = 'Henter saldo …';
           chartBalanceStatusEl.dataset.tone = 'muted';
         }
+        if (balanceHighlightValueEl) balanceHighlightValueEl.textContent = '–';
+        if (balanceHighlightMetaEl) balanceHighlightMetaEl.textContent = 'Henter saldo …';
         const yearStartISO = `${today.getFullYear()}-01-01`;
         const url = new URL('/.netlify/functions/tripletex', window.location.origin);
         url.searchParams.set('from', yearStartISO);
@@ -2818,10 +2891,13 @@
             chartBalanceValueEl.classList.remove('positive', 'negative');
             if (balance > 0) chartBalanceValueEl.classList.add('positive');
             if (balance < 0) chartBalanceValueEl.classList.add('negative');
+            const balanceDateLabel = `Per ${dateFmtLong.format(today)}`;
             if (chartBalanceStatusEl) {
-              chartBalanceStatusEl.textContent = `Per ${dateFmtLong.format(today)}`;
+              chartBalanceStatusEl.textContent = balanceDateLabel;
               chartBalanceStatusEl.dataset.tone = 'muted';
             }
+            if (balanceHighlightValueEl) balanceHighlightValueEl.textContent = moneyFmt.format(balance);
+            if (balanceHighlightMetaEl) balanceHighlightMetaEl.textContent = balanceDateLabel;
           })
           .catch((error) => {
         console.error('Kunne ikke hente saldo for driftskonto:', error);
@@ -2831,6 +2907,8 @@
               chartBalanceStatusEl.textContent = error?.message || 'Kunne ikke hente saldo';
               chartBalanceStatusEl.dataset.tone = 'error';
             }
+            if (balanceHighlightValueEl) balanceHighlightValueEl.textContent = '–';
+            if (balanceHighlightMetaEl) balanceHighlightMetaEl.textContent = error?.message || 'Kunne ikke hente saldo';
           });
       };
 
@@ -2862,6 +2940,25 @@
             dayReceiptsStatusEl.textContent = 'Ingen kvitteringer';
             dayReceiptsStatusEl.dataset.tone = 'warning';
           }
+        }
+        if (dayHighlightValueEl) {
+          dayHighlightValueEl.textContent = moneyFmt.format(revenueValue);
+          dayHighlightValueEl.classList.toggle('positive', revenueValue > 0);
+          dayHighlightValueEl.classList.toggle('negative', revenueValue < 0);
+        }
+        if (dayHighlightMetaEl) {
+          dayHighlightMetaEl.textContent = isDemo ? `Per ${friendly} · demo` : `Per ${friendly}`;
+        }
+        if (dayHighlightDateEl) {
+          dayHighlightDateEl.textContent = friendly;
+        }
+        if (averageHighlightValueEl) {
+          averageHighlightValueEl.textContent = averageSale != null ? moneyFmt.format(averageSale) : '–';
+        }
+        if (averageHighlightMetaEl) {
+          averageHighlightMetaEl.textContent = receiptsValue > 0
+            ? `${qtyFmt.format(receiptsValue)} kvitteringer`
+            : 'Ingen kvitteringer';
         }
         if (cache) {
           lastDayTotals = { date, revenue: revenueValue, receipts: receiptsValue, isDemo };
@@ -2898,6 +2995,15 @@
           dayReceiptsStatusEl.textContent = 'Henter …';
           dayReceiptsStatusEl.dataset.tone = 'muted';
         }
+        const highlightFriendly = formatFriendlyDate(date);
+        if (dayHighlightValueEl) {
+          dayHighlightValueEl.textContent = '–';
+          dayHighlightValueEl.classList.remove('positive', 'negative');
+        }
+        if (dayHighlightDateEl) dayHighlightDateEl.textContent = highlightFriendly || '–';
+        if (dayHighlightMetaEl) dayHighlightMetaEl.textContent = 'Henter …';
+        if (averageHighlightValueEl) averageHighlightValueEl.textContent = '–';
+        if (averageHighlightMetaEl) averageHighlightMetaEl.textContent = 'Henter …';
         hourlyChartState = null;
         if (hourlyCardEl) {
           if (hourlySeriesCache.has(date)) {
@@ -3001,6 +3107,13 @@
                   dayReceiptsStatusEl.textContent = fallbackMessage;
                   dayReceiptsStatusEl.dataset.tone = isTimeout ? 'warning' : 'error';
                 }
+                if (dayHighlightValueEl) {
+                  dayHighlightValueEl.textContent = '–';
+                  dayHighlightValueEl.classList.remove('positive', 'negative');
+                }
+                if (dayHighlightMetaEl) dayHighlightMetaEl.textContent = fallbackMessage;
+                if (averageHighlightValueEl) averageHighlightValueEl.textContent = '–';
+                if (averageHighlightMetaEl) averageHighlightMetaEl.textContent = fallbackMessage;
               }
               renderProductInsights(null, {
                 date,
