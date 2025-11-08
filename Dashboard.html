@@ -1027,6 +1027,7 @@
       font-weight:600;
       color:#16a34a;
     }
+    .overview-highlight__badge.trend-negative{color:#ef4444;}
     .overview-highlight__pill{
       display:inline-flex;
       align-items:center;
@@ -2080,6 +2081,7 @@
       let dueAmountNext3Days = 0;
       const PREVIEW_DAY_TOTALS = {
         '2025-08-10': { revenue: 150763, receipts: 429 },
+        '2025-08-03': { revenue: 123540, receipts: 388 },
       };
       const defaultHourlySeriesSeeds = {
         '2025-08-10': [32,36,40,45,60,82,105,126,148,165,176,170,162,150,140,134,138,168,198,192,170,125,82,54],
@@ -2090,6 +2092,41 @@
         '2024-07-12': [40,44,58,65,90,120,155,180,195,205,190,178,162,150,145,140,155,182,200,194,168,130,95,70],
       };
       const hourlySeedDates = new Set(Object.keys(defaultHourlySeriesSeeds));
+      const updateDayWeekDeltaBadge = () => {
+        if (!dayWeekDeltaBadgeEl) return;
+        const currentEntry = revenueAnalysisContext.entry || lastDayTotals;
+        if (!currentEntry?.date) {
+          dayWeekDeltaBadgeEl.textContent = '';
+          dayWeekDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
+          return;
+        }
+        const currentRevenue = Number(currentEntry.revenue || 0);
+        const prevIso = sanitizeIso(shiftIsoDate(currentEntry.date, -7));
+        if (!prevIso || !(currentRevenue > 0)) {
+          dayWeekDeltaBadgeEl.textContent = '';
+          dayWeekDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
+          return;
+        }
+        let prevRevenue = PREVIEW_DAY_TOTALS[prevIso]?.revenue;
+        if (!(prevRevenue > 0)) {
+          const fallbackPrev = (revenueAnalysisContext.fallbackDaily || []).find((entry) => entry?.date === prevIso);
+          if (fallbackPrev) prevRevenue = Number(fallbackPrev.revenue || 0);
+        }
+        if (!(prevRevenue > 0)) {
+          const fromChart = getDailyEntry(prevIso, revenueAnalysisContext.fallbackDaily || []);
+          if (fromChart) prevRevenue = Number(fromChart.revenue || 0);
+        }
+        if (!(prevRevenue > 0)) {
+          dayWeekDeltaBadgeEl.textContent = '';
+          dayWeekDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
+          return;
+        }
+        const delta = (currentRevenue - prevRevenue) / prevRevenue;
+        const deltaLabel = percentFmt.format(delta);
+        dayWeekDeltaBadgeEl.textContent = `${delta >= 0 ? '+' : ''}${deltaLabel} vs forrige uke`;
+        dayWeekDeltaBadgeEl.classList.toggle('trend-positive', delta >= 0);
+        dayWeekDeltaBadgeEl.classList.toggle('trend-negative', delta < 0);
+      };
       const updateNetHighlight = () => {
         const net = latestBankBalance - dueAmountNext3Days;
         if (highlightNetValueEl) {
@@ -3078,6 +3115,10 @@
           dayAverageStatusEl.textContent = 'Henter …';
           dayAverageStatusEl.dataset.tone = 'muted';
         }
+        if (dayWeekDeltaBadgeEl) {
+          dayWeekDeltaBadgeEl.textContent = '';
+          dayWeekDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
+        }
         hourlyChartState = null;
         if (hourlyCardEl) {
           if (hourlySeriesCache.has(date)) {
@@ -3120,6 +3161,7 @@
               renderProductInsights(items, { date, isDemo, message: 'Ingen data for valgt dato.' });
               revenueAnalysisContext = { date, fallbackDaily: daily, entry: selected };
               renderRevenueAnalysis(revenueAnalysisContext);
+              updateDayWeekDeltaBadge();
               productChangeContext = { date, items, options, isDemo };
               loadProductChanges(productChangeContext);
               ingestHourlySeries(data?.hourlyByDay || {});
@@ -3151,8 +3193,9 @@
                 renderDayTotals(dayPayload, { isDemo: true });
                 const items = Array.isArray(error?.body?.items) ? error.body.items : Array.isArray(error?.body?.top) ? error.body.top : [];
                 renderProductInsights(items, { date, isDemo: true });
-                revenueAnalysisContext = { date, fallbackDaily: Array.isArray(error?.body?.daily) ? error.body.daily : [], entry: error.body.dayTotal };
+                revenueAnalysisContext = { date, fallbackDaily: Array.isArray(error?.body?.daily) ? error.body.daily : [], entry: dayPayload };
                 renderRevenueAnalysis(revenueAnalysisContext);
+                updateDayWeekDeltaBadge();
                 productChangeContext = { date, items, options, isDemo: true };
                 loadProductChanges(productChangeContext);
                 ingestHourlySeries(error?.body?.hourlyByDay || {});
@@ -3170,7 +3213,9 @@
                 : (error?.body?.message || error?.message || 'Feil ved henting av omsetning');
               if (lastDayTotals && sanitizeIso(lastDayTotals.date) === sanitizeIso(date)) {
                 renderDayTotals(lastDayTotals, { isDemo: lastDayTotals.isDemo, suppressStatus: true, cache: false });
+                updateDayWeekDeltaBadge();
                 renderDayStatus(fallbackMessage, isTimeout ? 'warning' : 'error');
+                updateDayWeekDeltaBadge();
                 if (Number.isFinite(lastDayTotals.receipts)) {
                   if (dayReceiptsValueEl) dayReceiptsValueEl.textContent = qtyFmt.format(lastDayTotals.receipts);
                   if (dayReceiptsStatusEl) {
