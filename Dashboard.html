@@ -3358,8 +3358,14 @@
           .then(async (response) => {
             const payload = await response.json().catch(() => null);
             if (!response.ok) {
-              const message = payload?.message || payload?.error || `HTTP ${response.status}`;
-              throw new Error(message);
+              const friendly = payload?.message ||
+                payload?.developerMessage ||
+                (typeof payload?.error === 'string' ? payload.error : '') ||
+                (response.status === 401 ? 'Mangler tilgang til Tripletex. Sjekk API-innloggingen.' : `HTTP ${response.status}`);
+              const err = new Error(friendly || 'Kunne ikke hente saldo');
+              err.status = response.status;
+              err.payload = payload;
+              throw err;
             }
             const entry = Array.isArray(payload?.accounts)
               ? payload.accounts.find((item) => item.key === 'balanceOperating')
@@ -3393,7 +3399,8 @@
               chartBalanceValueEl.classList.remove('positive', 'negative');
             }
             if (chartBalanceStatusEl) {
-              chartBalanceStatusEl.textContent = error?.message || 'Kunne ikke hente saldo';
+              const friendly = error?.message || 'Kunne ikke hente saldo';
+              chartBalanceStatusEl.textContent = friendly;
               chartBalanceStatusEl.dataset.tone = 'error';
             }
             if (highlightBankValueEl) {
@@ -3401,7 +3408,11 @@
               highlightBankValueEl.classList.remove('positive', 'negative');
             }
             if (highlightBankMetaEl) {
-              highlightBankMetaEl.textContent = error?.message || 'Kunne ikke hente saldo';
+              if (error?.status === 401) {
+                highlightBankMetaEl.textContent = 'Mangler tilgang til Tripletex – sjekk API-nøkkel/bruker.';
+              } else {
+                highlightBankMetaEl.textContent = error?.message || 'Kunne ikke hente saldo';
+              }
             }
             updateNetHighlight();
           });
