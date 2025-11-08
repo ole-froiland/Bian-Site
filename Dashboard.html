@@ -1574,6 +1574,7 @@
           <span class="overview-highlight__eyebrow">Snitt per kjøp</span>
           <p class="overview-highlight__value" data-day-average>–</p>
           <p class="overview-highlight__meta" data-day-average-status data-tone="muted"></p>
+          <span class="overview-highlight__badge" data-day-average-delta></span>
         </article>
       </div>
       <article class="card ai-hourly-card overview-hourly" data-ai-hourly-card hidden>
@@ -1783,6 +1784,7 @@
       const dayReceiptsStatusEl = document.querySelector('[data-day-receipts-status]');
       const dayAverageStatusEl = document.querySelector('[data-day-average-status]');
       const dayWeekDeltaBadgeEl = document.querySelector('[data-day-week-delta]');
+      const dayAverageDeltaBadgeEl = document.querySelector('[data-day-average-delta]');
       const tablistDateEl = document.querySelector('[data-tablist-date]');
       const chartBalanceValueEl = document.querySelector('[data-balance-value]');
       const chartBalanceStatusEl = document.querySelector('[data-balance-status]');
@@ -2126,6 +2128,57 @@
         dayWeekDeltaBadgeEl.textContent = `${delta >= 0 ? '+' : ''}${deltaLabel} vs forrige uke`;
         dayWeekDeltaBadgeEl.classList.toggle('trend-positive', delta >= 0);
         dayWeekDeltaBadgeEl.classList.toggle('trend-negative', delta < 0);
+      };
+
+      const updateDayAverageDeltaBadge = () => {
+        if (!dayAverageDeltaBadgeEl) return;
+        const currentEntry = revenueAnalysisContext.entry || lastDayTotals;
+        if (!currentEntry?.date) {
+          dayAverageDeltaBadgeEl.textContent = '';
+          dayAverageDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
+          return;
+        }
+        const receipts = Number(currentEntry.receipts || 0);
+        const revenueValue = Number(currentEntry.revenue || 0);
+        if (!(receipts > 0 && revenueValue > 0)) {
+          dayAverageDeltaBadgeEl.textContent = '';
+          dayAverageDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
+          return;
+        }
+        const avg = revenueValue / receipts;
+        const prevIso = sanitizeIso(shiftIsoDate(currentEntry.date, -7));
+        if (!prevIso) {
+          dayAverageDeltaBadgeEl.textContent = '';
+          dayAverageDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
+          return;
+        }
+        let prevRevenue = PREVIEW_DAY_TOTALS[prevIso]?.revenue;
+        let prevReceipts = PREVIEW_DAY_TOTALS[prevIso]?.receipts;
+        if (!(prevRevenue > 0 && prevReceipts > 0)) {
+          const fallbackPrev = (revenueAnalysisContext.fallbackDaily || []).find((entry) => entry?.date === prevIso);
+          if (fallbackPrev) {
+            prevRevenue = Number(fallbackPrev.revenue || 0);
+            prevReceipts = Number(fallbackPrev.receipts || 0);
+          }
+        }
+        if (!(prevRevenue > 0 && prevReceipts > 0)) {
+          const fromChart = getDailyEntry(prevIso, revenueAnalysisContext.fallbackDaily || []);
+          if (fromChart) {
+            prevRevenue = Number(fromChart.revenue || 0);
+            prevReceipts = Number(fromChart.receipts || 0);
+          }
+        }
+        if (!(prevRevenue > 0 && prevReceipts > 0)) {
+          dayAverageDeltaBadgeEl.textContent = '';
+          dayAverageDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
+          return;
+        }
+        const prevAvg = prevRevenue / prevReceipts;
+        const delta = (avg - prevAvg) / prevAvg;
+        const deltaLabel = percentFmt.format(delta);
+        dayAverageDeltaBadgeEl.textContent = `${delta >= 0 ? '+' : ''}${deltaLabel} vs forrige uke`;
+        dayAverageDeltaBadgeEl.classList.toggle('trend-positive', delta >= 0);
+        dayAverageDeltaBadgeEl.classList.toggle('trend-negative', delta < 0);
       };
       const updateNetHighlight = () => {
         const net = latestBankBalance - dueAmountNext3Days;
