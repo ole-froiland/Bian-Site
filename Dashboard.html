@@ -1052,11 +1052,37 @@
       color:rgba(255,255,255,0.8);
     }
     .ai-hourly-card{
-      background:linear-gradient(140deg,#0b1324,#0f1c3a);
-      border:1px solid rgba(255,255,255,0.08);
       position:relative;
       overflow:hidden;
+      border-radius:24px;
+      padding:clamp(1.75rem,4vw,2.5rem);
+      border:1px solid rgba(255,255,255,0.08);
+      background:linear-gradient(150deg,#141821 0%,#1b1f29 55%,#0e1116 100%);
+      box-shadow:0 35px 80px rgba(3,7,18,0.65);
+      backdrop-filter:blur(28px);
+      isolation:isolate;
     }
+    .ai-hourly-card::before,
+    .ai-hourly-card::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      pointer-events:none;
+      z-index:0;
+    }
+    .ai-hourly-card::before{
+      background:
+        radial-gradient(circle at 18% 15%,rgba(255,255,255,0.12),transparent 55%),
+        radial-gradient(circle at 82% -10%,rgba(255,119,255,0.12),transparent 45%);
+      opacity:0.9;
+    }
+    .ai-hourly-card::after{
+      background:linear-gradient(0deg,rgba(255,255,255,0.06),transparent 45%);
+      mix-blend-mode:screen;
+      opacity:0.35;
+    }
+    .ai-hourly-card>*{position:relative;z-index:1;}
     .ai-hourly-card__header{
       display:flex;
       justify-content:space-between;
@@ -1071,14 +1097,20 @@
       border-radius:999px;
       font-size:0.75rem;
       text-transform:uppercase;
-      letter-spacing:0.08em;
+      letter-spacing:0.12em;
       background:rgba(255,255,255,0.08);
-      color:rgba(255,255,255,0.85);
-      margin-bottom:0.65rem;
+      border:1px solid rgba(255,255,255,0.12);
+      color:rgba(234,234,234,0.85);
+      margin-bottom:0.5rem;
+    }
+    .ai-hourly-card__header h2{
+      font-size:1.25rem;
+      letter-spacing:0.04em;
+      color:#f4f6fb;
     }
     .ai-hourly-card__sub{
-      color:var(--text-muted);
-      margin-top:0.35rem;
+      color:rgba(255,255,255,0.65);
+      margin-top:0.25rem;
       font-size:0.9rem;
     }
     .ai-hourly-card__meta{
@@ -1086,34 +1118,47 @@
       flex-direction:column;
       align-items:flex-end;
       gap:0.5rem;
-      min-width:160px;
+      min-width:176px;
     }
     .ai-hourly-card__tag{
-      padding:0.2rem 0.65rem;
+      padding:0.25rem 0.85rem;
       border-radius:999px;
-      font-size:0.75rem;
-      background:rgba(233,84,84,0.15);
-      color:#ffa7a7;
+      font-size:0.78rem;
+      font-weight:600;
+      letter-spacing:0.04em;
+      background:rgba(0,0,0,0.35);
+      border:1px solid rgba(255,255,255,0.15);
+      color:#eaeaea;
     }
     .ai-hourly-card__legend{
       display:flex;
-      gap:0.85rem;
+      gap:1rem;
       flex-wrap:wrap;
       font-size:0.85rem;
       color:rgba(255,255,255,0.75);
     }
-    .ai-hourly-card__dot{
-      width:0.5rem;
-      height:0.5rem;
-      border-radius:999px;
+    .ai-hourly-card__legend span{
       display:inline-flex;
-      margin-right:0.35rem;
+      align-items:center;
+      gap:0.35rem;
     }
-    .ai-hourly-card__dot--current{background:#56d3ff;box-shadow:0 0 12px rgba(86,211,255,0.6);}
-    .ai-hourly-card__dot--previous{background:rgba(255,255,255,0.55);}
+    .ai-hourly-card__dot{
+      width:0.55rem;
+      height:0.55rem;
+      border-radius:999px;
+    }
+    .ai-hourly-card__dot--current{
+      background:#63e0ff;
+      box-shadow:0 0 16px rgba(99,224,255,0.7);
+    }
+    .ai-hourly-card__dot--previous{
+      background:rgba(255,255,255,0.4);
+    }
     .ai-hourly-card__chart{
       margin-top:var(--space-3);
       position:relative;
+      border-radius:18px;
+      overflow:hidden;
     }
     .ai-hourly-card__chart canvas{
       width:100%;
@@ -1127,61 +1172,82 @@
       align-items:center;
       justify-content:center;
       font-weight:600;
-      color:rgba(255,255,255,0.7);
-      backdrop-filter:blur(6px);
+      color:rgba(255,255,255,0.8);
+      backdrop-filter:blur(12px);
       background:rgba(8,11,20,0.65);
     }
     .ai-hourly-card__footer{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:var(--space-3);
       margin-top:var(--space-3);
-      flex-wrap:wrap;
+      display:flex;
+      flex-direction:column;
+      gap:1rem;
     }
     .ai-hourly-card__focus{
-      display:flex;
-      gap:var(--space-3);
+      width:100%;
+      display:grid;
+      grid-template-columns:minmax(150px,1.2fr) repeat(2,minmax(120px,0.85fr)) auto;
+      gap:1.2rem;
       align-items:center;
-      flex-wrap:wrap;
+    }
+    @media (max-width:900px){
+      .ai-hourly-card__focus{
+        grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      }
+      .ai-hourly-card__note{text-align:left;}
+      .ai-hourly-card__pill{justify-self:flex-start;}
     }
     .ai-hourly-card__focus-label{
       font-weight:600;
-      color:rgba(255,255,255,0.85);
-      min-width:120px;
+      color:#f0f4ff;
+      letter-spacing:0.04em;
     }
     .ai-hourly-card__focus-metric{
       display:flex;
       flex-direction:column;
       gap:0.2rem;
-      min-width:110px;
-      color:rgba(255,255,255,0.75);
+      color:rgba(255,255,255,0.65);
     }
     .ai-hourly-card__focus-metric strong{
-      font-size:1.2rem;
-      color:#fff;
+      font-size:1.35rem;
+      color:#eaf8ff;
+      font-weight:700;
     }
     .ai-hourly-card__pill{
-      padding:0.35rem 0.7rem;
+      justify-self:flex-end;
+      padding:0.35rem 1rem;
       border-radius:999px;
-      background:rgba(0,0,0,0.35);
-      color:#fff;
+      background:linear-gradient(120deg,rgba(0,255,173,0.15),rgba(0,255,136,0.35));
+      color:#9effd8;
+      border:1px solid rgba(0,255,173,0.45);
       font-weight:600;
-      font-size:0.85rem;
+      font-size:0.9rem;
+      text-align:center;
+      min-width:110px;
     }
     .ai-hourly-card__note{
       color:rgba(255,255,255,0.75);
-      font-size:0.85rem;
-      flex:1;
+      font-size:0.9rem;
       text-align:right;
     }
     .ai-hourly-card[data-tone="positive"] .ai-hourly-card__tag{
-      background:rgba(34,197,94,0.18);
-      color:#86ffc9;
+      background:rgba(16,88,65,0.55);
+      border-color:rgba(0,255,173,0.35);
+      color:#7fffd6;
     }
     .ai-hourly-card[data-tone="positive"] .ai-hourly-card__pill{
-      background:rgba(34,197,94,0.25);
-      color:#86ffc9;
+      background:linear-gradient(120deg,rgba(16,141,101,0.3),rgba(0,255,173,0.45));
+      color:#c5ffe8;
+      border-color:rgba(0,255,173,0.65);
+    }
+    .ai-hourly-card[data-tone="negative"] .ai-hourly-card__tag{
+      background:rgba(93,20,28,0.55);
+      border-color:rgba(255,107,122,0.4);
+      color:#ffc2c2;
+    }
+    .ai-hourly-card[data-tone="negative"] .ai-hourly-card__pill{
+      background:linear-gradient(120deg,rgba(255,122,122,0.25),rgba(255,66,66,0.4));
+      color:#ffe1e1;
+      border-color:rgba(255,120,120,0.55);
     }
     .ai-insights-card .ai-insights{
       display:grid;
@@ -2326,6 +2392,15 @@
         return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
       };
 
+      const mergePreviewDayTotals = (entry, forcedIso = null) => {
+        if (!entry && !forcedIso) return null;
+        const base = entry ? { ...entry } : { date: forcedIso };
+        const iso = sanitizeIso(base.date || forcedIso);
+        if (!iso) return base;
+        const preview = PREVIEW_DAY_TOTALS[iso];
+        return preview ? { ...base, ...preview } : base;
+      };
+
       const parseIsoDate = (iso) => {
         const clean = sanitizeIso(iso);
         if (!clean) return null;
@@ -2640,12 +2715,13 @@
         const yStep = Math.max(20, Math.ceil(yStepRaw / 10) * 10);
 
         const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartHeight);
-        gradient.addColorStop(0, 'rgba(16, 58, 104, 0.5)');
-        gradient.addColorStop(1, 'rgba(7, 18, 41, 0.3)');
+        gradient.addColorStop(0, 'rgba(20, 34, 62, 0.85)');
+        gradient.addColorStop(0.5, 'rgba(13, 22, 41, 0.65)');
+        gradient.addColorStop(1, 'rgba(7, 11, 20, 0.85)');
         ctx.fillStyle = gradient;
         ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight);
 
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
         ctx.lineWidth = 1;
         for (let value = 0; value <= maxValue; value += yStep) {
           const y = padding.top + chartHeight - (value / maxValue) * chartHeight;
@@ -2653,8 +2729,8 @@
           ctx.moveTo(padding.left, y);
           ctx.lineTo(padding.left + chartWidth, y);
           ctx.stroke();
-          ctx.fillStyle = 'rgba(255,255,255,0.3)';
-          ctx.font = '10px/1 "Inter",system-ui,sans-serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.45)';
+          ctx.font = '11px/1 "Inter",system-ui,sans-serif';
           ctx.fillText(moneyFmt.format(value).replace(/\sNOK/, ''), 4, y + 4);
         }
 
@@ -2664,12 +2740,14 @@
           return [x, y];
         };
 
-        const drawSeries = (series, { color, width: lineWidth = 2, dash = [], pointFill = color, pointStroke = '#0d1b2e' }) => {
+        const drawSeries = (series, { color, width: lineWidth = 2, dash = [], pointFill = color, pointStroke = '#0d1b2e', glow = false }) => {
           if (!series) return;
           ctx.save();
           ctx.strokeStyle = color;
           ctx.lineWidth = lineWidth;
           ctx.setLineDash(dash);
+          ctx.shadowBlur = glow ? 18 : 0;
+          ctx.shadowColor = glow ? color : 'transparent';
           ctx.beginPath();
           series.forEach((value, index) => {
             const [x, y] = getPoint(index, Number(value) || 0);
@@ -2678,17 +2756,24 @@
           });
           ctx.stroke();
           ctx.setLineDash([]);
+          ctx.shadowBlur = 0;
+          ctx.shadowColor = 'transparent';
           series.forEach((value, index) => {
             const numeric = Number(value) || 0;
             if (numeric <= 0) return;
             const [x, y] = getPoint(index, numeric);
             ctx.beginPath();
             ctx.arc(x, y, index === state.focusHour ? 5 : 4, 0, Math.PI * 2);
+            if (glow) {
+              ctx.shadowBlur = 12;
+              ctx.shadowColor = color;
+            }
             ctx.fillStyle = pointFill;
             ctx.fill();
             ctx.lineWidth = 2;
             ctx.strokeStyle = pointStroke;
             ctx.stroke();
+            ctx.shadowBlur = 0;
           });
       ctx.restore();
     };
@@ -2724,15 +2809,18 @@
       registerHourlyCanvasEvents();
 
         drawSeries(state.comparison, {
-          color: 'rgba(255,255,255,0.45)',
+          color: 'rgba(255,255,255,0.35)',
           lineWidth: 2,
           dash: [6, 6],
-          pointFill: 'rgba(255,255,255,0.55)',
+          pointFill: 'rgba(255,255,255,0.5)',
+          pointStroke: 'rgba(9,14,24,0.6)',
         });
         drawSeries(state.current, {
-          color: '#5fd8ff',
+          color: '#63e0ff',
           lineWidth: 3,
-          pointFill: '#5fd8ff',
+          pointFill: '#63e0ff',
+          pointStroke: 'rgba(8,13,24,0.85)',
+          glow: true,
         });
 
         ctx.restore();
@@ -2795,6 +2883,9 @@
         const iso = sanitizeIso(date);
         const currentSeries = hourlySeriesCache.get(iso);
         const comparisonIso = iso ? sanitizeIso(shiftIsoDate(iso, -7)) : null;
+        if (comparisonIso && hourlySeedDates.has(comparisonIso) && hourlySeriesCache.has(comparisonIso)) {
+          syncHourlyPayload({ iso: comparisonIso, comparison: true });
+        }
         const comparisonSeries = comparisonIso ? hourlySeriesCache.get(comparisonIso) : null;
         if (!currentSeries) {
           hourlyCardEl.hidden = true;
@@ -2835,6 +2926,7 @@
           const parsed = parseHourlySeries(rawSeries);
           if (iso && parsed) {
             hourlySeriesCache.set(iso, parsed);
+            hourlySeedDates.delete(iso);
           }
         });
       };
@@ -2853,10 +2945,14 @@
         if (!key) return;
         if (hourlySeries) {
           const parsed = parseHourlySeries(hourlySeries);
-          if (parsed) hourlySeriesCache.set(key, parsed);
+          if (parsed) {
+            hourlySeriesCache.set(key, parsed);
+            hourlySeedDates.delete(key);
+          }
         }
         const hasSeries = hourlySeriesCache.has(key);
-        const targetRevenue = Number(revenue || 0);
+        const previewRevenue = PREVIEW_DAY_TOTALS[key]?.revenue;
+        const targetRevenue = Number(revenue || previewRevenue || 0);
         if (targetRevenue > 0) {
           scaleHourlySeriesToTotal(key, targetRevenue, { comparison });
         } else if (hasSeries) {
@@ -3100,10 +3196,11 @@
           const compareDay = payload.dayTotal && sanitizeIso(payload.dayTotal.date) === compareIso
             ? payload.dayTotal
             : (Array.isArray(payload.daily) ? payload.daily.find((entry) => entry?.date === compareIso) : null);
+          const compareEntry = mergePreviewDayTotals(compareDay, compareIso);
           syncHourlyPayload({
             iso: compareIso,
-            revenue: compareDay?.revenue,
-            hourlySeries: compareDay?.hourly,
+            revenue: compareEntry?.revenue,
+            hourlySeries: compareEntry?.hourly,
             hourlyByDay: payload?.hourlyByDay,
             comparison: true,
           });
@@ -3350,9 +3447,7 @@
                 selected = daily.find((d) => d.date === date) || daily[0];
               }
               if (selected) {
-                if (PREVIEW_DAY_TOTALS[selected.date]) {
-                  selected = { ...selected, ...PREVIEW_DAY_TOTALS[selected.date] };
-                }
+                selected = mergePreviewDayTotals(selected);
                 renderDayTotals(selected, { isDemo });
               } else {
                 renderDayStatus('Ingen omsetning funnet for valgt dato.', 'warning');
@@ -3396,8 +3491,7 @@
                 return;
               }
               if (attemptedDemo && options.demo && error?.body?.dayTotal) {
-                const previewOverride = PREVIEW_DAY_TOTALS[error.body.dayTotal?.date];
-                const dayPayload = previewOverride ? { ...error.body.dayTotal, ...previewOverride } : error.body.dayTotal;
+                const dayPayload = mergePreviewDayTotals(error.body.dayTotal, date);
                 renderDayTotals(dayPayload, { isDemo: true });
                 const items = Array.isArray(error?.body?.items) ? error.body.items : Array.isArray(error?.body?.top) ? error.body.top : [];
                 renderProductInsights(items, { date, isDemo: true });
@@ -3409,8 +3503,8 @@
                 productChangeContext = { date, items, options, isDemo: true };
                 loadProductChanges(productChangeContext);
                 syncHourlyPayload({
-                  iso: sanitizeIso(dayPayload.date) || sanitizeIso(date),
-                  revenue: dayPayload.revenue,
+                  iso: sanitizeIso(dayPayload?.date) || sanitizeIso(date),
+                  revenue: dayPayload?.revenue,
                   hourlySeries: error.body.dayTotal?.hourly,
                   hourlyByDay: error?.body?.hourlyByDay,
                   comparison: false,
