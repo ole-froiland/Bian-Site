@@ -2729,9 +2729,16 @@
         state.layout = { padding, chartWidth, width, height };
 
         const allValues = [...state.current, ...(state.comparison || [])];
-        const maxValue = Math.max(20, ...allValues);
-        const yStepRaw = maxValue / 4;
-        const yStep = Math.max(20, Math.ceil(yStepRaw / 10) * 10);
+        let maxValue = Math.max(10, ...allValues);
+        const niceStep = (() => {
+          if (maxValue <= 5000) return 1000;
+          if (maxValue <= 8000) return 2000;
+          if (maxValue <= 12000) return 2500;
+          if (maxValue <= 20000) return 5000;
+          return 10000;
+        })();
+        const totalSteps = Math.max(4, Math.ceil(maxValue / niceStep));
+        maxValue = totalSteps * niceStep;
 
         const getPoint = (hourIndex, value) => {
           const x = padding.left + (hourIndex / (HOURLY_HOURS.length - 1)) * chartWidth;
@@ -2748,7 +2755,7 @@
 
         ctx.strokeStyle = 'rgba(255,255,255,0.08)';
         ctx.lineWidth = 1;
-        for (let value = 0; value <= maxValue; value += yStep) {
+        for (let value = 0; value <= maxValue; value += niceStep) {
           const y = padding.top + chartHeight - (value / maxValue) * chartHeight;
           ctx.beginPath();
           ctx.moveTo(padding.left, y);
@@ -2760,19 +2767,20 @@
           ctx.textBaseline = 'middle';
           ctx.fillText(moneyFmt.format(value).replace(/\sNOK/, ''), padding.left - 10, y);
         }
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.fillStyle = 'rgba(232,235,244,0.7)';
-        const labelStep = chartWidth > 500 ? 2 : 3;
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        const labelStep = chartWidth > 600 ? 2 : 3;
         HOURLY_HOURS.forEach((hour) => {
           if (hour % labelStep !== 0) return;
           const [x] = getPoint(hour, 0);
-          ctx.fillText(formatHourLabel(hour).replace('kl ', ''), x, padding.top + chartHeight + 10);
-          ctx.strokeStyle = 'rgba(255,255,255,0.03)';
           ctx.beginPath();
           ctx.moveTo(x, padding.top);
           ctx.lineTo(x, padding.top + chartHeight);
           ctx.stroke();
+          ctx.fillStyle = 'rgba(232,235,244,0.7)';
+          ctx.font = '11px/1 \"Inter\",system-ui,sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(formatHourLabel(hour).replace('kl ', ''), x, padding.top + chartHeight + 10);
         });
         ctx.textAlign = 'left';
         ctx.textBaseline = 'alphabetic';
