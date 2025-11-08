@@ -3059,11 +3059,6 @@
           dayAverageStatusEl.textContent = 'Henter …';
           dayAverageStatusEl.dataset.tone = 'muted';
         }
-        if (dayGuestsValueEl) dayGuestsValueEl.textContent = '–';
-        if (dayGuestsStatusEl) {
-          dayGuestsStatusEl.textContent = 'Henter …';
-          dayGuestsStatusEl.dataset.tone = 'muted';
-        }
         hourlyChartState = null;
         if (hourlyCardEl) {
           if (hourlySeriesCache.has(date)) {
@@ -3187,6 +3182,12 @@
               renderHourlyInsights({ date, isDemo: lastDayTotals?.isDemo });
             });
         };
+
+        if (PREVIEW_TODAY && sanitizeIso(date) === PREVIEW_TODAY && !attemptedDemo) {
+          attemptedDemo = true;
+          attempt({ demo: true });
+          return;
+        }
 
         attempt();
       };
