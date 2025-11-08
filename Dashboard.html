@@ -1677,13 +1677,21 @@
       );
 
       const toISODate = (date) => {
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
       };
 
-      const today = new Date();
+      const PREVIEW_TODAY = '2024-08-07';
+      let today = new Date();
+      if (PREVIEW_TODAY) {
+        const previewDate = new Date(`${PREVIEW_TODAY}T00:00:00`);
+        if (!Number.isNaN(previewDate.getTime())) {
+          today = previewDate;
+        }
+      }
       const todayISO = toISODate(today);
 
       const dayPicker = document.querySelector('#sales-day-picker');
@@ -1979,6 +1987,8 @@
       let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
       const hourlySeriesCache = new Map();
       const defaultHourlySeriesSeeds = {
+        '2024-08-07': [50,55,60,70,95,130,165,185,205,215,210,198,182,168,155,150,165,205,228,220,190,140,95,65],
+        '2024-07-31': [42,46,58,68,88,118,150,170,188,198,188,176,162,150,142,138,150,185,205,198,170,128,90,62],
         '2024-07-19': [45,48,55,60,78,110,140,165,182,190,176,165,150,138,133,128,148,190,215,208,175,125,82,60],
         '2024-07-12': [40,44,58,65,90,120,155,180,195,205,190,178,162,150,145,140,155,182,200,194,168,130,95,70],
       };
@@ -3641,7 +3651,7 @@
           if (product.costAccount) accountsParam.push(`${product.key}Cost|${product.label} varekost:${product.costAccount}`);
         });
 
-        const todayDate = new Date();
+        const todayDate = new Date(today.getTime());
         const reportingYear = todayDate.getFullYear();
         const fromISO = `${reportingYear}-01-01`;
         const toISO = toISODate(todayDate);
