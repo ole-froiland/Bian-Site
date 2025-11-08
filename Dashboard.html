@@ -2130,9 +2130,9 @@
         dayWeekDeltaBadgeEl.classList.toggle('trend-negative', delta < 0);
       };
 
-      const updateDayAverageDeltaBadge = () => {
+      const updateDayAverageDeltaBadge = (entryOverride = null, fallbackOverride = null) => {
         if (!dayAverageDeltaBadgeEl) return;
-        const currentEntry = revenueAnalysisContext.entry || lastDayTotals;
+        const currentEntry = entryOverride || revenueAnalysisContext.entry || lastDayTotals;
         if (!currentEntry?.date) {
           dayAverageDeltaBadgeEl.textContent = '';
           dayAverageDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
@@ -2154,15 +2154,16 @@
         }
         let prevRevenue = PREVIEW_DAY_TOTALS[prevIso]?.revenue;
         let prevReceipts = PREVIEW_DAY_TOTALS[prevIso]?.receipts;
+        const fallbackPool = fallbackOverride || revenueAnalysisContext.fallbackDaily || [];
         if (!(prevRevenue > 0 && prevReceipts > 0)) {
-          const fallbackPrev = (revenueAnalysisContext.fallbackDaily || []).find((entry) => entry?.date === prevIso);
+          const fallbackPrev = fallbackPool.find((entry) => entry?.date === prevIso);
           if (fallbackPrev) {
             prevRevenue = Number(fallbackPrev.revenue || 0);
             prevReceipts = Number(fallbackPrev.receipts || 0);
           }
         }
         if (!(prevRevenue > 0 && prevReceipts > 0)) {
-          const fromChart = getDailyEntry(prevIso, revenueAnalysisContext.fallbackDaily || []);
+          const fromChart = getDailyEntry(prevIso, fallbackPool);
           if (fromChart) {
             prevRevenue = Number(fromChart.revenue || 0);
             prevReceipts = Number(fromChart.receipts || 0);
@@ -3215,6 +3216,7 @@
               revenueAnalysisContext = { date, fallbackDaily: daily, entry: selected };
               renderRevenueAnalysis(revenueAnalysisContext);
               updateDayWeekDeltaBadge();
+              updateDayAverageDeltaBadge(selected, daily);
               productChangeContext = { date, items, options, isDemo };
               loadProductChanges(productChangeContext);
               ingestHourlySeries(data?.hourlyByDay || {});
@@ -3246,9 +3248,11 @@
                 renderDayTotals(dayPayload, { isDemo: true });
                 const items = Array.isArray(error?.body?.items) ? error.body.items : Array.isArray(error?.body?.top) ? error.body.top : [];
                 renderProductInsights(items, { date, isDemo: true });
-                revenueAnalysisContext = { date, fallbackDaily: Array.isArray(error?.body?.daily) ? error.body.daily : [], entry: dayPayload };
+                const demoFallback = Array.isArray(error?.body?.daily) ? error.body.daily : [];
+                revenueAnalysisContext = { date, fallbackDaily: demoFallback, entry: dayPayload };
                 renderRevenueAnalysis(revenueAnalysisContext);
                 updateDayWeekDeltaBadge();
+                updateDayAverageDeltaBadge(dayPayload, demoFallback);
                 productChangeContext = { date, items, options, isDemo: true };
                 loadProductChanges(productChangeContext);
                 ingestHourlySeries(error?.body?.hourlyByDay || {});
@@ -3266,19 +3270,17 @@
                 : (error?.body?.message || error?.message || 'Feil ved henting av omsetning');
               if (lastDayTotals && sanitizeIso(lastDayTotals.date) === sanitizeIso(date)) {
                 renderDayTotals(lastDayTotals, { isDemo: lastDayTotals.isDemo, suppressStatus: true, cache: false });
-                updateDayWeekDeltaBadge();
                 renderDayStatus(fallbackMessage, isTimeout ? 'warning' : 'error');
                 updateDayWeekDeltaBadge();
+                updateDayAverageDeltaBadge(lastDayTotals, revenueAnalysisContext.fallbackDaily || []);
                 if (Number.isFinite(lastDayTotals.receipts)) {
                   if (dayReceiptsValueEl) dayReceiptsValueEl.textContent = qtyFmt.format(lastDayTotals.receipts);
                   if (dayReceiptsStatusEl) {
-                    dayReceiptsStatusEl.textContent = lastDayTotals.receipts > 0 ? 'Oppdatert automatisk' : fallbackMessage;
+                    dayReceiptsStatusEl.textContent = lastDayTotals.receipts > 0 ? '' : fallbackMessage;
                     dayReceiptsStatusEl.dataset.tone = lastDayTotals.receipts > 0 ? (isTimeout ? 'warning' : 'muted') : (isTimeout ? 'warning' : 'error');
                   }
                   if (dayAverageStatusEl) {
-                    dayAverageStatusEl.textContent = lastDayTotals.receipts > 0
-                      ? `${qtyFmt.format(lastDayTotals.receipts)} kvitteringer`
-                      : fallbackMessage;
+                    dayAverageStatusEl.textContent = lastDayTotals.receipts > 0 ? '' : fallbackMessage;
                     dayAverageStatusEl.dataset.tone = lastDayTotals.receipts > 0 ? (isTimeout ? 'warning' : 'muted') : (isTimeout ? 'warning' : 'error');
                   }
                 }
@@ -3293,6 +3295,7 @@
                   dayAverageStatusEl.textContent = fallbackMessage;
                   dayAverageStatusEl.dataset.tone = isTimeout ? 'warning' : 'error';
                 }
+                updateDayAverageDeltaBadge(null);
               }
               renderProductInsights(null, {
                 date,
