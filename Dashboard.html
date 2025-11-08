@@ -1520,31 +1520,25 @@
     <section class="tab-panel" id="oversikt" role="tabpanel" aria-labelledby="tab-oversikt" tabindex="0" hidden>
       <div class="overview-highlights" aria-label="Nøkkeltall">
         <article class="overview-highlight">
-          <span class="overview-highlight__eyebrow">Saldo driftskonto</span>
-          <p class="overview-highlight__value" data-balance-highlight>–</p>
-          <p class="overview-highlight__meta" data-balance-highlight-meta>Henter …</p>
+          <span class="overview-highlight__eyebrow">Bankkonto</span>
+          <p class="overview-highlight__value" data-highlight-bank>–</p>
+          <p class="overview-highlight__meta" data-highlight-bank-meta>Henter saldo …</p>
         </article>
         <article class="overview-highlight">
-          <span class="overview-highlight__eyebrow">Dagens omsetning</span>
-          <span class="overview-highlight__pill" data-day-highlight-date>–</span>
-          <p class="overview-highlight__value" data-day-highlight>–</p>
-          <p class="overview-highlight__meta" data-day-highlight-meta>Henter …</p>
+          <span class="overview-highlight__eyebrow">Forfall neste 3 dager</span>
+          <p class="overview-highlight__value" data-highlight-due>–</p>
+          <p class="overview-highlight__meta" data-highlight-due-meta>Ingen registrerte forfall</p>
         </article>
         <article class="overview-highlight">
-          <span class="overview-highlight__eyebrow">Snitt per kjøp</span>
-          <p class="overview-highlight__value" data-average-highlight>–</p>
-          <p class="overview-highlight__meta" data-average-highlight-meta>Henter …</p>
+          <span class="overview-highlight__eyebrow">Ny saldo</span>
+          <p class="overview-highlight__value" data-highlight-net>–</p>
+          <p class="overview-highlight__meta" data-highlight-net-meta>Bankkonto − forfall</p>
         </article>
       </div>
       <div class="chart-stats">
-        <article class="card chart-stat-card" data-balance-card>
-          <span class="chart-stat-card__eyebrow">Saldo Driftskonto</span>
-          <p class="chart-stat-card__value" data-balance-value>–</p>
-          <p class="chart-stat-card__status" data-balance-status data-tone="muted">Henter saldo …</p>
-        </article>
         <article class="card chart-stat-card chart-stat-card--metric" data-day-card>
           <header class="chart-stat-card__header">
-            <span class="chart-stat-card__eyebrow">Dagens omsetning</span>
+            <span class="chart-stat-card__eyebrow">Omsetning</span>
             <div class="chart-stat-card__controls">
               <label for="sales-day-picker" class="sr-only">Velg dato</label>
               <input type="date" id="sales-day-picker" class="chart-stat-card__input" />
@@ -1553,7 +1547,12 @@
           <p class="chart-stat-card__value" data-day-revenue>–</p>
           <p class="chart-stat-card__status" data-day-status data-tone="muted">Henter …</p>
         </article>
-        <article class="card chart-stat-card chart-stat-card--metric">
+        <article class="card chart-stat-card chart-stat-card--metric" data-guest-card>
+          <span class="chart-stat-card__eyebrow">Antall gjester</span>
+          <p class="chart-stat-card__value" data-day-guests>–</p>
+          <p class="chart-stat-card__status" data-day-guests-status data-tone="muted">Henter …</p>
+        </article>
+        <article class="card chart-stat-card chart-stat-card--metric" data-average-card>
           <span class="chart-stat-card__eyebrow">Snitt per kjøp</span>
           <p class="chart-stat-card__value" data-day-average>–</p>
           <p class="chart-stat-card__status" data-day-receipts-status data-tone="muted">Henter …</p>
@@ -1763,15 +1762,16 @@
       const dayAverageEl = document.querySelector('[data-day-average]');
       const dayStatusEl = document.querySelector('[data-day-status]');
       const dayReceiptsStatusEl = document.querySelector('[data-day-receipts-status]');
+      const dayGuestsValueEl = document.querySelector('[data-day-guests]');
+      const dayGuestsStatusEl = document.querySelector('[data-day-guests-status]');
       const chartBalanceValueEl = document.querySelector('[data-balance-value]');
       const chartBalanceStatusEl = document.querySelector('[data-balance-status]');
-      const balanceHighlightValueEl = document.querySelector('[data-balance-highlight]');
-      const balanceHighlightMetaEl = document.querySelector('[data-balance-highlight-meta]');
-      const dayHighlightValueEl = document.querySelector('[data-day-highlight]');
-      const dayHighlightMetaEl = document.querySelector('[data-day-highlight-meta]');
-      const dayHighlightDateEl = document.querySelector('[data-day-highlight-date]');
-      const averageHighlightValueEl = document.querySelector('[data-average-highlight]');
-      const averageHighlightMetaEl = document.querySelector('[data-average-highlight-meta]');
+      const highlightBankValueEl = document.querySelector('[data-highlight-bank]');
+      const highlightBankMetaEl = document.querySelector('[data-highlight-bank-meta]');
+      const highlightDueValueEl = document.querySelector('[data-highlight-due]');
+      const highlightDueMetaEl = document.querySelector('[data-highlight-due-meta]');
+      const highlightNetValueEl = document.querySelector('[data-highlight-net]');
+      const highlightNetMetaEl = document.querySelector('[data-highlight-net-meta]');
       const barChart = document.querySelector('[data-daily-chart]');
       const chartPrevBtn = document.querySelector('[data-chart-nav="prev"]');
       const chartNextBtn = document.querySelector('[data-chart-nav="next"]');
@@ -2057,6 +2057,8 @@
       let lastDayTotals = null;
       let revenueAnalysisContext = { date: null, fallbackDaily: [], entry: null };
       const hourlySeriesCache = new Map();
+      let latestBankBalance = 0;
+      let dueAmountNext3Days = 0;
       const defaultHourlySeriesSeeds = {
         '2025-08-10': [32,36,40,45,60,82,105,126,148,165,176,170,162,150,140,134,138,168,198,192,170,125,82,54],
         '2025-08-03': [28,32,36,42,56,74,95,115,135,150,158,152,144,135,126,120,125,152,180,174,155,114,76,50],
@@ -2066,6 +2068,33 @@
         '2024-07-12': [40,44,58,65,90,120,155,180,195,205,190,178,162,150,145,140,155,182,200,194,168,130,95,70],
       };
       const hourlySeedDates = new Set(Object.keys(defaultHourlySeriesSeeds));
+      const updateNetHighlight = () => {
+        const net = latestBankBalance - dueAmountNext3Days;
+        if (highlightNetValueEl) {
+          highlightNetValueEl.textContent = moneyFmt.format(net);
+          highlightNetValueEl.classList.toggle('positive', net > 0);
+          highlightNetValueEl.classList.toggle('negative', net < 0);
+        }
+        if (highlightNetMetaEl) {
+          highlightNetMetaEl.textContent = `Bankkonto ${moneyFmt.format(latestBankBalance)} − forfall ${moneyFmt.format(dueAmountNext3Days)}`;
+        }
+      };
+      const setDueHighlight = (value = 0, metaText = '') => {
+        dueAmountNext3Days = Math.max(0, Number(value) || 0);
+        if (highlightDueValueEl) {
+          highlightDueValueEl.textContent = dueAmountNext3Days ? moneyFmt.format(dueAmountNext3Days) : '0 kr';
+          highlightDueValueEl.classList.remove('positive');
+          highlightDueValueEl.classList.toggle('negative', dueAmountNext3Days > latestBankBalance);
+        }
+        if (highlightDueMetaEl) {
+          highlightDueMetaEl.textContent = metaText || (dueAmountNext3Days ? 'Planlagte betalinger' : 'Ingen forfall registrert');
+        }
+        updateNetHighlight();
+      };
+      setDueHighlight(0, 'Ingen forfall registrert');
+      if (typeof window !== 'undefined' && Number.isFinite(window.DASHBOARD_DUE_AMOUNT)) {
+        setDueHighlight(window.DASHBOARD_DUE_AMOUNT, 'Planlagte betalinger');
+      }
       let hourlyChartState = null;
       const productChangeCardEl = document.querySelector('[data-product-change-card]');
       const productChangeDateEl = document.querySelector('[data-product-change-date]');
@@ -2854,22 +2883,30 @@
       const defaultDayStatus = 'Henter omsetning …';
 
       const loadBalanceCard = () => {
-        if (!chartBalanceValueEl) return;
+        if (!chartBalanceValueEl && !highlightBankValueEl && !highlightNetValueEl) return;
         if (typeof fetch !== 'function') {
           if (chartBalanceStatusEl) {
             chartBalanceStatusEl.textContent = 'Nettleseren støtter ikke datahenting.';
             chartBalanceStatusEl.dataset.tone = 'error';
           }
+          if (highlightBankMetaEl) {
+            highlightBankMetaEl.textContent = 'Nettleseren støtter ikke datahenting.';
+          }
           return;
         }
-        chartBalanceValueEl.textContent = '–';
-        chartBalanceValueEl.classList.remove('positive', 'negative');
+        if (chartBalanceValueEl) {
+          chartBalanceValueEl.textContent = '–';
+          chartBalanceValueEl.classList.remove('positive', 'negative');
+        }
         if (chartBalanceStatusEl) {
           chartBalanceStatusEl.textContent = 'Henter saldo …';
           chartBalanceStatusEl.dataset.tone = 'muted';
         }
-        if (balanceHighlightValueEl) balanceHighlightValueEl.textContent = '–';
-        if (balanceHighlightMetaEl) balanceHighlightMetaEl.textContent = 'Henter saldo …';
+        if (highlightBankValueEl) {
+          highlightBankValueEl.textContent = '–';
+          highlightBankValueEl.classList.remove('positive', 'negative');
+        }
+        if (highlightBankMetaEl) highlightBankMetaEl.textContent = 'Henter saldo …';
         const yearStartISO = `${today.getFullYear()}-01-01`;
         const url = new URL('/.netlify/functions/tripletex', window.location.origin);
         url.searchParams.set('from', yearStartISO);
@@ -2887,39 +2924,57 @@
               : null;
             if (!entry) throw new Error('Fant ikke driftskontoen i Tripletex-responsen.');
             const balance = Number(entry.total ?? entry.totalAbsolute ?? 0);
-            chartBalanceValueEl.textContent = moneyFmt.format(balance);
-            chartBalanceValueEl.classList.remove('positive', 'negative');
-            if (balance > 0) chartBalanceValueEl.classList.add('positive');
-            if (balance < 0) chartBalanceValueEl.classList.add('negative');
+            latestBankBalance = balance;
+            if (chartBalanceValueEl) {
+              chartBalanceValueEl.textContent = moneyFmt.format(balance);
+              chartBalanceValueEl.classList.remove('positive', 'negative');
+              if (balance > 0) chartBalanceValueEl.classList.add('positive');
+              if (balance < 0) chartBalanceValueEl.classList.add('negative');
+            }
             const balanceDateLabel = `Per ${dateFmtLong.format(today)}`;
             if (chartBalanceStatusEl) {
               chartBalanceStatusEl.textContent = balanceDateLabel;
               chartBalanceStatusEl.dataset.tone = 'muted';
             }
-            if (balanceHighlightValueEl) balanceHighlightValueEl.textContent = moneyFmt.format(balance);
-            if (balanceHighlightMetaEl) balanceHighlightMetaEl.textContent = balanceDateLabel;
+            if (highlightBankValueEl) {
+              highlightBankValueEl.textContent = moneyFmt.format(balance);
+              highlightBankValueEl.classList.remove('positive', 'negative');
+              if (balance > 0) highlightBankValueEl.classList.add('positive');
+              if (balance < 0) highlightBankValueEl.classList.add('negative');
+            }
+            if (highlightBankMetaEl) highlightBankMetaEl.textContent = balanceDateLabel;
+            updateNetHighlight();
           })
           .catch((error) => {
         console.error('Kunne ikke hente saldo for driftskonto:', error);
-            chartBalanceValueEl.textContent = '–';
-            chartBalanceValueEl.classList.remove('positive', 'negative');
+            if (chartBalanceValueEl) {
+              chartBalanceValueEl.textContent = '–';
+              chartBalanceValueEl.classList.remove('positive', 'negative');
+            }
             if (chartBalanceStatusEl) {
               chartBalanceStatusEl.textContent = error?.message || 'Kunne ikke hente saldo';
               chartBalanceStatusEl.dataset.tone = 'error';
             }
-            if (balanceHighlightValueEl) balanceHighlightValueEl.textContent = '–';
-            if (balanceHighlightMetaEl) balanceHighlightMetaEl.textContent = error?.message || 'Kunne ikke hente saldo';
+            if (highlightBankValueEl) {
+              highlightBankValueEl.textContent = '–';
+              highlightBankValueEl.classList.remove('positive', 'negative');
+            }
+            if (highlightBankMetaEl) {
+              highlightBankMetaEl.textContent = error?.message || 'Kunne ikke hente saldo';
+            }
+            updateNetHighlight();
           });
       };
 
       loadBalanceCard();
 
-      const renderDayTotals = ({ date, revenue, receipts }, { isDemo = false, suppressStatus = false, cache = true } = {}) => {
+      const renderDayTotals = ({ date, revenue, receipts, guests }, { isDemo = false, suppressStatus = false, cache = true } = {}) => {
         if (!dayRevenueEl) return;
         const parsed = date ? new Date(`${date}T00:00:00`) : null;
         const friendly = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : date || '–';
         const revenueValue = Number(revenue || 0);
         const receiptsValue = Number(receipts || 0);
+        const guestsValue = Number(guests || 0);
         const averageSale = receiptsValue > 0 ? revenueValue / receiptsValue : null;
         dayRevenueEl.textContent = moneyFmt.format(revenueValue);
         dayRevenueEl.classList.remove('positive', 'negative');
@@ -2941,27 +2996,20 @@
             dayReceiptsStatusEl.dataset.tone = 'warning';
           }
         }
-        if (dayHighlightValueEl) {
-          dayHighlightValueEl.textContent = moneyFmt.format(revenueValue);
-          dayHighlightValueEl.classList.toggle('positive', revenueValue > 0);
-          dayHighlightValueEl.classList.toggle('negative', revenueValue < 0);
+        if (dayGuestsValueEl) {
+          dayGuestsValueEl.textContent = guestsValue > 0 ? qtyFmt.format(guestsValue) : '–';
         }
-        if (dayHighlightMetaEl) {
-          dayHighlightMetaEl.textContent = isDemo ? `Per ${friendly} · demo` : `Per ${friendly}`;
-        }
-        if (dayHighlightDateEl) {
-          dayHighlightDateEl.textContent = friendly;
-        }
-        if (averageHighlightValueEl) {
-          averageHighlightValueEl.textContent = averageSale != null ? moneyFmt.format(averageSale) : '–';
-        }
-        if (averageHighlightMetaEl) {
-          averageHighlightMetaEl.textContent = receiptsValue > 0
-            ? `${qtyFmt.format(receiptsValue)} kvitteringer`
-            : 'Ingen kvitteringer';
+        if (dayGuestsStatusEl) {
+          if (guestsValue > 0) {
+            dayGuestsStatusEl.textContent = `Per ${friendly}`;
+            dayGuestsStatusEl.dataset.tone = 'muted';
+          } else {
+            dayGuestsStatusEl.textContent = 'Ingen gjester registrert';
+            dayGuestsStatusEl.dataset.tone = 'warning';
+          }
         }
         if (cache) {
-          lastDayTotals = { date, revenue: revenueValue, receipts: receiptsValue, isDemo };
+          lastDayTotals = { date, revenue: revenueValue, receipts: receiptsValue, guests: guestsValue, isDemo };
         }
       };
 
@@ -2996,14 +3044,11 @@
           dayReceiptsStatusEl.dataset.tone = 'muted';
         }
         const highlightFriendly = formatFriendlyDate(date);
-        if (dayHighlightValueEl) {
-          dayHighlightValueEl.textContent = '–';
-          dayHighlightValueEl.classList.remove('positive', 'negative');
+        if (dayGuestsValueEl) dayGuestsValueEl.textContent = '–';
+        if (dayGuestsStatusEl) {
+          dayGuestsStatusEl.textContent = 'Henter …';
+          dayGuestsStatusEl.dataset.tone = 'muted';
         }
-        if (dayHighlightDateEl) dayHighlightDateEl.textContent = highlightFriendly || '–';
-        if (dayHighlightMetaEl) dayHighlightMetaEl.textContent = 'Henter …';
-        if (averageHighlightValueEl) averageHighlightValueEl.textContent = '–';
-        if (averageHighlightMetaEl) averageHighlightMetaEl.textContent = 'Henter …';
         hourlyChartState = null;
         if (hourlyCardEl) {
           if (hourlySeriesCache.has(date)) {
@@ -3107,13 +3152,11 @@
                   dayReceiptsStatusEl.textContent = fallbackMessage;
                   dayReceiptsStatusEl.dataset.tone = isTimeout ? 'warning' : 'error';
                 }
-                if (dayHighlightValueEl) {
-                  dayHighlightValueEl.textContent = '–';
-                  dayHighlightValueEl.classList.remove('positive', 'negative');
+                if (dayGuestsValueEl) dayGuestsValueEl.textContent = '–';
+                if (dayGuestsStatusEl) {
+                  dayGuestsStatusEl.textContent = fallbackMessage;
+                  dayGuestsStatusEl.dataset.tone = isTimeout ? 'warning' : 'error';
                 }
-                if (dayHighlightMetaEl) dayHighlightMetaEl.textContent = fallbackMessage;
-                if (averageHighlightValueEl) averageHighlightValueEl.textContent = '–';
-                if (averageHighlightMetaEl) averageHighlightMetaEl.textContent = fallbackMessage;
               }
               renderProductInsights(null, {
                 date,
