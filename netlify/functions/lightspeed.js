@@ -389,6 +389,15 @@ function formatDateKey(date){
   return `${y}-${m}-${d}`;
 }
 
+function shiftIsoDate(iso, deltaDays){
+  if (!iso || !Number.isFinite(Number(deltaDays))) return null;
+  const base = normalizeDateValue(iso);
+  if (!base) return null;
+  const shifted = new Date(base);
+  shifted.setDate(shifted.getDate() + Number(deltaDays));
+  return formatDateKey(shifted);
+}
+
 async function fetchPeriodTransactions(periodId){
   const path = `${TRANSACTION_ENDPOINT.replace(/\/+$/, '')}/${String(periodId).replace(/^\/+/, '')}`;
   const url = new URL(path, CFG.baseUrl).toString();
@@ -658,8 +667,10 @@ exports.handler = async (event) => {
     let from = normDate(q.from || q.start);
     let to   = normDate(q.to || q.end);
     const singleDate = normDate(q.date || q.day || null);
+    let comparisonDate = null;
     if (singleDate) {
-      from = singleDate;
+      comparisonDate = shiftIsoDate(singleDate, -7);
+      from = comparisonDate || singleDate;
       to = singleDate;
     }
     if(!from || !to){
@@ -737,7 +748,7 @@ exports.handler = async (event) => {
       if (dayTotal && hourlyByDay[dayTotal.date]) {
         dayTotal.hourly = hourlyByDay[dayTotal.date];
       }
-      return ok({ from, to, endpoint: BUSINESS_PERIODS_ENDPOINT, count: demoReceipts.length, top: items.slice(0,limit), items, daily, hourlyByDay, dayTotal, mode: 'demo' });
+      return ok({ from, to, comparisonDate, endpoint: BUSINESS_PERIODS_ENDPOINT, count: demoReceipts.length, top: items.slice(0,limit), items, daily, hourlyByDay, dayTotal, mode: 'demo' });
     }
 
     if(!CFG.xToken || !CFG.businessId){
@@ -795,6 +806,7 @@ exports.handler = async (event) => {
     return ok({
       from,
       to,
+      comparisonDate,
       endpoint: BUSINESS_PERIODS_ENDPOINT,
       count: transactions.length,
       top: itemsArray.slice(0, limit),
