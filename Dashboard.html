@@ -993,6 +993,7 @@
       gap:var(--space-2);
       margin-bottom:var(--space-3);
     }
+    .overview-highlights + .overview-highlights{margin-top:var(--space-2);}
     .overview-highlight{
       background:linear-gradient(160deg,rgba(16,23,44,0.95),rgba(8,13,26,0.92));
       border:1px solid rgba(255,255,255,0.08);
@@ -1534,7 +1535,7 @@
       </div>
     </section>
     <section class="tab-panel" id="oversikt" role="tabpanel" aria-labelledby="tab-oversikt" tabindex="0" hidden>
-      <div class="overview-highlights" aria-label="Nøkkeltall">
+      <div class="overview-highlights" aria-label="Likviditet">
         <article class="overview-highlight">
           <span class="overview-highlight__eyebrow">Bankkonto</span>
           <p class="overview-highlight__value" data-highlight-bank>–</p>
@@ -1551,27 +1552,21 @@
           <p class="overview-highlight__meta" data-highlight-net-meta>Bankkonto − forfall</p>
         </article>
       </div>
-      <div class="chart-stats">
-        <article class="card chart-stat-card chart-stat-card--metric" data-day-card>
-          <header class="chart-stat-card__header">
-            <span class="chart-stat-card__eyebrow">Omsetning</span>
-            <div class="chart-stat-card__controls">
-              <label for="sales-day-picker" class="sr-only">Velg dato</label>
-              <input type="date" id="sales-day-picker" class="chart-stat-card__input" />
-            </div>
-          </header>
-          <p class="chart-stat-card__value" data-day-revenue>–</p>
-          <p class="chart-stat-card__status" data-day-status data-tone="muted">Henter …</p>
+      <div class="overview-highlights overview-highlights--stats" aria-label="Omsetning">
+        <article class="overview-highlight">
+          <span class="overview-highlight__eyebrow">Omsetning</span>
+          <p class="overview-highlight__value" data-day-revenue>–</p>
+          <p class="overview-highlight__meta" data-day-status data-tone="muted">Henter …</p>
         </article>
-        <article class="card chart-stat-card chart-stat-card--metric" data-guest-card>
-          <span class="chart-stat-card__eyebrow">Antall gjester</span>
-          <p class="chart-stat-card__value" data-day-guests>–</p>
-          <p class="chart-stat-card__status" data-day-guests-status data-tone="muted">Henter …</p>
+        <article class="overview-highlight">
+          <span class="overview-highlight__eyebrow">Antall kvitteringer</span>
+          <p class="overview-highlight__value" data-day-receipts-value>–</p>
+          <p class="overview-highlight__meta" data-day-receipts-status data-tone="muted">Henter …</p>
         </article>
-        <article class="card chart-stat-card chart-stat-card--metric" data-average-card>
-          <span class="chart-stat-card__eyebrow">Snitt per kjøp</span>
-          <p class="chart-stat-card__value" data-day-average>–</p>
-          <p class="chart-stat-card__status" data-day-receipts-status data-tone="muted">Henter …</p>
+        <article class="overview-highlight">
+          <span class="overview-highlight__eyebrow">Snitt per kjøp</span>
+          <p class="overview-highlight__value" data-day-average>–</p>
+          <p class="overview-highlight__meta" data-day-average-status data-tone="muted">Henter …</p>
         </article>
       </div>
       <article class="card chart-card">
@@ -1777,9 +1772,9 @@
       const dayRevenueEl = document.querySelector('[data-day-revenue]');
       const dayAverageEl = document.querySelector('[data-day-average]');
       const dayStatusEl = document.querySelector('[data-day-status]');
+      const dayReceiptsValueEl = document.querySelector('[data-day-receipts-value]');
       const dayReceiptsStatusEl = document.querySelector('[data-day-receipts-status]');
-      const dayGuestsValueEl = document.querySelector('[data-day-guests]');
-      const dayGuestsStatusEl = document.querySelector('[data-day-guests-status]');
+      const dayAverageStatusEl = document.querySelector('[data-day-average-status]');
       const tablistDateEl = document.querySelector('[data-tablist-date]');
       const chartBalanceValueEl = document.querySelector('[data-balance-value]');
       const chartBalanceStatusEl = document.querySelector('[data-balance-status]');
@@ -2951,9 +2946,9 @@
               if (balance > 0) chartBalanceValueEl.classList.add('positive');
               if (balance < 0) chartBalanceValueEl.classList.add('negative');
             }
-            const balanceDateLabel = `Per ${dateFmtLong.format(today)}`;
+            const balanceMetaText = 'Oppdatert automatisk';
             if (chartBalanceStatusEl) {
-              chartBalanceStatusEl.textContent = balanceDateLabel;
+              chartBalanceStatusEl.textContent = balanceMetaText;
               chartBalanceStatusEl.dataset.tone = 'muted';
             }
             if (highlightBankValueEl) {
@@ -2962,7 +2957,7 @@
               if (balance > 0) highlightBankValueEl.classList.add('positive');
               if (balance < 0) highlightBankValueEl.classList.add('negative');
             }
-            if (highlightBankMetaEl) highlightBankMetaEl.textContent = balanceDateLabel;
+            if (highlightBankMetaEl) highlightBankMetaEl.textContent = balanceMetaText;
             updateNetHighlight();
           })
           .catch((error) => {
@@ -2994,7 +2989,6 @@
         const friendly = parsed && !Number.isNaN(parsed.getTime()) ? dateFmtLong.format(parsed) : date || '–';
         const revenueValue = Number(revenue || 0);
         const receiptsValue = Number(receipts || 0);
-        const guestsValue = Number(guests || 0);
         const averageSale = receiptsValue > 0 ? revenueValue / receiptsValue : null;
         dayRevenueEl.textContent = moneyFmt.format(revenueValue);
         dayRevenueEl.classList.remove('positive', 'negative');
@@ -3004,29 +2998,26 @@
           dayAverageEl.textContent = averageSale != null ? moneyFmt.format(averageSale) : '–';
         }
         if (!suppressStatus && dayStatusEl) {
-          dayStatusEl.textContent = isDemo ? `Per ${friendly} · demo` : `Per ${friendly}`;
-          dayStatusEl.dataset.tone = 'muted';
+          dayStatusEl.textContent = isDemo ? 'Viser demo-data' : 'Oppdatert automatisk';
+          dayStatusEl.dataset.tone = isDemo ? 'info' : 'muted';
+        }
+        if (dayReceiptsValueEl) {
+          dayReceiptsValueEl.textContent = receiptsValue > 0 ? qtyFmt.format(receiptsValue) : '0';
         }
         if (dayReceiptsStatusEl) {
           if (receiptsValue > 0) {
-            dayReceiptsStatusEl.textContent = `${qtyFmt.format(receiptsValue)} kvitteringer`;
+            dayReceiptsStatusEl.textContent = 'Oppdatert automatisk';
             dayReceiptsStatusEl.dataset.tone = 'muted';
           } else {
-            dayReceiptsStatusEl.textContent = 'Ingen kvitteringer';
+            dayReceiptsStatusEl.textContent = 'Ingen kvitteringer registrert';
             dayReceiptsStatusEl.dataset.tone = 'warning';
           }
         }
-        if (dayGuestsValueEl) {
-          dayGuestsValueEl.textContent = guestsValue > 0 ? qtyFmt.format(guestsValue) : '–';
-        }
-        if (dayGuestsStatusEl) {
-          if (guestsValue > 0) {
-            dayGuestsStatusEl.textContent = `Per ${friendly}`;
-            dayGuestsStatusEl.dataset.tone = 'muted';
-          } else {
-            dayGuestsStatusEl.textContent = 'Ingen gjester registrert';
-            dayGuestsStatusEl.dataset.tone = 'warning';
-          }
+        if (dayAverageStatusEl) {
+          dayAverageStatusEl.textContent = receiptsValue > 0
+            ? `${qtyFmt.format(receiptsValue)} kvitteringer`
+            : 'Ingen kvitteringer';
+          dayAverageStatusEl.dataset.tone = receiptsValue > 0 ? 'muted' : 'warning';
         }
         if (cache) {
           lastDayTotals = { date, revenue: revenueValue, receipts: receiptsValue, guests: guestsValue, isDemo };
@@ -3063,7 +3054,11 @@
           dayReceiptsStatusEl.textContent = 'Henter …';
           dayReceiptsStatusEl.dataset.tone = 'muted';
         }
-        const highlightFriendly = formatFriendlyDate(date);
+        if (dayReceiptsValueEl) dayReceiptsValueEl.textContent = '–';
+        if (dayAverageStatusEl) {
+          dayAverageStatusEl.textContent = 'Henter …';
+          dayAverageStatusEl.dataset.tone = 'muted';
+        }
         if (dayGuestsValueEl) dayGuestsValueEl.textContent = '–';
         if (dayGuestsStatusEl) {
           dayGuestsStatusEl.textContent = 'Henter …';
@@ -3157,25 +3152,29 @@
               if (lastDayTotals && sanitizeIso(lastDayTotals.date) === sanitizeIso(date)) {
                 renderDayTotals(lastDayTotals, { isDemo: lastDayTotals.isDemo, suppressStatus: true, cache: false });
                 renderDayStatus(fallbackMessage, isTimeout ? 'warning' : 'error');
-                if (dayReceiptsStatusEl && Number.isFinite(lastDayTotals.receipts)) {
-                  if (lastDayTotals.receipts > 0) {
-                    dayReceiptsStatusEl.textContent = `${qtyFmt.format(lastDayTotals.receipts)} kvitteringer`;
-                    dayReceiptsStatusEl.dataset.tone = isTimeout ? 'warning' : 'muted';
-                  } else {
-                    dayReceiptsStatusEl.textContent = fallbackMessage;
-                    dayReceiptsStatusEl.dataset.tone = isTimeout ? 'warning' : 'error';
+                if (Number.isFinite(lastDayTotals.receipts)) {
+                  if (dayReceiptsValueEl) dayReceiptsValueEl.textContent = qtyFmt.format(lastDayTotals.receipts);
+                  if (dayReceiptsStatusEl) {
+                    dayReceiptsStatusEl.textContent = lastDayTotals.receipts > 0 ? 'Oppdatert automatisk' : fallbackMessage;
+                    dayReceiptsStatusEl.dataset.tone = lastDayTotals.receipts > 0 ? (isTimeout ? 'warning' : 'muted') : (isTimeout ? 'warning' : 'error');
+                  }
+                  if (dayAverageStatusEl) {
+                    dayAverageStatusEl.textContent = lastDayTotals.receipts > 0
+                      ? `${qtyFmt.format(lastDayTotals.receipts)} kvitteringer`
+                      : fallbackMessage;
+                    dayAverageStatusEl.dataset.tone = lastDayTotals.receipts > 0 ? (isTimeout ? 'warning' : 'muted') : (isTimeout ? 'warning' : 'error');
                   }
                 }
               } else {
                 renderDayStatus(fallbackMessage, isTimeout ? 'warning' : 'error');
+                if (dayReceiptsValueEl) dayReceiptsValueEl.textContent = '–';
                 if (dayReceiptsStatusEl) {
                   dayReceiptsStatusEl.textContent = fallbackMessage;
                   dayReceiptsStatusEl.dataset.tone = isTimeout ? 'warning' : 'error';
                 }
-                if (dayGuestsValueEl) dayGuestsValueEl.textContent = '–';
-                if (dayGuestsStatusEl) {
-                  dayGuestsStatusEl.textContent = fallbackMessage;
-                  dayGuestsStatusEl.dataset.tone = isTimeout ? 'warning' : 'error';
+                if (dayAverageStatusEl) {
+                  dayAverageStatusEl.textContent = fallbackMessage;
+                  dayAverageStatusEl.dataset.tone = isTimeout ? 'warning' : 'error';
                 }
               }
               renderProductInsights(null, {
@@ -3204,6 +3203,8 @@
           const date = dayPicker.value || todayISO;
           loadDayTotals(date);
         });
+      } else {
+        loadDayTotals(todayISO);
       }
 
       if (aiProductsPicker) {
