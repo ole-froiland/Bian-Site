@@ -1022,6 +1022,11 @@
       font-size:0.85rem;
       color:rgba(255,255,255,0.72);
     }
+    .overview-highlight__badge{
+      font-size:0.8rem;
+      font-weight:600;
+      color:#16a34a;
+    }
     .overview-highlight__pill{
       display:inline-flex;
       align-items:center;
@@ -1557,6 +1562,7 @@
           <span class="overview-highlight__eyebrow">Omsetning</span>
           <p class="overview-highlight__value" data-day-revenue>–</p>
           <p class="overview-highlight__meta" data-day-status data-tone="muted"></p>
+          <span class="overview-highlight__badge" data-day-week-delta></span>
         </article>
         <article class="overview-highlight">
           <span class="overview-highlight__eyebrow">Antall kvitteringer</span>
@@ -1775,6 +1781,7 @@
       const dayReceiptsValueEl = document.querySelector('[data-day-receipts-value]');
       const dayReceiptsStatusEl = document.querySelector('[data-day-receipts-status]');
       const dayAverageStatusEl = document.querySelector('[data-day-average-status]');
+      const dayWeekDeltaBadgeEl = document.querySelector('[data-day-week-delta]');
       const tablistDateEl = document.querySelector('[data-tablist-date]');
       const chartBalanceValueEl = document.querySelector('[data-balance-value]');
       const chartBalanceStatusEl = document.querySelector('[data-balance-status]');
@@ -3015,6 +3022,21 @@
         if (dayAverageStatusEl) {
           dayAverageStatusEl.textContent = receiptsValue > 0 ? '' : 'Ingen kvitteringer';
           dayAverageStatusEl.dataset.tone = receiptsValue > 0 ? 'muted' : 'warning';
+        }
+        if (dayWeekDeltaBadgeEl) {
+          const prevDate = sanitizeIso(shiftIsoDate(date, -7));
+          const prevEntry = prevDate ? getDailyEntry(prevDate, revenueAnalysisContext.fallbackDaily || []) : null;
+          const prevRevenue = Number(prevEntry?.revenue || 0);
+          if (prevRevenue > 0 && revenueValue > 0) {
+            const delta = ((revenueValue - prevRevenue) / prevRevenue) || 0;
+            const formatted = percentFmt.format(delta);
+            dayWeekDeltaBadgeEl.textContent = `${formatted} vs forrige uke`;
+            dayWeekDeltaBadgeEl.classList.toggle('trend-positive', delta >= 0);
+            dayWeekDeltaBadgeEl.classList.toggle('trend-negative', delta < 0);
+          } else {
+            dayWeekDeltaBadgeEl.textContent = '';
+            dayWeekDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
+          }
         }
         if (cache) {
           lastDayTotals = { date, revenue: revenueValue, receipts: receiptsValue, isDemo };
