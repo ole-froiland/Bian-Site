@@ -3013,7 +3013,7 @@
           dayReceiptsStatusEl.dataset.tone = receiptsValue > 0 ? 'muted' : 'warning';
         }
         if (dayAverageStatusEl) {
-          dayAverageStatusEl.textContent = receiptsValue > 0 ? `${qtyFmt.format(receiptsValue)} kvitteringer` : 'Ingen kvitteringer';
+          dayAverageStatusEl.textContent = receiptsValue > 0 ? '' : 'Ingen kvitteringer';
           dayAverageStatusEl.dataset.tone = receiptsValue > 0 ? 'muted' : 'warning';
         }
         if (cache) {
