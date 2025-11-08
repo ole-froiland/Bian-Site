@@ -2193,6 +2193,50 @@
       dayAverageDeltaBadgeEl.classList.toggle('trend-negative', delta < 0);
     };
 
+      const refreshHourlyChartSeries = (iso, { comparison = false } = {}) => {
+        if (!hourlyChartState) return;
+        const key = sanitizeIso(iso);
+        if (!key) return;
+        const cached = hourlySeriesCache.get(key);
+        if (!Array.isArray(cached) || !cached.length) return;
+        let chartUpdated = false;
+        if (!comparison && hourlyChartState.date === key) {
+          hourlyChartState.current = cached;
+          chartUpdated = true;
+        }
+        if (comparison && hourlyChartState.compareIso === key) {
+          hourlyChartState.comparison = cached;
+          chartUpdated = true;
+        }
+        if (chartUpdated) {
+          drawHourlyChart(hourlyChartState);
+          updateHourlyFocus(hourlyChartState);
+        }
+      };
+
+      const scaleHourlySeriesToTotal = (date, targetTotal, { comparison = false } = {}) => {
+        const key = sanitizeIso(date);
+        const target = Number(targetTotal || 0);
+        if (!key || !(target > 0)) {
+          refreshHourlyChartSeries(key, { comparison });
+          return;
+        }
+        const series = hourlySeriesCache.get(key);
+        if (!Array.isArray(series) || !series.length) {
+          refreshHourlyChartSeries(key, { comparison });
+          return;
+        }
+        const originalSum = series.reduce((sum, value) => sum + Number(value || 0), 0);
+        let scaledSeries = series;
+        if (originalSum > 0 && Math.abs(originalSum - target) >= 1) {
+          scaledSeries = series.map((value) => (Number(value || 0) * target) / originalSum);
+          const correction = target - scaledSeries.reduce((sum, value) => sum + value, 0);
+          if (scaledSeries.length) scaledSeries[scaledSeries.length - 1] += correction;
+          hourlySeriesCache.set(key, scaledSeries);
+        }
+        refreshHourlyChartSeries(key, { comparison });
+      };
+
       const setHourlyFocusHour = (hour = null) => {
         if (!hourlyChartState) return;
         const fallback = hourlyChartState.defaultFocusHour;
@@ -2795,6 +2839,31 @@
         });
       };
 
+      const syncHourlyPayload = ({
+        iso,
+        revenue,
+        hourlySeries,
+        hourlyByDay,
+        comparison = false,
+      } = {}) => {
+        if (hourlyByDay && typeof hourlyByDay === 'object' && Object.keys(hourlyByDay).length) {
+          ingestHourlySeries(hourlyByDay);
+        }
+        const key = sanitizeIso(iso);
+        if (!key) return;
+        if (hourlySeries) {
+          const parsed = parseHourlySeries(hourlySeries);
+          if (parsed) hourlySeriesCache.set(key, parsed);
+        }
+        const hasSeries = hourlySeriesCache.has(key);
+        const targetRevenue = Number(revenue || 0);
+        if (targetRevenue > 0) {
+          scaleHourlySeriesToTotal(key, targetRevenue, { comparison });
+        } else if (hasSeries) {
+          refreshHourlyChartSeries(key, { comparison });
+        }
+      };
+
       window.addEventListener('resize', () => {
         if (hourlyChartState) drawHourlyChart(hourlyChartState);
       });
@@ -3026,6 +3095,20 @@
           });
         };
 
+        const hydrateComparisonHourly = (payload) => {
+          if (!payload || !compareIso) return;
+          const compareDay = payload.dayTotal && sanitizeIso(payload.dayTotal.date) === compareIso
+            ? payload.dayTotal
+            : (Array.isArray(payload.daily) ? payload.daily.find((entry) => entry?.date === compareIso) : null);
+          syncHourlyPayload({
+            iso: compareIso,
+            revenue: compareDay?.revenue,
+            hourlySeries: compareDay?.hourly,
+            hourlyByDay: payload?.hourlyByDay,
+            comparison: true,
+          });
+        };
+
         const handleError = (error) => {
           if (productChangeContext.date !== iso) return;
           renderProductChangesState('error', {
@@ -3037,6 +3120,7 @@
 
         fetchDayTotals(compareIso, options)
           .then((data) => {
+            hydrateComparisonHourly(data);
             const previousItems = pickItemsFromResponse(data);
             applyResult(previousItems, !!options.demo || data?.mode === 'demo');
           })
@@ -3046,6 +3130,7 @@
             if (shouldDemo) {
               fetchDayTotals(compareIso, { demo: true })
                 .then((demoData) => {
+                  hydrateComparisonHourly(demoData);
                   const previousItems = pickItemsFromResponse(demoData);
                   applyResult(previousItems, true);
                 })
@@ -3283,12 +3368,16 @@
               updateDayAverageDeltaBadge(selected, daily);
               productChangeContext = { date, items, options, isDemo };
               loadProductChanges(productChangeContext);
-              ingestHourlySeries(data?.hourlyByDay || {});
-              if (selected?.hourly) {
-                const parsedHourly = parseHourlySeries(selected.hourly);
-                if (parsedHourly) {
-                  hourlySeriesCache.set(sanitizeIso(selected.date || date) || date, parsedHourly);
-                }
+              if (selected) {
+                syncHourlyPayload({
+                  iso: sanitizeIso(selected.date) || sanitizeIso(date),
+                  revenue: selected.revenue,
+                  hourlySeries: selected.hourly,
+                  hourlyByDay: data?.hourlyByDay,
+                  comparison: false,
+                });
+              } else if (data?.hourlyByDay) {
+                ingestHourlySeries(data.hourlyByDay);
               }
               renderHourlyInsights({ date, isDemo });
             })
@@ -3319,13 +3408,13 @@
                 updateDayAverageDeltaBadge(dayPayload, demoFallback);
                 productChangeContext = { date, items, options, isDemo: true };
                 loadProductChanges(productChangeContext);
-                ingestHourlySeries(error?.body?.hourlyByDay || {});
-                if (error.body.dayTotal?.hourly) {
-                  const parsedHourly = parseHourlySeries(error.body.dayTotal.hourly);
-                  if (parsedHourly) {
-                    hourlySeriesCache.set(sanitizeIso(error.body.dayTotal.date || date) || date, parsedHourly);
-                  }
-                }
+                syncHourlyPayload({
+                  iso: sanitizeIso(dayPayload.date) || sanitizeIso(date),
+                  revenue: dayPayload.revenue,
+                  hourlySeries: error.body.dayTotal?.hourly,
+                  hourlyByDay: error?.body?.hourlyByDay,
+                  comparison: false,
+                });
                 renderHourlyInsights({ date, isDemo: true });
                 return;
               }
