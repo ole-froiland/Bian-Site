@@ -2723,7 +2723,7 @@
         ctx.scale(dpr, dpr);
         ctx.clearRect(0, 0, width, height);
 
-        const padding = { top: 20, right: 20, bottom: 40, left: 48 };
+        const padding = { top: 20, right: 24, bottom: 60, left: 56 };
         const chartWidth = width - padding.left - padding.right;
         const chartHeight = height - padding.top - padding.bottom;
         state.layout = { padding, chartWidth, width, height };
@@ -2733,6 +2733,12 @@
         const yStepRaw = maxValue / 4;
         const yStep = Math.max(20, Math.ceil(yStepRaw / 10) * 10);
 
+        const getPoint = (hourIndex, value) => {
+          const x = padding.left + (hourIndex / (HOURLY_HOURS.length - 1)) * chartWidth;
+          const y = padding.top + chartHeight - (value / maxValue) * chartHeight;
+          return [x, y];
+        };
+
         const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartHeight);
         gradient.addColorStop(0, 'rgba(20, 34, 62, 0.85)');
         gradient.addColorStop(0.5, 'rgba(13, 22, 41, 0.65)');
@@ -2740,7 +2746,7 @@
         ctx.fillStyle = gradient;
         ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight);
 
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
         ctx.lineWidth = 1;
         for (let value = 0; value <= maxValue; value += yStep) {
           const y = padding.top + chartHeight - (value / maxValue) * chartHeight;
@@ -2748,16 +2754,28 @@
           ctx.moveTo(padding.left, y);
           ctx.lineTo(padding.left + chartWidth, y);
           ctx.stroke();
-          ctx.fillStyle = 'rgba(255,255,255,0.45)';
+          ctx.fillStyle = 'rgba(232,235,244,0.65)';
           ctx.font = '11px/1 "Inter",system-ui,sans-serif';
-          ctx.fillText(moneyFmt.format(value).replace(/\sNOK/, ''), 4, y + 4);
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(moneyFmt.format(value).replace(/\sNOK/, ''), padding.left - 10, y);
         }
-
-        const getPoint = (hourIndex, value) => {
-          const x = padding.left + (hourIndex / (HOURLY_HOURS.length - 1)) * chartWidth;
-          const y = padding.top + chartHeight - (value / maxValue) * chartHeight;
-          return [x, y];
-        };
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = 'rgba(232,235,244,0.7)';
+        const labelStep = chartWidth > 500 ? 2 : 3;
+        HOURLY_HOURS.forEach((hour) => {
+          if (hour % labelStep !== 0) return;
+          const [x] = getPoint(hour, 0);
+          ctx.fillText(formatHourLabel(hour).replace('kl ', ''), x, padding.top + chartHeight + 10);
+          ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+          ctx.beginPath();
+          ctx.moveTo(x, padding.top);
+          ctx.lineTo(x, padding.top + chartHeight);
+          ctx.stroke();
+        });
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
 
         const drawSeries = (series, { color, width: lineWidth = 2, dash = [], pointFill = color, pointStroke = '#0d1b2e', glow = false }) => {
           if (!series) return;
