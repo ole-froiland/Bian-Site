@@ -2326,7 +2326,9 @@
         const fallback = hourlyChartState.defaultFocusHour;
         let target = hour;
         if (target == null || Number.isNaN(target)) target = fallback;
-        target = Math.max(0, Math.min(HOURLY_HOURS.length - 1, Math.round(target)));
+        const startHour = hourlyChartState.startHour ?? 0;
+        const endHour = hourlyChartState.endHour ?? (HOURLY_HOURS.length - 1);
+        target = Math.max(startHour, Math.min(endHour, Math.round(target)));
         if (hourlyChartState.focusHour === target) return;
         hourlyChartState.focusHour = target;
         updateHourlyFocus(hourlyChartState);
@@ -2678,15 +2680,6 @@
         return hasValues ? series : null;
       };
 
-      const trimLeadingZeros = (series = []) => {
-        if (!Array.isArray(series)) return null;
-        let firstIndex = series.findIndex((value) => Number(value || 0) > 0);
-        if (firstIndex === -1) firstIndex = 0;
-        if (firstIndex === 0) return series;
-        const trimmed = series.slice(firstIndex);
-        return trimmed.length ? trimmed : series;
-      };
-
       Object.entries(defaultHourlySeriesSeeds).forEach(([seedIso, seedSeries]) => {
         const parsedSeed = parseHourlySeries(seedSeries);
         if (parsedSeed) hourlySeriesCache.set(seedIso, parsedSeed);
@@ -2713,6 +2706,20 @@
         return maxIndex;
       };
 
+      const getSeriesBounds = (series) => {
+        if (!Array.isArray(series) || !series.length) return { start: null, end: null };
+        let start = series.findIndex((value) => Number(value || 0) > 0);
+        if (start === -1) start = null;
+        let end = null;
+        for (let index = series.length - 1; index >= 0; index -= 1) {
+          if (Number(series[index] || 0) > 0) {
+            end = index;
+            break;
+          }
+        }
+        return { start, end };
+      };
+
       const formatHourLabel = (hour) => {
         const safeHour = Math.max(0, Math.min(23, Number(hour) || 0));
         return `kl ${String(safeHour).padStart(2, '0')}`;
@@ -2737,6 +2744,19 @@
         state.layout = { padding, chartWidth, width, height };
 
         const allValues = [...state.current, ...(state.comparison || [])];
+        const boundsList = [state.current, state.comparison]
+          .map(getSeriesBounds)
+          .filter((bounds) => bounds.start != null);
+        let startHour = boundsList.length ? Math.min(...boundsList.map((b) => b.start)) : 0;
+        let endHour = boundsList.length ? Math.max(...boundsList.map((b) => b.end)) : 23;
+        if (!Number.isFinite(startHour)) startHour = 0;
+        if (!Number.isFinite(endHour) || endHour < startHour) endHour = 23;
+        if (endHour - startHour < 2) endHour = Math.min(23, startHour + 2);
+        const hourSpan = Math.max(1, endHour - startHour);
+        state.startHour = startHour;
+        state.endHour = endHour;
+        state.hourSpan = hourSpan;
+
         let maxValue = Math.max(10, ...allValues);
         const niceStep = (() => {
           if (maxValue <= 5000) return 1000;
@@ -2749,7 +2769,9 @@
         maxValue = totalSteps * niceStep;
 
         const getPoint = (hourIndex, value) => {
-          const x = padding.left + (hourIndex / (HOURLY_HOURS.length - 1)) * chartWidth;
+          const clamped = Math.min(Math.max(hourIndex, startHour), endHour);
+          const relative = (clamped - startHour) / hourSpan;
+          const x = padding.left + relative * chartWidth;
           const y = padding.top + chartHeight - (value / maxValue) * chartHeight;
           return [x, y];
         };
@@ -2776,57 +2798,57 @@
           ctx.fillText(moneyFmt.format(value).replace(/\sNOK/, ''), padding.left - 10, y);
         }
         ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-        const labelStep = chartWidth > 600 ? 2 : 3;
-        HOURLY_HOURS.forEach((hour) => {
-          if (hour % labelStep !== 0) return;
+        const desiredLabels = chartWidth > 600 ? 10 : 6;
+        const hourLabelStep = Math.max(1, Math.ceil(hourSpan / desiredLabels));
+        for (let hour = startHour; hour <= endHour; hour += hourLabelStep) {
           const [x] = getPoint(hour, 0);
           ctx.beginPath();
           ctx.moveTo(x, padding.top);
           ctx.lineTo(x, padding.top + chartHeight);
           ctx.stroke();
           ctx.fillStyle = 'rgba(232,235,244,0.7)';
-          ctx.font = '11px/1 \"Inter\",system-ui,sans-serif';
+          ctx.font = '11px/1 "Inter",system-ui,sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';
           ctx.fillText(formatHourLabel(hour).replace('kl ', ''), x, padding.top + chartHeight + 10);
-        });
+        }
         ctx.textAlign = 'left';
         ctx.textBaseline = 'alphabetic';
 
-        const drawSeries = (series, { color, width: lineWidth = 2, dash = [], pointFill = color, pointStroke = '#0d1b2e', glow = false }) => {
-          if (!series) return;
+        const drawSeries = (series, { color, width: lineWidth = 2, dash = [], pointFill = color, pointStroke = '#0d1b2e' }) => {
+          if (!Array.isArray(series)) return;
           ctx.save();
           ctx.strokeStyle = color;
           ctx.lineWidth = lineWidth;
           ctx.setLineDash(dash);
-          ctx.shadowBlur = glow ? 18 : 0;
-          ctx.shadowColor = glow ? color : 'transparent';
-          ctx.beginPath();
-          series.forEach((value, index) => {
-            const [x, y] = getPoint(index, Number(value) || 0);
-            if (index === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          });
-          ctx.stroke();
-          ctx.setLineDash([]);
           ctx.shadowBlur = 0;
           ctx.shadowColor = 'transparent';
+          let started = false;
+          ctx.beginPath();
+          for (let index = startHour; index <= endHour; index += 1) {
+            const numeric = Number(series[index] || 0);
+            const [x, y] = getPoint(index, numeric);
+            if (!started) {
+              ctx.moveTo(x, y);
+              started = true;
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
           series.forEach((value, index) => {
+            if (index < startHour || index > endHour) return;
             const numeric = Number(value) || 0;
             if (numeric <= 0) return;
             const [x, y] = getPoint(index, numeric);
             ctx.beginPath();
             ctx.arc(x, y, index === state.focusHour ? 5 : 4, 0, Math.PI * 2);
-            if (glow) {
-              ctx.shadowBlur = 12;
-              ctx.shadowColor = color;
-            }
             ctx.fillStyle = pointFill;
             ctx.fill();
             ctx.lineWidth = 2;
             ctx.strokeStyle = pointStroke;
             ctx.stroke();
-            ctx.shadowBlur = 0;
           });
       ctx.restore();
     };
@@ -2841,7 +2863,9 @@
         const relativeX = pointerX - padding.left;
         if (relativeX < 0 || relativeX > chartWidth) return;
         const ratio = relativeX / chartWidth;
-        const hour = Math.round(ratio * (HOURLY_HOURS.length - 1));
+        const startHour = hourlyChartState.startHour ?? 0;
+        const span = hourlyChartState.hourSpan ?? (HOURLY_HOURS.length - 1);
+        const hour = Math.round(startHour + ratio * span);
         setHourlyFocusHour(hour);
         if (event.type === 'touchmove') event.preventDefault();
       };
@@ -2935,20 +2959,18 @@
         if (!hourlyCardEl) return;
         const iso = sanitizeIso(date);
         const currentSeries = hourlySeriesCache.get(iso);
-        const trimmedCurrent = Array.isArray(currentSeries) ? trimLeadingZeros(currentSeries) : null;
         const comparisonIso = iso ? sanitizeIso(shiftIsoDate(iso, -7)) : null;
         if (comparisonIso && hourlySeedDates.has(comparisonIso) && hourlySeriesCache.has(comparisonIso)) {
           syncHourlyPayload({ iso: comparisonIso, comparison: true });
         }
-        const rawComparison = comparisonIso ? hourlySeriesCache.get(comparisonIso) : null;
-        const comparisonSeries = Array.isArray(rawComparison) ? trimLeadingZeros(rawComparison) : null;
-        if (!trimmedCurrent) {
+        const comparisonSeries = comparisonIso ? hourlySeriesCache.get(comparisonIso) : null;
+        if (!currentSeries) {
           hourlyCardEl.hidden = true;
           hourlyChartState = null;
           return;
         }
         hourlyCardEl.hidden = false;
-        const hasCurrentData = Array.isArray(trimmedCurrent) && trimmedCurrent.some((value) => Number(value || 0) > 0);
+        const hasCurrentData = Array.isArray(currentSeries) && currentSeries.some((value) => Number(value || 0) > 0);
         if (hourlyEmptyEl) {
           if (hasCurrentData) {
             hourlyEmptyEl.hidden = true;
@@ -2958,11 +2980,11 @@
             hourlyEmptyEl.style.display = 'flex';
           }
         }
-        const defaultFocusHour = pickSeriesFocusHour(trimmedCurrent);
+        const defaultFocusHour = pickSeriesFocusHour(currentSeries);
         const demoFlag = isDemo || hourlySeedDates.has(iso);
         hourlyChartState = {
           date: iso,
-          current: trimmedCurrent,
+          current: currentSeries,
           comparison: comparisonSeries,
           compareIso: comparisonIso,
           focusHour: defaultFocusHour,
