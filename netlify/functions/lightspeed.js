@@ -349,8 +349,18 @@ function normalizeHourValue(value){
   return null;
 }
 
-function buildHourlyProfile(total=0){
-  const weights = [
+function seededNoise(seed, index = 0){
+  const key = `${seed || 'seed'}:${index}`;
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0;
+  }
+  const sine = Math.sin(hash) * 10000;
+  return sine - Math.floor(sine);
+}
+
+function buildHourlyProfile(total=0, { seed='default', weekend=false, lateRush=false } = {}){
+  const baseWeights = [
     0.005,0.005,0.004,0.004,
     0.01,0.015,0.025,0.04,
     0.055,0.065,0.07,0.065,
@@ -358,9 +368,18 @@ function buildHourlyProfile(total=0){
     0.04,0.06,0.075,0.085,
     0.06,0.03,0.01,0.006
   ];
-  const sum = weights.reduce((acc,val)=>acc+val,0);
-  const safeTotal = Number(total) || 0;
-  return weights.map((weight)=> Math.max(0, Math.round((safeTotal * weight) / sum)));
+  const adjusted = baseWeights.map((weight, hour) => {
+    const noise = 0.78 + seededNoise(seed, hour) * 0.44; // 0.78–1.22
+    let value = weight * noise;
+    if (weekend && hour >= 10 && hour <= 20) value *= 1.12;
+    if (!weekend && hour < 8) value *= 0.75;
+    if (lateRush && hour >= 19 && hour <= 22) value *= 1.25;
+    return value;
+  });
+  const sum = adjusted.reduce((acc,val)=>acc+val,0);
+  const safeTotal = Math.max(0, Number(total) || 0);
+  if (!(safeTotal > 0) || !(sum > 0)) return Array.from({ length: 24 }, () => 0);
+  return adjusted.map((weight)=> Math.max(0, Math.round((safeTotal * weight) / sum)));
 }
 
 function formatDateKey(date){
@@ -706,7 +725,11 @@ exports.handler = async (event) => {
       const items = aggregateTopProducts(demoReceipts, metric);
       const daily = summarizeReceiptsByDay(demoReceipts);
       const hourlyByDay = daily.reduce((acc, entry) => {
-        acc[entry.date] = buildHourlyProfile(entry.revenue);
+        const dateObj = normalizeDateValue(entry.date);
+        const day = dateObj ? dateObj.getDay() : null;
+        const weekend = day === 0 || day === 6;
+        const lateRush = day === 5 || day === 6;
+        acc[entry.date] = buildHourlyProfile(entry.revenue, { seed: entry.date, weekend, lateRush });
         return acc;
       }, {});
       const limit = Math.max(1, Math.min(50, Number(q.limit||3)|0));
