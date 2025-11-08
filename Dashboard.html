@@ -1556,17 +1556,17 @@
         <article class="overview-highlight">
           <span class="overview-highlight__eyebrow">Omsetning</span>
           <p class="overview-highlight__value" data-day-revenue>–</p>
-          <p class="overview-highlight__meta" data-day-status data-tone="muted">Henter …</p>
+          <p class="overview-highlight__meta" data-day-status data-tone="muted"></p>
         </article>
         <article class="overview-highlight">
           <span class="overview-highlight__eyebrow">Antall kvitteringer</span>
           <p class="overview-highlight__value" data-day-receipts-value>–</p>
-          <p class="overview-highlight__meta" data-day-receipts-status data-tone="muted">Henter …</p>
+          <p class="overview-highlight__meta" data-day-receipts-status data-tone="muted"></p>
         </article>
         <article class="overview-highlight">
           <span class="overview-highlight__eyebrow">Snitt per kjøp</span>
           <p class="overview-highlight__value" data-day-average>–</p>
-          <p class="overview-highlight__meta" data-day-average-status data-tone="muted">Henter …</p>
+          <p class="overview-highlight__meta" data-day-average-status data-tone="muted"></p>
         </article>
       </div>
       <article class="card chart-card">
@@ -3001,25 +3001,18 @@
           dayAverageEl.textContent = averageSale != null ? moneyFmt.format(averageSale) : '–';
         }
         if (!suppressStatus && dayStatusEl) {
-          dayStatusEl.textContent = isDemo ? 'Viser demo-data' : 'Oppdatert automatisk';
-          dayStatusEl.dataset.tone = isDemo ? 'info' : 'muted';
+          dayStatusEl.textContent = '';
+          dayStatusEl.dataset.tone = 'muted';
         }
         if (dayReceiptsValueEl) {
           dayReceiptsValueEl.textContent = receiptsValue > 0 ? qtyFmt.format(receiptsValue) : '0';
         }
         if (dayReceiptsStatusEl) {
-          if (receiptsValue > 0) {
-            dayReceiptsStatusEl.textContent = 'Oppdatert automatisk';
-            dayReceiptsStatusEl.dataset.tone = 'muted';
-          } else {
-            dayReceiptsStatusEl.textContent = 'Ingen kvitteringer registrert';
-            dayReceiptsStatusEl.dataset.tone = 'warning';
-          }
+          dayReceiptsStatusEl.textContent = receiptsValue > 0 ? '' : 'Ingen kvitteringer registrert';
+          dayReceiptsStatusEl.dataset.tone = receiptsValue > 0 ? 'muted' : 'warning';
         }
         if (dayAverageStatusEl) {
-          dayAverageStatusEl.textContent = receiptsValue > 0
-            ? `${qtyFmt.format(receiptsValue)} kvitteringer`
-            : 'Ingen kvitteringer';
+          dayAverageStatusEl.textContent = receiptsValue > 0 ? `${qtyFmt.format(receiptsValue)} kvitteringer` : 'Ingen kvitteringer';
           dayAverageStatusEl.dataset.tone = receiptsValue > 0 ? 'muted' : 'warning';
         }
         if (cache) {
