@@ -2716,7 +2716,16 @@
           return;
         }
         hourlyCardEl.hidden = false;
-        if (hourlyEmptyEl) hourlyEmptyEl.hidden = true;
+        const hasCurrentData = Array.isArray(currentSeries) && currentSeries.some((value) => Number(value || 0) > 0);
+        if (hourlyEmptyEl) {
+          if (hasCurrentData) {
+            hourlyEmptyEl.hidden = true;
+            hourlyEmptyEl.style.display = 'none';
+          } else {
+            hourlyEmptyEl.hidden = false;
+            hourlyEmptyEl.style.display = 'flex';
+          }
+        }
         const focusHour = pickSeriesFocusHour(currentSeries);
         const demoFlag = isDemo || hourlySeedDates.has(iso);
         hourlyChartState = {
