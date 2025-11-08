@@ -361,14 +361,15 @@ function seededNoise(seed, index = 0){
 
 function buildHourlyProfile(total=0, { seed='default', weekend=false, lateRush=false } = {}){
   const baseWeights = [
-    0.005,0.005,0.004,0.004,
-    0.01,0.015,0.025,0.04,
-    0.055,0.065,0.07,0.065,
-    0.055,0.045,0.04,0.035,
-    0.04,0.06,0.075,0.085,
-    0.06,0.03,0.01,0.006
+    0,0,0,0,0,0,
+    0.015,0.03,
+    0.05,0.065,0.075,0.07,
+    0.06,0.05,0.045,0.04,
+    0.045,0.06,0.08,0.085,
+    0.065,0.035,0.015,0.01
   ];
   const adjusted = baseWeights.map((weight, hour) => {
+    if (weight === 0) return 0;
     const noise = 0.78 + seededNoise(seed, hour) * 0.44; // 0.78–1.22
     let value = weight * noise;
     if (weekend && hour >= 10 && hour <= 20) value *= 1.12;
