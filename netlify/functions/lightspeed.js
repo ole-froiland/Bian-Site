@@ -472,10 +472,15 @@ function summarizePeriodSalesFromData(data={}){
           null
         );
       }
-      if (hourIndex == null || hourIndex < 0 || hourIndex > 23) hourIndex = 0;
-      const hourlySeries = hourlyTotals.get(dayKey) || Array.from({ length: 24 }, () => 0);
-      hourlySeries[hourIndex] += netTotal;
-      hourlyTotals.set(dayKey, hourlySeries);
+      if (!(Number.isFinite(hourIndex) && hourIndex >= 0 && hourIndex < 24)) {
+        hourIndex = null;
+      }
+      if (hourIndex != null) {
+        const safeHour = Math.floor(hourIndex);
+        const hourlySeries = hourlyTotals.get(dayKey) || Array.from({ length: 24 }, () => 0);
+        hourlySeries[safeHour] += netTotal;
+        hourlyTotals.set(dayKey, hourlySeries);
+      }
     }
 
     for (const record of lineRecords) {
