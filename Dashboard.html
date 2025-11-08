@@ -2185,12 +2185,23 @@
           dayAverageDeltaBadgeEl.classList.remove('trend-positive', 'trend-negative');
           return;
         }
-        const prevAvg = prevRevenue / prevReceipts;
-        const delta = (avg - prevAvg) / prevAvg;
-        const deltaLabel = percentFmt.format(delta);
-        dayAverageDeltaBadgeEl.textContent = `${delta >= 0 ? '+' : ''}${deltaLabel} vs forrige uke`;
-        dayAverageDeltaBadgeEl.classList.toggle('trend-positive', delta >= 0);
-        dayAverageDeltaBadgeEl.classList.toggle('trend-negative', delta < 0);
+      const prevAvg = prevRevenue / prevReceipts;
+      const delta = (avg - prevAvg) / prevAvg;
+      const deltaLabel = percentFmt.format(delta);
+      dayAverageDeltaBadgeEl.textContent = `${delta >= 0 ? '+' : ''}${deltaLabel} vs forrige uke`;
+      dayAverageDeltaBadgeEl.classList.toggle('trend-positive', delta >= 0);
+      dayAverageDeltaBadgeEl.classList.toggle('trend-negative', delta < 0);
+    };
+
+      const setHourlyFocusHour = (hour = null) => {
+        if (!hourlyChartState) return;
+        const fallback = hourlyChartState.defaultFocusHour;
+        let target = hour;
+        if (target == null || Number.isNaN(target)) target = fallback;
+        target = Math.max(0, Math.min(HOURLY_HOURS.length - 1, Math.round(target)));
+        if (hourlyChartState.focusHour === target) return;
+        hourlyChartState.focusHour = target;
+        updateHourlyFocus(hourlyChartState);
       };
       const updateNetHighlight = () => {
         const net = latestBankBalance - dueAmountNext3Days;
@@ -2577,6 +2588,7 @@
         const padding = { top: 20, right: 20, bottom: 40, left: 48 };
         const chartWidth = width - padding.left - padding.right;
         const chartHeight = height - padding.top - padding.bottom;
+        state.layout = { padding, chartWidth, width, height };
 
         const allValues = [...state.current, ...(state.comparison || [])];
         const maxValue = Math.max(20, ...allValues);
@@ -2634,8 +2646,38 @@
             ctx.strokeStyle = pointStroke;
             ctx.stroke();
           });
-          ctx.restore();
-        };
+      ctx.restore();
+    };
+
+      const handleHourlyPointer = (event) => {
+        if (!hourlyCanvas || !hourlyChartState?.layout) return;
+        const { padding, chartWidth } = hourlyChartState.layout;
+        const rect = hourlyCanvas.getBoundingClientRect();
+        const client = event.touches ? event.touches[0] : event;
+        if (!client) return;
+        const pointerX = client.clientX - rect.left;
+        const relativeX = pointerX - padding.left;
+        if (relativeX < 0 || relativeX > chartWidth) return;
+        const ratio = relativeX / chartWidth;
+        const hour = Math.round(ratio * (HOURLY_HOURS.length - 1));
+        setHourlyFocusHour(hour);
+        if (event.type === 'touchmove') event.preventDefault();
+      };
+
+      const handleHourlyPointerLeave = () => {
+        setHourlyFocusHour(null);
+      };
+
+      const registerHourlyCanvasEvents = () => {
+        if (!hourlyCanvas || hourlyCanvas.dataset.interactive === '1') return;
+        hourlyCanvas.addEventListener('mousemove', handleHourlyPointer);
+        hourlyCanvas.addEventListener('click', handleHourlyPointer);
+        hourlyCanvas.addEventListener('mouseleave', handleHourlyPointerLeave);
+        hourlyCanvas.addEventListener('touchmove', handleHourlyPointer, { passive: false });
+        hourlyCanvas.addEventListener('touchend', handleHourlyPointerLeave);
+        hourlyCanvas.dataset.interactive = '1';
+      };
+      registerHourlyCanvasEvents();
 
         drawSeries(state.comparison, {
           color: 'rgba(255,255,255,0.45)',
@@ -2726,19 +2768,21 @@
             hourlyEmptyEl.style.display = 'flex';
           }
         }
-        const focusHour = pickSeriesFocusHour(currentSeries);
+        const defaultFocusHour = pickSeriesFocusHour(currentSeries);
         const demoFlag = isDemo || hourlySeedDates.has(iso);
         hourlyChartState = {
           date: iso,
           current: currentSeries,
           comparison: comparisonSeries,
           compareIso: comparisonIso,
-          focusHour,
+          focusHour: defaultFocusHour,
+          defaultFocusHour,
           isDemo: demoFlag,
+          layout: null,
         };
         drawHourlyChart(hourlyChartState);
         updateHourlyFocus(hourlyChartState);
-      };
+     };
 
       const ingestHourlySeries = (hourlyMap = {}) => {
         if (!hourlyMap || typeof hourlyMap !== 'object') return;
