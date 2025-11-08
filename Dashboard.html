@@ -1054,12 +1054,15 @@
     .ai-hourly-card{
       position:relative;
       overflow:hidden;
-      border-radius:24px;
-      padding:clamp(1.75rem,4vw,2.5rem);
-      border:1px solid rgba(255,255,255,0.08);
-      background:linear-gradient(150deg,#141821 0%,#1b1f29 55%,#0e1116 100%);
-      box-shadow:0 35px 80px rgba(3,7,18,0.65);
-      backdrop-filter:blur(28px);
+      border-radius:30px;
+      padding:clamp(1.8rem,4vw,3rem);
+      border:1px solid rgba(133,211,255,0.2);
+      background:
+        radial-gradient(circle at 15% -10%,rgba(255,147,255,0.25),transparent 45%),
+        radial-gradient(circle at 80% -15%,rgba(51,190,255,0.3),transparent 45%),
+        linear-gradient(135deg,#090e1a 0%,#0f1728 45%,#05080f 100%);
+      box-shadow:0 45px 120px rgba(4,9,20,0.8);
+      backdrop-filter:blur(30px);
       isolation:isolate;
     }
     .ai-hourly-card::before,
@@ -1072,15 +1075,15 @@
       z-index:0;
     }
     .ai-hourly-card::before{
-      background:
-        radial-gradient(circle at 18% 15%,rgba(255,255,255,0.12),transparent 55%),
-        radial-gradient(circle at 82% -10%,rgba(255,119,255,0.12),transparent 45%);
-      opacity:0.9;
+      background:linear-gradient(180deg,rgba(255,255,255,0.08),transparent 50%);
+      mix-blend-mode:screen;
+      opacity:0.75;
     }
     .ai-hourly-card::after{
-      background:linear-gradient(0deg,rgba(255,255,255,0.06),transparent 45%);
-      mix-blend-mode:screen;
-      opacity:0.35;
+      background:
+        radial-gradient(circle at 0% 100%,rgba(0,0,0,0.55),transparent 50%),
+        radial-gradient(circle at 100% 0%,rgba(255,255,255,0.08),transparent 50%);
+      opacity:0.6;
     }
     .ai-hourly-card>*{position:relative;z-index:1;}
     .ai-hourly-card__header{
@@ -1093,54 +1096,57 @@
     .ai-hourly-card__eyebrow{
       display:inline-flex;
       align-items:center;
-      padding:0.2rem 0.75rem;
+      padding:0.25rem 0.9rem;
       border-radius:999px;
       font-size:0.75rem;
       text-transform:uppercase;
-      letter-spacing:0.12em;
-      background:rgba(255,255,255,0.08);
-      border:1px solid rgba(255,255,255,0.12);
-      color:rgba(234,234,234,0.85);
-      margin-bottom:0.5rem;
+      letter-spacing:0.13em;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.16);
+      color:rgba(234,241,255,0.88);
+      margin-bottom:0.6rem;
     }
     .ai-hourly-card__header h2{
-      font-size:1.25rem;
-      letter-spacing:0.04em;
-      color:#f4f6fb;
+      font-size:1.3rem;
+      letter-spacing:0.08em;
+      color:#f9fbff;
+      text-transform:uppercase;
     }
     .ai-hourly-card__sub{
-      color:rgba(255,255,255,0.65);
-      margin-top:0.25rem;
-      font-size:0.9rem;
+      color:rgba(255,255,255,0.68);
+      margin-top:0.3rem;
+      font-size:0.92rem;
     }
     .ai-hourly-card__meta{
       display:flex;
       flex-direction:column;
       align-items:flex-end;
-      gap:0.5rem;
-      min-width:176px;
+      gap:0.65rem;
+      min-width:190px;
     }
     .ai-hourly-card__tag{
-      padding:0.25rem 0.85rem;
+      padding:0.3rem 1rem;
       border-radius:999px;
-      font-size:0.78rem;
+      font-size:0.8rem;
       font-weight:600;
-      letter-spacing:0.04em;
-      background:rgba(0,0,0,0.35);
-      border:1px solid rgba(255,255,255,0.15);
-      color:#eaeaea;
+      letter-spacing:0.05em;
+      background:rgba(0,10,20,0.65);
+      border:1px solid rgba(255,255,255,0.2);
+      color:#e1fdfb;
+      box-shadow:0 8px 26px rgba(3,10,18,0.55);
     }
     .ai-hourly-card__legend{
       display:flex;
-      gap:1rem;
+      gap:1.2rem;
       flex-wrap:wrap;
-      font-size:0.85rem;
+      font-size:0.86rem;
       color:rgba(255,255,255,0.75);
     }
     .ai-hourly-card__legend span{
       display:inline-flex;
       align-items:center;
-      gap:0.35rem;
+      gap:0.38rem;
+      font-weight:500;
     }
     .ai-hourly-card__dot{
       width:0.55rem;
@@ -1148,17 +1154,18 @@
       border-radius:999px;
     }
     .ai-hourly-card__dot--current{
-      background:#63e0ff;
-      box-shadow:0 0 16px rgba(99,224,255,0.7);
+      background:#64e3ff;
+      box-shadow:0 0 18px rgba(100,227,255,0.8);
     }
     .ai-hourly-card__dot--previous{
-      background:rgba(255,255,255,0.4);
+      background:rgba(255,255,255,0.45);
     }
     .ai-hourly-card__chart{
       margin-top:var(--space-3);
       position:relative;
-      border-radius:18px;
+      border-radius:22px;
       overflow:hidden;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,0.04);
     }
     .ai-hourly-card__chart canvas{
       width:100%;
@@ -1172,7 +1179,7 @@
       align-items:center;
       justify-content:center;
       font-weight:600;
-      color:rgba(255,255,255,0.8);
+      color:rgba(255,255,255,0.82);
       backdrop-filter:blur(12px);
       background:rgba(8,11,20,0.65);
     }
@@ -1180,53 +1187,62 @@
       margin-top:var(--space-3);
       display:flex;
       flex-direction:column;
-      gap:1rem;
-    }
-    .ai-hourly-card__focus{
-      width:100%;
-      display:grid;
-      grid-template-columns:minmax(150px,1.2fr) repeat(2,minmax(120px,0.85fr)) auto;
       gap:1.2rem;
-      align-items:center;
     }
-    @media (max-width:900px){
-      .ai-hourly-card__focus{
-        grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-      }
-      .ai-hourly-card__note{text-align:left;}
-      .ai-hourly-card__pill{justify-self:flex-start;}
+    .ai-hourly-card__stats{
+      display:grid;
+      grid-template-columns:minmax(180px,1.3fr) repeat(2,minmax(140px,0.9fr)) auto;
+      gap:1.3rem;
+      align-items:center;
+      padding:1.1rem 1.4rem;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:linear-gradient(120deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
+    }
+    .ai-hourly-card__stat{
+      display:flex;
+      flex-direction:column;
+      gap:0.25rem;
+    }
+    .ai-hourly-card__stat-label{
+      font-size:0.78rem;
+      text-transform:uppercase;
+      letter-spacing:0.18em;
+      color:rgba(255,255,255,0.55);
     }
     .ai-hourly-card__focus-label{
       font-weight:600;
-      color:#f0f4ff;
+      color:#f3f6ff;
       letter-spacing:0.04em;
     }
-    .ai-hourly-card__focus-metric{
-      display:flex;
-      flex-direction:column;
-      gap:0.2rem;
-      color:rgba(255,255,255,0.65);
-    }
-    .ai-hourly-card__focus-metric strong{
-      font-size:1.35rem;
+    .ai-hourly-card__stat-value{
+      font-size:1.4rem;
       color:#eaf8ff;
       font-weight:700;
     }
     .ai-hourly-card__pill{
       justify-self:flex-end;
-      padding:0.35rem 1rem;
+      padding:0.45rem 1.1rem;
       border-radius:999px;
-      background:linear-gradient(120deg,rgba(0,255,173,0.15),rgba(0,255,136,0.35));
-      color:#9effd8;
+      background:linear-gradient(120deg,rgba(0,255,173,0.15),rgba(0,255,136,0.4));
+      color:#b7ffe4;
       border:1px solid rgba(0,255,173,0.45);
       font-weight:600;
-      font-size:0.9rem;
+      font-size:0.92rem;
       text-align:center;
-      min-width:110px;
+      min-width:120px;
+      box-shadow:0 12px 35px rgba(7,217,158,0.3);
+    }
+    @media (max-width:900px){
+      .ai-hourly-card__stats{
+        grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      }
+      .ai-hourly-card__pill{justify-self:flex-start;}
+      .ai-hourly-card__note{text-align:left;}
     }
     .ai-hourly-card__note{
-      color:rgba(255,255,255,0.75);
-      font-size:0.9rem;
+      color:rgba(255,255,255,0.78);
+      font-size:0.92rem;
       text-align:right;
     }
     .ai-hourly-card[data-tone="positive"] .ai-hourly-card__tag{
@@ -1674,15 +1690,18 @@
           <div class="ai-hourly-card__empty" data-hourly-empty hidden>Ingen timetall tilgjengelig ennå.</div>
         </div>
         <footer class="ai-hourly-card__footer">
-          <div class="ai-hourly-card__focus">
-            <p class="ai-hourly-card__focus-label" data-hourly-focus-label>–</p>
-            <div class="ai-hourly-card__focus-metric">
-              <span>I dag</span>
-              <strong data-hourly-focus-current>–</strong>
+          <div class="ai-hourly-card__stats">
+            <div class="ai-hourly-card__stat ai-hourly-card__stat--time">
+              <span class="ai-hourly-card__stat-label">Tidspunkt</span>
+              <p class="ai-hourly-card__focus-label" data-hourly-focus-label>–</p>
             </div>
-            <div class="ai-hourly-card__focus-metric">
-              <span>Samme dag forrige uke</span>
-              <strong data-hourly-focus-previous>–</strong>
+            <div class="ai-hourly-card__stat">
+              <span class="ai-hourly-card__stat-label">I dag</span>
+              <strong class="ai-hourly-card__stat-value" data-hourly-focus-current>–</strong>
+            </div>
+            <div class="ai-hourly-card__stat">
+              <span class="ai-hourly-card__stat-label">Samme dag forrige uke</span>
+              <strong class="ai-hourly-card__stat-value" data-hourly-focus-previous>–</strong>
             </div>
             <span class="ai-hourly-card__pill" data-hourly-focus-delta>–</span>
           </div>
