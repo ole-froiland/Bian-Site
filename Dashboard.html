@@ -2906,18 +2906,17 @@
       registerHourlyCanvasEvents();
 
         drawSeries(state.comparison, {
-          color: 'rgba(255,255,255,0.35)',
+          color: 'rgba(255,255,255,0.32)',
           lineWidth: 2,
           dash: [6, 6],
-          pointFill: 'rgba(255,255,255,0.5)',
+          pointFill: 'rgba(255,255,255,0.45)',
           pointStroke: 'rgba(9,14,24,0.6)',
         });
         drawSeries(state.current, {
-          color: '#63e0ff',
-          lineWidth: 3,
-          pointFill: '#63e0ff',
+          color: '#4fa7ff',
+          lineWidth: 2.6,
+          pointFill: '#4fa7ff',
           pointStroke: 'rgba(8,13,24,0.85)',
-          glow: true,
         });
 
         ctx.restore();
