@@ -29,37 +29,42 @@
   <style>
     :root{
       color-scheme:light;
-      --bg-from:#f7f8fc;
-      --bg-to:#eef1f7;
+      --bg-from:#f6f7fb;
+      --bg-to:#edf1f8;
       --surface:#ffffff;
-      --surface-muted:rgba(255,255,255,0.72);
-      --surface-elevated:#ffffff;
-      --surface-glass:rgba(255,255,255,0.82);
-      --surface-ghost:rgba(255,255,255,0.6);
-      --primary:#6C63FF;
-      --primary-hover:#5A53E6;
-      --primary-pressed:#4D47CC;
-      --primary-border:rgba(108,99,255,0.35);
+      --surface-muted:rgba(255,255,255,0.9);
+      --surface-elevated:#fafbff;
+      --surface-glass:rgba(255,255,255,0.85);
+      --surface-ghost:rgba(247,249,254,0.75);
+      --primary:#5d63ff;
+      --primary-hover:#4b52e0;
+      --primary-pressed:#3f45c6;
+      --primary-border:rgba(93,99,255,0.3);
       --accent-positive:#12b67a;
       --accent-negative:#f05454;
-      --highlight-bg:linear-gradient(135deg,#fdfefe,#f2f6fc);
+      --accent-neutral:#7c8fac;
+      --highlight-bg:linear-gradient(140deg,#ffffff 0%,#f5f7fb 100%);
       --highlight-border:rgba(15,23,42,0.08);
-      --highlight-shadow:0 20px 45px rgba(15,23,42,0.12);
-      --highlight-shadow-hover:0 28px 55px rgba(15,23,42,0.16);
-      --highlight-border-hover:rgba(108,99,255,0.3);
+      --highlight-shadow:0 24px 55px rgba(15,23,42,0.12);
+      --highlight-shadow-hover:0 32px 68px rgba(15,23,42,0.16);
+      --highlight-border-hover:rgba(93,99,255,0.28);
       --text:#0F172A;
       --text-strong:#0F172A;
-      --text-muted:#475569;
-      --text-subtle:#64748B;
+      --text-muted:#4b5566;
+      --text-soft:#7b879c;
       --text-inverse:#F8FAFC;
       --border:#E2E8F0;
-      --border-subtle:rgba(148,163,184,0.4);
-      --shadow-xs:0 8px 20px rgba(15,23,42,0.08);
-      --shadow-sm:0 12px 28px rgba(15,23,42,0.12);
-      --shadow-md:0 18px 42px rgba(15,23,42,0.12);
-      --shadow-lg:0 28px 64px rgba(15,23,42,0.16);
-      --ring:0 0 0 3px rgba(108,99,255,0.38);
+      --border-subtle:rgba(148,163,184,0.35);
+      --shadow-xs:0 10px 26px rgba(15,23,42,0.08);
+      --shadow-sm:0 16px 32px rgba(15,23,42,0.12);
+      --shadow-md:0 24px 48px rgba(15,23,42,0.16);
+      --shadow-lg:0 40px 80px rgba(15,23,42,0.18);
+      --ring:0 0 0 3px rgba(93,99,255,0.32);
       --ring-offset:0 0 0 5px rgba(255,255,255,0.85);
+      --chart-grid:rgba(15,23,42,0.08);
+      --chart-grid-strong:rgba(15,23,42,0.12);
+      --chart-panel-top:#eef3fb;
+      --chart-panel-bottom:#dfe7f5;
       --radius-sm:0.75rem;
       --radius-md:1rem;
       --radius-lg:1.5rem;
@@ -76,21 +81,22 @@
       --bg-from:#0b1020;
       --bg-to:#0b1222;
       --surface:#0f172a;
-      --surface-muted:rgba(15,23,42,0.7);
+      --surface-muted:rgba(15,23,42,0.8);
       --surface-elevated:#111c32;
-      --surface-glass:rgba(15,23,42,0.8);
-      --surface-ghost:rgba(15,23,42,0.62);
+      --surface-glass:rgba(15,23,42,0.82);
+      --surface-ghost:rgba(15,23,42,0.65);
       --accent-positive:#00f4c5;
       --accent-negative:#f97070;
+      --accent-neutral:#a0a8c0;
       --highlight-bg:linear-gradient(145deg,#141821,#1b1f29);
-      --highlight-border:rgba(255,255,255,0.07);
-      --highlight-shadow:0 18px 44px rgba(0,0,0,0.4);
-      --highlight-shadow-hover:0 24px 54px rgba(0,0,0,0.48);
-      --highlight-border-hover:rgba(255,255,255,0.12);
+      --highlight-border:rgba(255,255,255,0.08);
+      --highlight-shadow:0 18px 44px rgba(0,0,0,0.55);
+      --highlight-shadow-hover:0 32px 64px rgba(0,0,0,0.65);
+      --highlight-border-hover:rgba(255,255,255,0.14);
       --text:#E2E8F0;
       --text-strong:#F8FAFC;
       --text-muted:#94A3B8;
-      --text-subtle:#7C8FAC;
+      --text-soft:#7C8FAC;
       --text-inverse:#0F172A;
       --border:#1f2937;
       --border-subtle:rgba(30,41,59,0.68);
@@ -99,6 +105,10 @@
       --shadow-md:0 24px 54px rgba(2,6,23,0.6);
       --shadow-lg:0 32px 80px rgba(2,6,23,0.66);
       --ring-offset:0 0 0 4px rgba(15,23,42,0.85);
+      --chart-grid:rgba(255,255,255,0.12);
+      --chart-grid-strong:rgba(255,255,255,0.18);
+      --chart-panel-top:#132238;
+      --chart-panel-bottom:#0b111f;
     }
     *,*::before,*::after{box-sizing:border-box;}
     html{background:var(--bg-from);}
@@ -1004,15 +1014,15 @@
     .overview-highlights{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-      gap:16px;
-      margin-bottom:8px;
+      gap:clamp(16px,3vw,28px);
+      margin-bottom:clamp(16px,3vw,32px);
     }
-    .overview-highlights + .overview-highlights{margin-top:8px;}
+    .overview-highlights + .overview-highlights{margin-top:clamp(16px,2vw,28px);}
     .overview-highlight{
       background:var(--highlight-bg);
       border:1px solid var(--highlight-border);
       border-radius:16px;
-      padding:24px;
+      padding:clamp(20px,3vw,28px);
       min-height:160px;
       display:flex;
       flex-direction:column;
@@ -1039,6 +1049,8 @@
       font-size:2.1rem;
       font-weight:700;
       color:var(--text-strong);
+      font-variant-numeric:tabular-nums;
+      font-feature-settings:"tnum";
     }
     .overview-highlight__value.positive{color:var(--accent-positive);}
     .overview-highlight__value.negative{color:var(--accent-negative);}
@@ -1074,6 +1086,12 @@
       box-shadow:var(--highlight-shadow);
       backdrop-filter:blur(30px);
       isolation:isolate;
+      transition:transform var(--transition),box-shadow var(--transition),border-color var(--transition);
+    }
+    .ai-hourly-card:hover{
+      transform:translateY(-6px);
+      border-color:var(--highlight-border-hover);
+      box-shadow:var(--highlight-shadow-hover);
     }
     .ai-hourly-card::before,
     .ai-hourly-card::after{
@@ -1091,9 +1109,20 @@
     }
     .ai-hourly-card::after{
       background:
-        radial-gradient(circle at 0% 100%,rgba(0,0,0,0.35),transparent 60%),
-        radial-gradient(circle at 100% 0%,rgba(255,255,255,0.04),transparent 55%);
-      opacity:0.4;
+        radial-gradient(circle at 0% 90%,rgba(0,0,0,0.16),transparent 60%),
+        radial-gradient(circle at 100% 0%,rgba(255,255,255,0.03),transparent 55%);
+      opacity:0.35;
+    }
+    body[data-theme="dark"] .ai-hourly-card{
+      background:linear-gradient(135deg,#0a101d 0%,#111b2f 60%,#090f1b 100%);
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow:0 45px 120px rgba(4,9,20,0.8);
+    }
+    body[data-theme="dark"] .ai-hourly-card::after{
+      background:
+        radial-gradient(circle at 0% 100%,rgba(0,0,0,0.45),transparent 55%),
+        radial-gradient(circle at 100% 0%,rgba(255,255,255,0.05),transparent 55%);
+      opacity:0.5;
     }
     .ai-hourly-card>*{position:relative;z-index:1;}
     .ai-hourly-card__header{
@@ -1111,9 +1140,9 @@
       font-size:0.75rem;
       text-transform:uppercase;
       letter-spacing:0.13em;
-      background:rgba(255,255,255,0.06);
-      border:1px solid rgba(255,255,255,0.16);
-      color:rgba(234,241,255,0.88);
+      background:var(--surface-ghost);
+      border:1px solid var(--border-subtle);
+      color:var(--text-muted);
       margin-bottom:0.6rem;
     }
     .ai-hourly-card__header h2{
@@ -1144,6 +1173,12 @@
       border:1px solid var(--border-subtle);
       color:var(--text);
       box-shadow:0 8px 26px rgba(3,10,18,0.15);
+    }
+    body[data-theme="dark"] .ai-hourly-card__tag{
+      background:rgba(0,10,20,0.65);
+      border:1px solid rgba(255,255,255,0.2);
+      color:#e1fdfb;
+      box-shadow:0 8px 26px rgba(3,10,18,0.55);
     }
     .ai-hourly-card__legend{
       display:flex;
@@ -1209,6 +1244,11 @@
       background:var(--surface);
       box-shadow:var(--shadow-xs);
     }
+    body[data-theme="dark"] .ai-hourly-card__stats{
+      background:rgba(15,23,42,0.5);
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow:none;
+    }
     .ai-hourly-card__stat{
       display:flex;
       flex-direction:column;
@@ -1229,6 +1269,8 @@
       font-size:1.4rem;
       color:var(--text-strong);
       font-weight:700;
+      font-variant-numeric:tabular-nums;
+      font-feature-settings:"tnum";
     }
     .ai-hourly-card__pill{
       justify-self:flex-end;
@@ -1242,6 +1284,12 @@
       text-align:center;
       min-width:120px;
       box-shadow:0 12px 35px rgba(18,182,122,0.28);
+    }
+    body[data-theme="dark"] .ai-hourly-card__pill{
+      color:#c5ffe8;
+      background:linear-gradient(120deg,rgba(16,141,101,0.3),rgba(0,255,173,0.45));
+      border:1px solid rgba(0,255,173,0.45);
+      box-shadow:0 12px 35px rgba(7,217,158,0.3);
     }
     @media (max-width:900px){
       .ai-hourly-card__stats{
@@ -2754,6 +2802,14 @@
         const chartHeight = height - padding.top - padding.bottom;
         state.layout = { padding, chartWidth, width, height };
 
+        const themeRoot = document.body || document.documentElement;
+        const styles = window.getComputedStyle(themeRoot);
+        const chartPanelTop = styles.getPropertyValue('--chart-panel-top').trim() || 'rgba(20,34,62,0.85)';
+        const chartPanelBottom = styles.getPropertyValue('--chart-panel-bottom').trim() || 'rgba(7,11,20,0.85)';
+        const chartGridColor = styles.getPropertyValue('--chart-grid').trim() || 'rgba(255,255,255,0.08)';
+        const chartGridStrong = styles.getPropertyValue('--chart-grid-strong').trim() || 'rgba(255,255,255,0.12)';
+        const axisLabelColor = styles.getPropertyValue('--text-soft').trim() || 'rgba(232,235,244,0.65)';
+
         const allValues = [...state.current, ...(state.comparison || [])];
         const boundsList = [state.current, state.comparison]
           .map(getSeriesBounds)
@@ -2788,13 +2844,12 @@
         };
 
         const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartHeight);
-        gradient.addColorStop(0, 'rgba(20, 34, 62, 0.85)');
-        gradient.addColorStop(0.5, 'rgba(13, 22, 41, 0.65)');
-        gradient.addColorStop(1, 'rgba(7, 11, 20, 0.85)');
+        gradient.addColorStop(0, chartPanelTop);
+        gradient.addColorStop(1, chartPanelBottom);
         ctx.fillStyle = gradient;
         ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight);
 
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.strokeStyle = chartGridColor;
         ctx.lineWidth = 1;
         for (let value = 0; value <= maxValue; value += niceStep) {
           const y = padding.top + chartHeight - (value / maxValue) * chartHeight;
@@ -2802,7 +2857,7 @@
           ctx.moveTo(padding.left, y);
           ctx.lineTo(padding.left + chartWidth, y);
           ctx.stroke();
-          ctx.fillStyle = 'rgba(232,235,244,0.65)';
+          ctx.fillStyle = axisLabelColor;
           ctx.font = '11px/1 "Inter",system-ui,sans-serif';
           ctx.textAlign = 'right';
           ctx.textBaseline = 'middle';
@@ -2815,7 +2870,7 @@
             ctx.fillText(label, padding.left - 10, y);
           }
         }
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.strokeStyle = chartGridStrong;
         const desiredLabels = chartWidth > 600 ? 10 : 6;
         const hourLabelStep = Math.max(1, Math.ceil(hourSpan / desiredLabels));
         for (let hour = startHour; hour <= endHour; hour += hourLabelStep) {
@@ -2824,7 +2879,7 @@
           ctx.moveTo(x, padding.top);
           ctx.lineTo(x, padding.top + chartHeight);
           ctx.stroke();
-          ctx.fillStyle = 'rgba(232,235,244,0.7)';
+          ctx.fillStyle = axisLabelColor;
           ctx.font = '11px/1 "Inter",system-ui,sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';
