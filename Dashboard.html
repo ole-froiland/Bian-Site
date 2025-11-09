@@ -1119,11 +1119,11 @@
     .ai-hourly-card__header h2{
       font-size:1.3rem;
       letter-spacing:0.08em;
-      color:#f9fbff;
+      color:var(--text-strong);
       text-transform:uppercase;
     }
     .ai-hourly-card__sub{
-      color:rgba(255,255,255,0.68);
+      color:var(--text-muted);
       margin-top:0.3rem;
       font-size:0.92rem;
     }
@@ -1140,17 +1140,17 @@
       font-size:0.8rem;
       font-weight:600;
       letter-spacing:0.05em;
-      background:rgba(0,10,20,0.65);
-      border:1px solid rgba(255,255,255,0.2);
-      color:#e1fdfb;
-      box-shadow:0 8px 26px rgba(3,10,18,0.55);
+      background:var(--surface-ghost);
+      border:1px solid var(--border-subtle);
+      color:var(--text);
+      box-shadow:0 8px 26px rgba(3,10,18,0.15);
     }
     .ai-hourly-card__legend{
       display:flex;
       gap:1.2rem;
       flex-wrap:wrap;
       font-size:0.86rem;
-      color:rgba(255,255,255,0.75);
+      color:var(--text);
     }
     .ai-hourly-card__legend span{
       display:inline-flex;
@@ -1164,11 +1164,11 @@
       border-radius:999px;
     }
     .ai-hourly-card__dot--current{
-      background:#64e3ff;
-      box-shadow:0 0 18px rgba(100,227,255,0.8);
+      background:#4fa7ff;
+      box-shadow:0 0 12px rgba(79,167,255,0.4);
     }
     .ai-hourly-card__dot--previous{
-      background:rgba(255,255,255,0.45);
+      background:rgba(120,126,148,0.5);
     }
     .ai-hourly-card__chart{
       margin-top:var(--space-3);
@@ -1205,8 +1205,9 @@
       align-items:center;
       padding:1.1rem 1.4rem;
       border-radius:20px;
-      border:1px solid rgba(255,255,255,0.08);
-      background:linear-gradient(120deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));
+      border:1px solid var(--border-subtle);
+      background:var(--surface);
+      box-shadow:var(--shadow-xs);
     }
     .ai-hourly-card__stat{
       display:flex;
@@ -1217,30 +1218,30 @@
       font-size:0.78rem;
       text-transform:uppercase;
       letter-spacing:0.18em;
-      color:rgba(255,255,255,0.55);
+      color:var(--text-muted);
     }
     .ai-hourly-card__focus-label{
       font-weight:600;
-      color:#f3f6ff;
+      color:var(--text-strong);
       letter-spacing:0.04em;
     }
     .ai-hourly-card__stat-value{
       font-size:1.4rem;
-      color:#eaf8ff;
+      color:var(--text-strong);
       font-weight:700;
     }
     .ai-hourly-card__pill{
       justify-self:flex-end;
       padding:0.45rem 1.1rem;
       border-radius:999px;
-      background:linear-gradient(120deg,rgba(0,255,173,0.15),rgba(0,255,136,0.4));
-      color:#b7ffe4;
-      border:1px solid rgba(0,255,173,0.45);
+      background:linear-gradient(120deg,rgba(18,182,122,0.18),rgba(0,201,147,0.4));
+      color:#0c5138;
+      border:1px solid rgba(18,182,122,0.4);
       font-weight:600;
       font-size:0.92rem;
       text-align:center;
       min-width:120px;
-      box-shadow:0 12px 35px rgba(7,217,158,0.3);
+      box-shadow:0 12px 35px rgba(18,182,122,0.28);
     }
     @media (max-width:900px){
       .ai-hourly-card__stats{
@@ -1250,7 +1251,7 @@
       .ai-hourly-card__note{text-align:left;}
     }
     .ai-hourly-card__note{
-      color:rgba(255,255,255,0.78);
+      color:var(--text-muted);
       font-size:0.92rem;
       text-align:right;
     }
