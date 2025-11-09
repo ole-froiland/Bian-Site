@@ -1069,12 +1069,9 @@
       overflow:hidden;
       border-radius:30px;
       padding:clamp(1.8rem,4vw,3rem);
-      border:1px solid rgba(133,211,255,0.2);
-      background:
-        radial-gradient(circle at 15% -10%,rgba(255,147,255,0.25),transparent 45%),
-        radial-gradient(circle at 80% -15%,rgba(51,190,255,0.3),transparent 45%),
-        linear-gradient(135deg,#090e1a 0%,#0f1728 45%,#05080f 100%);
-      box-shadow:0 45px 120px rgba(4,9,20,0.8);
+      border:1px solid var(--highlight-border);
+      background:var(--highlight-bg);
+      box-shadow:var(--highlight-shadow);
       backdrop-filter:blur(30px);
       isolation:isolate;
     }
@@ -1088,15 +1085,15 @@
       z-index:0;
     }
     .ai-hourly-card::before{
-      background:linear-gradient(180deg,rgba(255,255,255,0.08),transparent 50%);
+      background:linear-gradient(180deg,rgba(255,255,255,0.05),transparent 55%);
       mix-blend-mode:screen;
-      opacity:0.75;
+      opacity:0.4;
     }
     .ai-hourly-card::after{
       background:
-        radial-gradient(circle at 0% 100%,rgba(0,0,0,0.55),transparent 50%),
-        radial-gradient(circle at 100% 0%,rgba(255,255,255,0.08),transparent 50%);
-      opacity:0.6;
+        radial-gradient(circle at 0% 100%,rgba(0,0,0,0.35),transparent 60%),
+        radial-gradient(circle at 100% 0%,rgba(255,255,255,0.04),transparent 55%);
+      opacity:0.4;
     }
     .ai-hourly-card>*{position:relative;z-index:1;}
     .ai-hourly-card__header{
