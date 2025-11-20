@@ -419,6 +419,13 @@
       grid-column:3;
       justify-self:end;
     }
+    .sub-nav__filters{
+      grid-column:1/-1;
+      width:100%;
+      display:flex;
+      justify-content:center;
+      margin-top:clamp(10px,1.8vw,18px);
+    }
     .tablist{
       display:flex;
       align-items:center;
@@ -1601,6 +1608,10 @@
         grid-column:1;
         justify-self:center;
       }
+      .sub-nav__filters{
+        grid-column:1;
+        justify-self:center;
+      }
     }
     @media (min-width:1024px){
       .tab-panel{flex-direction:column;}
@@ -1674,37 +1685,39 @@
           </button>
           <input type="date" id="sales-day-picker" class="sr-only tablist-date__input" aria-label="Velg dato for dashbordet" tabindex="-1" />
         </div>
+        <div class="sub-nav__filters" data-toolbar-for="kpi">
+          <div class="reports-toolbar" data-reports-toolbar data-toolbar-mode="simple">
+            <div class="reports-range" role="tablist" aria-label="Rapporter periode">
+              <button type="button" class="reports-range__btn" data-range="month" aria-expanded="false">Måned</button>
+              <button type="button" class="reports-range__btn" data-range="week" aria-expanded="false">Uke</button>
+              <button type="button" class="reports-range__btn" data-range="day" aria-expanded="false">Dag</button>
+            </div>
+            <div class="reports-filter" data-range-panel="month" hidden>
+              <div class="reports-month-grid">
+                <button type="button" class="reports-month" data-month="01">Jan</button>
+                <button type="button" class="reports-month" data-month="02">Feb</button>
+                <button type="button" class="reports-month" data-month="03">Mar</button>
+                <button type="button" class="reports-month" data-month="04">Apr</button>
+                <button type="button" class="reports-month" data-month="05">Mai</button>
+                <button type="button" class="reports-month" data-month="06">Jun</button>
+                <button type="button" class="reports-month" data-month="07">Jul</button>
+                <button type="button" class="reports-month" data-month="08">Aug</button>
+                <button type="button" class="reports-month" data-month="09">Sep</button>
+                <button type="button" class="reports-month" data-month="10">Okt</button>
+                <button type="button" class="reports-month" data-month="11">Nov</button>
+                <button type="button" class="reports-month" data-month="12">Des</button>
+              </div>
+            </div>
+            <div class="reports-filter" data-range-panel="week" hidden>
+              <div class="reports-week-grid" data-simple-week-grid></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
   <main class="shell">
     <section class="tab-panel active" id="kpi" role="tabpanel" aria-labelledby="tab-kpi" tabindex="0" data-tripletex-config='{"beer":{"label":"Øl","accounts":{"revenue":"id-289896744","cost":"id-289896742"}},"wine":{"label":"Vin","accounts":{"revenue":"id-289896745","cost":"id-289896743"}}}'>
-      <div class="reports-toolbar" data-reports-toolbar data-toolbar-mode="simple">
-        <div class="reports-range" role="tablist" aria-label="Rapporter periode">
-          <button type="button" class="reports-range__btn" data-range="month" aria-expanded="false">Måned</button>
-          <button type="button" class="reports-range__btn" data-range="week" aria-expanded="false">Uke</button>
-          <button type="button" class="reports-range__btn" data-range="day" aria-expanded="false">Dag</button>
-        </div>
-        <div class="reports-filter" data-range-panel="month" hidden>
-          <div class="reports-month-grid">
-            <button type="button" class="reports-month" data-month="01">Jan</button>
-            <button type="button" class="reports-month" data-month="02">Feb</button>
-            <button type="button" class="reports-month" data-month="03">Mar</button>
-            <button type="button" class="reports-month" data-month="04">Apr</button>
-            <button type="button" class="reports-month" data-month="05">Mai</button>
-            <button type="button" class="reports-month" data-month="06">Jun</button>
-            <button type="button" class="reports-month" data-month="07">Jul</button>
-            <button type="button" class="reports-month" data-month="08">Aug</button>
-            <button type="button" class="reports-month" data-month="09">Sep</button>
-            <button type="button" class="reports-month" data-month="10">Okt</button>
-            <button type="button" class="reports-month" data-month="11">Nov</button>
-            <button type="button" class="reports-month" data-month="12">Des</button>
-          </div>
-        </div>
-        <div class="reports-filter" data-range-panel="week" hidden>
-          <div class="reports-week-grid" data-simple-week-grid></div>
-        </div>
-      </div>
       <div class="tripletex-grid">
         <article class="card tripletex-card" data-tripletex-product="beer">
           <header>
@@ -1915,6 +1928,15 @@
     (function() {
       const buttons = Array.from(document.querySelectorAll('.tab-button'));
       const panels = Array.from(document.querySelectorAll('.tab-panel'));
+      const contextualToolbars = Array.from(document.querySelectorAll('[data-toolbar-for]'));
+
+      const updateToolbarVisibility = (targetId) => {
+        contextualToolbars.forEach((toolbar) => {
+          const matches = (toolbar.dataset.toolbarFor || '') === targetId;
+          toolbar.hidden = !matches;
+          toolbar.setAttribute('aria-hidden', matches ? 'false' : 'true');
+        });
+      };
 
       function activateTab(targetId) {
         buttons.forEach((btn) => {
@@ -1929,6 +1951,7 @@
           panel.classList.toggle('active', isMatch);
           panel.toggleAttribute('hidden', !isMatch);
         });
+        updateToolbarVisibility(targetId);
 
       }
 
