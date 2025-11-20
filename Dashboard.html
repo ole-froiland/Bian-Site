@@ -753,7 +753,7 @@
     .reports-range__month{
       font-size:clamp(1rem,2.6vw,1.55rem);
       font-weight:700;
-      color:var(--text-strong);
+      color:var(--primary);
       letter-spacing:0.01em;
       white-space:nowrap;
     }
@@ -2608,7 +2608,8 @@
       const formatReportMonth = (iso) => {
         const parsed = parseIsoDate(iso);
         if (!parsed) return '';
-        const formatted = reportMonthFmt.format(parsed);
+        const prevMonth = new Date(parsed.getFullYear(), parsed.getMonth() - 1, 1);
+        const formatted = reportMonthFmt.format(prevMonth);
         return formatted.charAt(0).toUpperCase() + formatted.slice(1);
       };
       const updateReportsMonthLabel = (iso) => {
