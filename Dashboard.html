@@ -750,6 +750,13 @@
     body[data-theme="dark"] .reports-range__title{
       color:var(--text-strong);
     }
+    .reports-range__month{
+      font-size:clamp(1rem,2.6vw,1.55rem);
+      font-weight:700;
+      color:var(--text-strong);
+      letter-spacing:0.01em;
+      white-space:nowrap;
+    }
     .reports-range__btn{
       padding:0.5rem 1rem;
       border-radius:999px;
@@ -1703,6 +1710,7 @@
               <button type="button" class="reports-range__btn" data-range="week" aria-expanded="false">Uke</button>
               <button type="button" class="reports-range__btn" data-range="day" aria-expanded="false">Dag</button>
               <span class="reports-range__title" aria-hidden="true">Rapport:</span>
+              <span class="reports-range__month" data-reports-month-label aria-live="polite"></span>
             </div>
           </div>
         </div>
@@ -1978,6 +1986,7 @@
       const percentFmt = new Intl.NumberFormat('nb-NO', { style: 'percent', maximumFractionDigits: 0 });
       const dateFmtShort = new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'short' });
       const dateFmtLong = new Intl.DateTimeFormat('nb-NO', { weekday: 'short', day: 'numeric', month: 'short' });
+      const reportMonthFmt = new Intl.DateTimeFormat('nb-NO', { month: 'long', year: 'numeric' });
 
       const apiBase = window.DASHBOARD_API_BASE || (
         (window.location && window.location.origin) ? window.location.origin : 'http://localhost:8888'
@@ -2012,6 +2021,7 @@
       const dayWeekDeltaBadgeEl = document.querySelector('[data-day-week-delta]');
       const dayAverageDeltaBadgeEl = document.querySelector('[data-day-average-delta]');
       const tablistDateEl = document.querySelector('[data-tablist-date]');
+      const reportsMonthLabelEl = document.querySelector('[data-reports-month-label]');
       const chartBalanceValueEl = document.querySelector('[data-balance-value]');
       const chartBalanceStatusEl = document.querySelector('[data-balance-status]');
       const highlightBankValueEl = document.querySelector('[data-highlight-bank]');
@@ -2595,6 +2605,16 @@
         const formatted = dateFmtLong.format(parsed);
         return formatted.charAt(0).toUpperCase() + formatted.slice(1);
       };
+      const formatReportMonth = (iso) => {
+        const parsed = parseIsoDate(iso);
+        if (!parsed) return '';
+        const formatted = reportMonthFmt.format(parsed);
+        return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      };
+      const updateReportsMonthLabel = (iso) => {
+        if (!reportsMonthLabelEl) return;
+        reportsMonthLabelEl.textContent = formatReportMonth(iso);
+      };
       const updateSelectedDateUI = (nextIso, source = null) => {
         const iso = sanitizeIso(nextIso) || todayISO;
         if (tablistDateEl) {
@@ -2606,6 +2626,7 @@
         if (aiProductsPicker && source !== 'ai') {
           aiProductsPicker.value = iso;
         }
+        updateReportsMonthLabel(iso);
         return iso;
       };
       let activeDateISO = updateSelectedDateUI(dayPicker?.value || aiProductsPicker?.value || todayISO);
