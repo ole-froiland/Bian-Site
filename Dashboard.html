@@ -741,11 +741,14 @@
     }
     .reports-range__title{
       margin-left:clamp(0.8rem,1.6vw,1.25rem);
-      font-size:clamp(1.1rem,2.8vw,1.6rem);
+      font-size:clamp(1.3rem,3.4vw,1.9rem);
       font-weight:700;
-      color:var(--primary);
+      color:#0f172a;
       letter-spacing:0.01em;
       white-space:nowrap;
+    }
+    body[data-theme="dark"] .reports-range__title{
+      color:var(--text-strong);
     }
     .reports-range__btn{
       padding:0.5rem 1rem;
