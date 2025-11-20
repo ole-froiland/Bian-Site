@@ -692,10 +692,12 @@
     .reports-toolbar{
       display:flex;
       flex-direction:column;
-      align-items:flex-start;
-      gap:var(--space-2);
-      margin-bottom:var(--space-2);
+      align-items:center;
+      justify-content:center;
+      gap:clamp(12px,1.8vw,20px);
+      margin:clamp(4px,1vw,16px) auto var(--space-2);
       width:100%;
+      max-width:720px;
       position:relative;
     }
     .reports-toolbar[data-toolbar-mode="simple"] .reports-filter[data-open]{
@@ -726,19 +728,21 @@
     .reports-range{
       display:flex;
       align-items:center;
-      gap:var(--space-1);
+      justify-content:center;
+      gap:clamp(0.5rem,1.5vw,1rem);
       flex-wrap:wrap;
     }
     .reports-range__btn{
-      padding:0.35rem 0.75rem;
-      border-radius:var(--radius-sm);
+      padding:0.55rem 1.1rem;
+      border-radius:999px;
       border:1px solid var(--border-subtle);
-      background:color-mix(in srgb,var(--surface) 94%,transparent);
+      background:color-mix(in srgb,var(--surface) 96%,transparent);
       font-weight:600;
-      font-size:0.85rem;
+      font-size:0.95rem;
       cursor:pointer;
-      transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
+      transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition),transform var(--transition);
     }
+    .reports-range__btn:active{transform:translateY(1px);}
     .reports-range__btn.active,
     .reports-range__btn[data-selected="true"]{
       background:var(--primary);
