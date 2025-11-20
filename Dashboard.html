@@ -423,7 +423,7 @@
       grid-column:1/-1;
       width:100%;
       display:flex;
-      justify-content:center;
+      justify-content:flex-start;
       margin-top:clamp(10px,1.8vw,18px);
     }
     .tablist{
@@ -699,10 +699,10 @@
     .reports-toolbar{
       display:flex;
       flex-direction:column;
-      align-items:center;
-      justify-content:center;
+      align-items:flex-start;
+      justify-content:flex-start;
       gap:clamp(12px,1.8vw,20px);
-      margin:clamp(4px,1vw,16px) auto var(--space-2);
+      margin:clamp(4px,1vw,16px) 0 var(--space-2);
       width:100%;
       max-width:720px;
       position:relative;
@@ -735,7 +735,7 @@
     .reports-range{
       display:flex;
       align-items:center;
-      justify-content:center;
+      justify-content:flex-start;
       gap:clamp(0.5rem,1.5vw,1rem);
       flex-wrap:wrap;
     }
@@ -1610,7 +1610,7 @@
       }
       .sub-nav__filters{
         grid-column:1;
-        justify-self:center;
+        justify-self:stretch;
       }
     }
     @media (min-width:1024px){
