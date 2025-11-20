@@ -1701,25 +1701,6 @@
               <button type="button" class="reports-range__btn" data-range="day" aria-expanded="false">Dag</button>
               <span class="reports-range__title" aria-hidden="true">Rapport:</span>
             </div>
-            <div class="reports-filter" data-range-panel="month" hidden>
-              <div class="reports-month-grid">
-                <button type="button" class="reports-month" data-month="01">Jan</button>
-                <button type="button" class="reports-month" data-month="02">Feb</button>
-                <button type="button" class="reports-month" data-month="03">Mar</button>
-                <button type="button" class="reports-month" data-month="04">Apr</button>
-                <button type="button" class="reports-month" data-month="05">Mai</button>
-                <button type="button" class="reports-month" data-month="06">Jun</button>
-                <button type="button" class="reports-month" data-month="07">Jul</button>
-                <button type="button" class="reports-month" data-month="08">Aug</button>
-                <button type="button" class="reports-month" data-month="09">Sep</button>
-                <button type="button" class="reports-month" data-month="10">Okt</button>
-                <button type="button" class="reports-month" data-month="11">Nov</button>
-                <button type="button" class="reports-month" data-month="12">Des</button>
-              </div>
-            </div>
-            <div class="reports-filter" data-range-panel="week" hidden>
-              <div class="reports-week-grid" data-simple-week-grid></div>
-            </div>
           </div>
         </div>
       </div>
@@ -2071,6 +2052,7 @@
       const weekButton = rawReportsToolbar.querySelector('[data-range="week"]');
       const weekPanel = rawReportsToolbar.querySelector('[data-range-panel="week"]');
       const dayButton = rawReportsToolbar.querySelector('[data-range="day"]');
+      const simpleRangeButtons = Array.from(rawReportsToolbar.querySelectorAll('[data-range]'));
 
       let closeMonthMenu = () => {};
       let openMonthMenu = () => {};
@@ -2078,6 +2060,19 @@
       let openWeekMenu = () => {};
       let clearMonthSelection = () => {};
       let clearWeekSelection = () => {};
+
+      const setSimpleRangeSelection = (range) => {
+        simpleRangeButtons.forEach((btn) => {
+          const isActive = btn.dataset.range === range;
+          btn.classList.toggle('active', isActive);
+          if (isActive) {
+            btn.setAttribute('data-selected', 'true');
+          } else {
+            btn.removeAttribute('data-selected');
+          }
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      };
 
       if (monthButton && monthPanel) {
         const monthButtons = Array.from(monthPanel.querySelectorAll('.reports-month'));
@@ -2273,12 +2268,28 @@
         closeWeekMenu();
       };
 
+      if (monthButton) {
+        monthButton.addEventListener('click', () => {
+          closeAllSimplePanels();
+          clearWeekSelection();
+          setSimpleRangeSelection('month');
+        });
+      }
+
+      if (weekButton) {
+        weekButton.addEventListener('click', () => {
+          closeAllSimplePanels();
+          clearMonthSelection();
+          setSimpleRangeSelection('week');
+        });
+      }
+
       if (dayButton) {
         dayButton.addEventListener('click', () => {
           closeAllSimplePanels();
           clearMonthSelection();
           clearWeekSelection();
-          dayButton.setAttribute('data-selected', 'true');
+          setSimpleRangeSelection('day');
         });
       }
 
