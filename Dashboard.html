@@ -427,11 +427,37 @@
       overflow-x:auto;
     }
     .tablist-date{
-      font-size:0.9rem;
-      color:rgba(255,255,255,0.72);
-      font-weight:600;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       white-space:nowrap;
     }
+    .tablist-date__trigger{
+      display:inline-flex;
+      align-items:center;
+      gap:0.45rem;
+      border-radius:var(--radius-pill);
+      border:1px solid var(--border);
+      background:color-mix(in srgb,var(--surface) 85%,transparent);
+      color:var(--text-strong);
+      font-size:0.9rem;
+      font-weight:600;
+      padding:0.35rem 0.9rem;
+      box-shadow:var(--shadow-xs);
+    }
+    body[data-theme="dark"] .tablist-date__trigger{
+      background:rgba(15,23,42,0.65);
+      color:var(--text);
+      border-color:var(--border-subtle);
+    }
+    .tablist-date__trigger:hover{color:var(--primary);}
+    .tablist-date__trigger:focus-visible{box-shadow:var(--ring);}
+    .tablist-date__icon{
+      width:1rem;
+      height:1rem;
+      opacity:0.75;
+    }
+    .tablist-date__input{pointer-events:none;}
     .tab-button{
       min-height:2.6rem;
       padding:0.5rem 1.3rem;
@@ -1618,7 +1644,15 @@
           <button class="tab-button" id="tab-oversikt" type="button" role="tab" aria-selected="false" aria-controls="oversikt" data-tab-target="oversikt" tabindex="-1">Oversikt</button>
           <button class="tab-button" id="tab-ai" type="button" role="tab" aria-selected="false" aria-controls="ai-tips" data-tab-target="ai-tips" tabindex="-1">AI-tips</button>
         </div>
-        <span class="tablist-date" data-tablist-date>–</span>
+        <div class="tablist-date">
+          <button type="button" class="tablist-date__trigger" data-day-picker-trigger aria-controls="sales-day-picker" aria-haspopup="dialog">
+            <span data-tablist-date>–</span>
+            <svg class="tablist-date__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 4V2M17 4V2M7 11h10M5 7h14v13H5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <input type="date" id="sales-day-picker" class="sr-only tablist-date__input" aria-label="Velg dato for dashbordet" tabindex="-1" />
+        </div>
       </div>
     </div>
   </nav>
@@ -1931,6 +1965,7 @@
       const todayISO = toISODate(today);
 
       const dayPicker = document.querySelector('#sales-day-picker');
+      const dayPickerTrigger = document.querySelector('[data-day-picker-trigger]');
       const dayRevenueEl = document.querySelector('[data-day-revenue]');
       const dayAverageEl = document.querySelector('[data-day-average]');
       const dayStatusEl = document.querySelector('[data-day-status]');
@@ -1962,8 +1997,8 @@
       const aiBottomListEl = document.querySelector('[data-ai-bottom-list]');
       const aiProductsStatusEl = document.querySelector('[data-ai-products-status]');
       const aiProductsDateEl = document.querySelector('[data-ai-products-date]');
-    const aiProductsPicker = document.querySelector('#ai-products-picker');
-    const aiTodayBtn = document.querySelector('[data-ai-today]');
+      const aiProductsPicker = document.querySelector('#ai-products-picker');
+      const aiTodayBtn = document.querySelector('[data-ai-today]');
     const hourlyCardEl = document.querySelector('[data-ai-hourly-card]');
     const hourlyCanvas = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-chart]') : null;
     const hourlyEmptyEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-empty]') : null;
@@ -2493,9 +2528,20 @@
         const formatted = dateFmtLong.format(parsed);
         return formatted.charAt(0).toUpperCase() + formatted.slice(1);
       };
-      if (tablistDateEl) {
-        tablistDateEl.textContent = formatFriendlyDate(todayISO);
-      }
+      const updateSelectedDateUI = (nextIso, source = null) => {
+        const iso = sanitizeIso(nextIso) || todayISO;
+        if (tablistDateEl) {
+          tablistDateEl.textContent = formatFriendlyDate(iso);
+        }
+        if (dayPicker && source !== 'day') {
+          dayPicker.value = iso;
+        }
+        if (aiProductsPicker && source !== 'ai') {
+          aiProductsPicker.value = iso;
+        }
+        return iso;
+      };
+      let activeDateISO = updateSelectedDateUI(dayPicker?.value || aiProductsPicker?.value || todayISO);
 
       const getISOWeekInfo = (iso) => {
         const parsed = parseIsoDate(iso);
@@ -3732,35 +3778,44 @@
 
       if (dayPicker) {
         dayPicker.max = todayISO;
-        if (!dayPicker.value) dayPicker.value = todayISO;
-        loadDayTotals(dayPicker.value);
+        loadDayTotals(activeDateISO);
         dayPicker.addEventListener('change', () => {
-          const date = dayPicker.value || todayISO;
-          loadDayTotals(date);
+          activeDateISO = updateSelectedDateUI(dayPicker.value || todayISO, 'day');
+          loadDayTotals(activeDateISO);
         });
       } else {
-        loadDayTotals(todayISO);
+        loadDayTotals(activeDateISO);
+      }
+
+      if (dayPickerTrigger && dayPicker) {
+        const openNativePicker = () => {
+          if (typeof dayPicker.showPicker === 'function') {
+            dayPicker.showPicker();
+          } else {
+            dayPicker.focus();
+            dayPicker.click();
+          }
+        };
+        dayPickerTrigger.addEventListener('click', () => {
+          openNativePicker();
+        });
       }
 
       if (aiProductsPicker) {
         aiProductsPicker.max = todayISO;
         if (!aiProductsPicker.value) {
-          aiProductsPicker.value = dayPicker?.value || todayISO;
+          aiProductsPicker.value = activeDateISO;
         }
         aiProductsPicker.addEventListener('change', () => {
-          const date = aiProductsPicker.value || todayISO;
-          if (dayPicker && dayPicker.value !== date) {
-            dayPicker.value = date;
-          }
-          loadDayTotals(date);
+          activeDateISO = updateSelectedDateUI(aiProductsPicker.value || todayISO, 'ai');
+          loadDayTotals(activeDateISO);
         });
       }
 
       if (aiTodayBtn) {
         aiTodayBtn.addEventListener('click', () => {
-          if (aiProductsPicker) aiProductsPicker.value = todayISO;
-          if (dayPicker) dayPicker.value = todayISO;
-          loadDayTotals(todayISO);
+          activeDateISO = updateSelectedDateUI(todayISO);
+          loadDayTotals(activeDateISO);
         });
       }
 
@@ -4732,8 +4787,8 @@
 
         const setRangeSelection = (rangeType, key) => {
           reportsState.selection[rangeType] = key || null;
-          if (rangeType === 'day' && dayPicker) {
-            dayPicker.value = key || '';
+          if (rangeType === 'day') {
+            updateSelectedDateUI(key, 'day');
           }
           if (rangeType === 'day' && dayPanelInput) {
             dayPanelInput.value = key || '';
@@ -4898,8 +4953,8 @@
           const dataset = reportsState.data[range];
           if (!dataset) return;
           const selectionKey = reportsState.selection[range];
-          if (range === 'day' && dayPicker) {
-            dayPicker.value = selectionKey || '';
+          if (range === 'day' && selectionKey) {
+            updateSelectedDateUI(selectionKey, 'day');
           }
           products.forEach((product) => {
             const rowsSource = dataset.products[product.key]?.rows || [];
