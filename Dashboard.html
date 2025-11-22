@@ -2049,7 +2049,7 @@
         return `${year}-${month}-${day}`;
       };
 
-      const PREVIEW_TODAY = '2025-08-10';
+      const PREVIEW_TODAY = '';
       let today = new Date();
       if (PREVIEW_TODAY) {
         const previewDate = new Date(`${PREVIEW_TODAY}T00:00:00`);
@@ -2115,6 +2115,7 @@
         });
       };
       applyRangeVisibility('month');
+      let handleActiveDateChange = null;
       const hourlyCardEl = document.querySelector('[data-ai-hourly-card]');
       const hourlyCanvas = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-chart]') : null;
       const hourlyEmptyEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-empty]') : null;
@@ -4043,16 +4044,19 @@
         barChart.addEventListener('mouseleave', hideGlobalTooltip);
       }
 
-      if (dayPicker) {
-        dayPicker.max = todayISO;
-        loadDayTotals(activeDateISO);
-        dayPicker.addEventListener('change', () => {
-          activeDateISO = updateSelectedDateUI(dayPicker.value || todayISO, 'day');
+        if (dayPicker) {
+          dayPicker.max = todayISO;
           loadDayTotals(activeDateISO);
-        });
-      } else {
-        loadDayTotals(activeDateISO);
-      }
+          dayPicker.addEventListener('change', () => {
+            activeDateISO = updateSelectedDateUI(dayPicker.value || todayISO, 'day');
+            loadDayTotals(activeDateISO);
+            if (typeof handleActiveDateChange === 'function') {
+              handleActiveDateChange(activeDateISO);
+            }
+          });
+        } else {
+          loadDayTotals(activeDateISO);
+        }
 
       if (dayPickerTrigger && dayPicker) {
         const openNativePicker = () => {
@@ -4068,23 +4072,29 @@
         });
       }
 
-      if (aiProductsPicker) {
-        aiProductsPicker.max = todayISO;
-        if (!aiProductsPicker.value) {
-          aiProductsPicker.value = activeDateISO;
+        if (aiProductsPicker) {
+          aiProductsPicker.max = todayISO;
+          if (!aiProductsPicker.value) {
+            aiProductsPicker.value = activeDateISO;
+          }
+          aiProductsPicker.addEventListener('change', () => {
+            activeDateISO = updateSelectedDateUI(aiProductsPicker.value || todayISO, 'ai');
+            loadDayTotals(activeDateISO);
+            if (typeof handleActiveDateChange === 'function') {
+              handleActiveDateChange(activeDateISO);
+            }
+          });
         }
-        aiProductsPicker.addEventListener('change', () => {
-          activeDateISO = updateSelectedDateUI(aiProductsPicker.value || todayISO, 'ai');
-          loadDayTotals(activeDateISO);
-        });
-      }
 
-      if (aiTodayBtn) {
-        aiTodayBtn.addEventListener('click', () => {
-          activeDateISO = updateSelectedDateUI(todayISO);
-          loadDayTotals(activeDateISO);
-        });
-      }
+        if (aiTodayBtn) {
+          aiTodayBtn.addEventListener('click', () => {
+            activeDateISO = updateSelectedDateUI(todayISO);
+            loadDayTotals(activeDateISO);
+            if (typeof handleActiveDateChange === 'function') {
+              handleActiveDateChange(activeDateISO);
+            }
+          });
+        }
 
       if (typeof fetch === 'function') {
         const renderChart = (days, { isDemo = false, message = '', direction = '' } = {}) => {
@@ -4687,10 +4697,29 @@
           if (product.costAccount) accountsParam.push(`${product.key}Cost|${product.label} varekost:${product.costAccount}`);
         });
 
-        const todayDate = new Date(today.getTime());
-        const reportingYear = todayDate.getFullYear();
-        const fromISO = `${reportingYear}-01-01`;
-        const toISO = toISODate(todayDate);
+        const makeIsoDate = (yearVal, monthVal, dayVal) => `${String(yearVal).padStart(4, '0')}-${String(monthVal).padStart(2, '0')}-${String(dayVal).padStart(2, '0')}`;
+        const buildTripletexContext = (baseIso = activeDateISO, rangeType = 'month') => {
+          const anchorIso = sanitizeIso(baseIso) || todayISO;
+          const anchorDate = parseIsoDate(anchorIso) || new Date();
+          const effectiveRange = rangeType || 'month';
+          const monthForReport = effectiveRange === 'month'
+            ? new Date(Date.UTC(anchorDate.getFullYear(), anchorDate.getMonth() - 1, 1))
+            : new Date(Date.UTC(anchorDate.getFullYear(), anchorDate.getMonth(), 1));
+          const year = monthForReport.getUTCFullYear();
+          const month = monthForReport.getUTCMonth() + 1;
+          const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+          const endOfMonth = new Date(Date.UTC(monthForReport.getUTCFullYear(), monthForReport.getUTCMonth() + 1, 0));
+          return {
+            anchorIso,
+            year,
+            monthKey,
+            from: makeIsoDate(year, 1, 1),
+            to: effectiveRange === 'month'
+              ? makeIsoDate(endOfMonth.getUTCFullYear(), endOfMonth.getUTCMonth() + 1, endOfMonth.getUTCDate())
+              : makeIsoDate(anchorDate.getFullYear(), anchorDate.getMonth() + 1, anchorDate.getDate()),
+          };
+        };
+        let tripletexContext = buildTripletexContext();
       if (reportsToolbar) {
         const reportsToolbarEl = reportsToolbar;
         const monthButtons = reportsToolbarEl ? Array.from(reportsToolbarEl.querySelectorAll('.reports-month')) : [];
@@ -4709,6 +4738,18 @@
           loading: { month: false, week: false, day: false },
           error: { month: null, week: null, day: null },
         };
+        const resetTripletexState = () => {
+          ['month', 'week', 'day'].forEach((range) => {
+            reportsState.data[range] = null;
+            reportsState.selection[range] = null;
+            reportsState.error[range] = null;
+            reportsState.loading[range] = false;
+          });
+          if (weekGrid) {
+            weekGrid.dataset.initialized = '0';
+            weekGrid.innerHTML = '';
+          }
+        };
         if (dayPicker && dayPicker.value) {
           const initialDay = sanitizeIso(dayPicker.value);
           if (initialDay) reportsState.selection.day = initialDay;
@@ -4722,7 +4763,8 @@
           if (weekGrid.dataset.initialized === '1') return;
           weekGrid.innerHTML = '';
           for (let week = 1; week <= 53; week += 1) {
-            const weekKey = `${reportingYear}-W${String(week).padStart(2, '0')}`;
+            const year = tripletexContext.year || today.getFullYear();
+            const weekKey = `${year}-W${String(week).padStart(2, '0')}`;
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'reports-week';
@@ -4876,8 +4918,6 @@
             body.appendChild(tr);
           });
         };
-
-        const makeIsoDate = (yearVal, monthVal, dayVal) => `${String(yearVal).padStart(4, '0')}-${String(monthVal).padStart(2, '0')}-${String(dayVal).padStart(2, '0')}`;
 
         const formatPeriodHint = (meta) => {
           const start = meta?.start ? parseIsoDate(meta.start) : null;
@@ -5040,12 +5080,12 @@
           element.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
         };
 
-        const getSortedRangeKeys = (rangeType) => {
+        const getSortedRangeKeys = (rangeType, { includeMeta = false } = {}) => {
           const dataset = reportsState.data[rangeType];
           if (!dataset) return [];
           const metaKeys = Array.from(dataset.meta?.keys?.() || []);
           metaKeys.sort((a, b) => a.localeCompare(b));
-          if (dataset.availableKeys && dataset.availableKeys.size) {
+          if (!includeMeta && dataset.availableKeys && dataset.availableKeys.size) {
             const filtered = metaKeys.filter((key) => dataset.availableKeys.has(key));
             if (filtered.length) return filtered;
           }
@@ -5080,18 +5120,40 @@
         };
 
         const pickInitialSelection = (rangeType) => {
-          const keys = getSortedRangeKeys(rangeType);
-          if (!keys.length) return null;
+          const availableKeys = getSortedRangeKeys(rangeType);
+          const metaKeys = getSortedRangeKeys(rangeType, { includeMeta: true });
+          const pickFromList = (list, targets) => targets.find((key) => key && list.includes(key));
+
           if (rangeType === 'month') {
-            const currentMonthKey = todayISO.slice(0, 7);
-            if (keys.includes(currentMonthKey)) return currentMonthKey;
+            const preferred = [];
+            if (tripletexContext?.monthKey) preferred.push(tripletexContext.monthKey);
+            const anchorMonthKey = (tripletexContext?.anchorIso || '').slice(0, 7);
+            if (anchorMonthKey) preferred.push(anchorMonthKey);
+            const todayMonthKey = todayISO.slice(0, 7);
+            preferred.push(todayMonthKey);
+
+            const matchAvailable = pickFromList(availableKeys, preferred);
+            if (matchAvailable) return matchAvailable;
+            const matchMeta = pickFromList(metaKeys, preferred);
+            if (matchMeta) return matchMeta;
           } else if (rangeType === 'week') {
-            const info = getISOWeekInfo(todayISO);
-            if (info?.key && keys.includes(info.key)) return info.key;
+            const info = getISOWeekInfo(tripletexContext?.anchorIso || activeDateISO || todayISO);
+            const targets = [info?.key];
+            const matchAvailable = pickFromList(availableKeys, targets);
+            if (matchAvailable) return matchAvailable;
+            const matchMeta = pickFromList(metaKeys, targets);
+            if (matchMeta) return matchMeta;
           } else if (rangeType === 'day') {
-            if (keys.includes(todayISO)) return todayISO;
+            const targets = [sanitizeIso(tripletexContext?.anchorIso || activeDateISO || todayISO), todayISO];
+            const matchAvailable = pickFromList(availableKeys, targets);
+            if (matchAvailable) return matchAvailable;
+            const matchMeta = pickFromList(metaKeys, targets);
+            if (matchMeta) return matchMeta;
           }
-          return keys[keys.length - 1];
+
+          if (availableKeys.length) return availableKeys[availableKeys.length - 1];
+          if (metaKeys.length) return metaKeys[metaKeys.length - 1];
+          return null;
         };
 
         const applyMonthSelectionState = () => {
@@ -5101,7 +5163,8 @@
           const activeKey = reportsState.selection.month;
           monthButtons.forEach((button) => {
             const monthPart = button.dataset.month;
-            const periodKey = dataset?.keyByMonth?.get(monthPart) || `${reportingYear}-${monthPart}`;
+            const year = tripletexContext.year || today.getFullYear();
+            const periodKey = dataset?.keyByMonth?.get(monthPart) || `${year}-${monthPart}`;
             button.dataset.periodKey = periodKey;
             if (available.has(periodKey)) button.setAttribute('data-available', 'true');
             else button.removeAttribute('data-available');
@@ -5244,6 +5307,8 @@
 
         const fetchTripletexRange = async (rangeType) => {
           if (reportsState.loading[rangeType]) return;
+          tripletexContext = buildTripletexContext(activeDateISO, rangeType);
+          const { from, to, year } = tripletexContext;
           reportsState.loading[rangeType] = true;
           if (reportsState.activeRange === rangeType) {
             setStatusAll('Henter …', 'muted');
@@ -5251,8 +5316,8 @@
           try {
             const base = await resolveTripletexEndpoint();
             const url = new URL(base, window.location.origin);
-            url.searchParams.set('from', fromISO);
-            url.searchParams.set('to', toISO);
+            url.searchParams.set('from', from);
+            url.searchParams.set('to', to);
             if (['month', 'week', 'day'].includes(rangeType)) {
               url.searchParams.set('group', rangeType);
             }
@@ -5265,7 +5330,7 @@
               const message = data?.message || data?.error || res.statusText || text || 'Kunne ikke hente Tripletex-data';
               throw new Error(message);
             }
-            const dataset = normalizeTripletexResponse(data, { rangeType, from: fromISO, to: toISO, year: reportingYear });
+            const dataset = normalizeTripletexResponse(data, { rangeType, from, to, year });
             reportsState.data[rangeType] = dataset;
             reportsState.error[rangeType] = null;
             if (!reportsState.selection[rangeType]) {
@@ -5276,7 +5341,7 @@
             if (rangeType === 'week') updateWeekButtons();
             if (rangeType === 'day') {
               if (!reportsState.selection.day) {
-                setRangeSelection('day', sanitizeIso(toISO));
+                setRangeSelection('day', sanitizeIso(tripletexContext.anchorIso));
               }
               updateDayButtons();
               updateDayHint();
@@ -5287,10 +5352,10 @@
           } catch (error) {
             reportsState.error[rangeType] = error;
             if (rangeType === 'month') {
-              const previewDataset = buildTripletexPreview(rangeType, { from: fromISO, to: toISO, year: reportingYear });
+              const previewDataset = buildTripletexPreview(rangeType, { from, to, year });
               if (previewDataset) {
                 reportsState.data[rangeType] = previewDataset;
-                setRangeSelection('month', '2025-01');
+                setRangeSelection('month', tripletexContext.monthKey || '2025-01');
                 setStatusAll('Forhåndsvisning (Tripletex)', 'muted');
                 renderTripletexTables();
                 reportsState.loading[rangeType] = false;
@@ -5430,7 +5495,8 @@
 
           monthButtons.forEach((button) => {
             button.addEventListener('click', () => {
-              const periodKey = button.dataset.periodKey || `${reportingYear}-${button.dataset.month}`;
+              const year = tripletexContext.year || today.getFullYear();
+              const periodKey = button.dataset.periodKey || `${year}-${button.dataset.month}`;
               setRangeSelection('month', periodKey);
               renderTripletexTables();
               applyMonthSelectionState();
@@ -5526,6 +5592,30 @@
         if (reportsToolbarEl) {
           setRangePanelsVisibility(null);
         }
+        handleActiveDateChange = (nextIso) => {
+          const targetRange = reportsState.activeRange || 'month';
+          const nextContext = buildTripletexContext(nextIso, targetRange);
+          const changed = !tripletexContext
+            || nextContext.year !== tripletexContext.year
+            || nextContext.monthKey !== tripletexContext.monthKey
+            || nextContext.to !== tripletexContext.to;
+          tripletexContext = nextContext;
+          if (!reportsToolbar) return;
+          if (changed) {
+            resetTripletexState();
+            setStatusAll('Henter …', 'muted');
+            products.forEach((product) => setTable(product.key, []));
+            fetchTripletexRange(targetRange);
+            return;
+          }
+          if (reportsState.activeRange === 'month' && reportsState.data.month) {
+            const desiredKey = pickInitialSelection('month');
+            if (desiredKey) {
+              setRangeSelection('month', desiredKey);
+              renderTripletexTables();
+            }
+          }
+        };
       }
       }
 
