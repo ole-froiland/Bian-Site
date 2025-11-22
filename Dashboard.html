@@ -2077,79 +2077,8 @@
       const aiProductsPicker = document.querySelector('#ai-products-picker');
       const aiTodayBtn = document.querySelector('[data-ai-today]');
       const rangeVisibilityTargets = Array.from(document.querySelectorAll('[data-range-visible]'));
-      let reportsActiveRange = 'month';
-      const reportsRangeSelection = { month: null, week: null, day: null };
-      const getYesterdayIso = (baseIso = todayISO) => {
-        const base = parseIsoDate(baseIso);
-        if (!base) return todayISO;
-        const copy = new Date(base.getTime());
-        copy.setDate(copy.getDate() - 1);
-        return toISODate(copy);
-      };
-      const getISOWeekStart = (dateObj) => {
-        const d = new Date(dateObj.getTime());
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
-        d.setDate(diff);
-        d.setHours(0, 0, 0, 0);
-        return d;
-      };
-      const getISOWeekRangeFromDate = (dateObj) => {
-        const start = getISOWeekStart(dateObj);
-        const end = new Date(start.getTime());
-        end.setDate(start.getDate() + 6);
-        return { start, end };
-      };
-      const dateFromWeekKey = (key) => {
-        const match = /^([0-9]{4})-W([0-9]{2})$/.exec(String(key || ''));
-        if (!match) return null;
-        const year = Number(match[1]);
-        const week = Number(match[2]);
-        const simple = new Date(Date.UTC(year, 0, 4));
-        const day = simple.getUTCDay() || 7;
-        simple.setUTCDate(simple.getUTCDate() - day + 1 + (week - 1) * 7);
-        simple.setUTCHours(0, 0, 0, 0);
-        return new Date(simple);
-      };
-      const formatWeekLabel = (value) => {
-        let targetDate = null;
-        if (value && /^\d{4}-W\d{2}$/.test(value)) {
-          targetDate = dateFromWeekKey(value);
-        } else if (value) {
-          targetDate = parseIsoDate(value);
-        }
-        if (!targetDate) {
-          targetDate = parseIsoDate(todayISO);
-        }
-        // Default to previous week
-        targetDate.setDate(targetDate.getDate() - 7);
-        const weekInfo = getISOWeekInfo(toISODate(targetDate));
-        const { start, end } = getISOWeekRangeFromDate(targetDate);
-        const weekNumber = weekInfo?.week ? String(weekInfo.week).padStart(2, '0') : '';
-        if (start && end) {
-          return `Uke ${weekNumber} · ${weekRangeFmt.format(start)} – ${weekRangeFmt.format(end)}`;
-        }
-        return weekNumber ? `Uke ${weekNumber}` : '';
-      };
-      const updateReportsHeading = (range = reportsActiveRange, selectionValue = null) => {
-        if (!reportsMonthLabelEl) return;
-        reportsActiveRange = range || reportsActiveRange || 'month';
-        let text = '';
-        if (reportsActiveRange === 'month') {
-          const iso = selectionValue || reportsRangeSelection.month || todayISO;
-          text = formatReportMonth(iso);
-        } else if (reportsActiveRange === 'week') {
-          const value = selectionValue || reportsRangeSelection.week || todayISO;
-          text = formatWeekLabel(value);
-        } else if (reportsActiveRange === 'day') {
-          const iso = selectionValue || reportsRangeSelection.day || getYesterdayIso();
-          text = formatFriendlyDate(iso);
-        }
-        reportsMonthLabelEl.textContent = text;
-      };
       const applyRangeVisibility = (range) => {
         const safeRange = range || 'month';
-        reportsActiveRange = safeRange;
         document.body.dataset.reportsRange = safeRange;
         rangeVisibilityTargets.forEach((target) => {
           const allowed = (target.dataset.rangeVisible || '')
@@ -2165,7 +2094,6 @@
             target.setAttribute('data-range-hidden', '1');
           }
         });
-        updateReportsHeading(safeRange);
       };
       applyRangeVisibility('month');
       const hourlyCardEl = document.querySelector('[data-ai-hourly-card]');
@@ -2285,12 +2213,10 @@
           if (!trigger) return;
           selectedMonth = trigger.dataset.month;
           selectedMonthLabel = trigger.textContent.trim();
-          reportsRangeSelection.month = selectedMonth ? `${today.getFullYear()}-${selectedMonth}` : null;
           syncMonthButtonStates();
           clearWeekSelection();
           dayButton?.removeAttribute('data-selected');
           closeMonthMenu();
-          updateReportsHeading('month', reportsRangeSelection.month);
         });
       }
 
@@ -2394,12 +2320,10 @@
           if (!trigger) return;
           selectedWeek = trigger.dataset.week;
           selectedWeekLabel = trigger.textContent.trim();
-          reportsRangeSelection.week = selectedWeek ? `${today.getFullYear()}-W${selectedWeek}` : null;
           syncWeekButtonStates();
           clearMonthSelection();
           dayButton?.removeAttribute('data-selected');
           closeWeekMenu();
-          updateReportsHeading('week', reportsRangeSelection.week);
         });
       }
 
@@ -5004,7 +4928,6 @@
 
         const setRangeSelection = (rangeType, key) => {
           reportsState.selection[rangeType] = key || null;
-          reportsRangeSelection[rangeType] = key || null;
           if (rangeType === 'day') {
             updateSelectedDateUI(key, 'day');
           }
@@ -5174,7 +5097,6 @@
           if (range === 'day' && selectionKey) {
             updateSelectedDateUI(selectionKey, 'day');
           }
-          updateReportsHeading(range, selectionKey || reportsRangeSelection[range]);
           products.forEach((product) => {
             const rowsSource = dataset.products[product.key]?.rows || [];
             const rows = selectionKey ? rowsSource.filter((row) => row.key === selectionKey) : rowsSource;
@@ -5224,12 +5146,11 @@
               const initialKey = pickInitialSelection(rangeType);
               if (initialKey) setRangeSelection(rangeType, initialKey);
             }
-            updateReportsHeading(rangeType, reportsState.selection[rangeType] || reportsRangeSelection[rangeType]);
             if (rangeType === 'month') applyMonthSelectionState();
             if (rangeType === 'week') updateWeekButtons();
             if (rangeType === 'day') {
               if (!reportsState.selection.day) {
-                setRangeSelection('day', sanitizeIso(toISODate(today)));
+                setRangeSelection('day', sanitizeIso(toISO));
               }
               updateDayButtons();
               updateDayHint();
@@ -5251,11 +5172,11 @@
         if (reportsToolbarEl) {
           reportsToolbarEl.querySelectorAll('[data-range]').forEach((button) => {
             button.addEventListener('click', () => {
-            const range = button.dataset.range;
-            if (!range) return;
-            const panel = getRangePanel(range);
-            const panelVisible = panel ? !panel.hidden : false;
-            const isActive = reportsState.activeRange === range;
+              const range = button.dataset.range;
+              if (!range) return;
+              const panel = getRangePanel(range);
+              const panelVisible = panel ? !panel.hidden : false;
+              const isActive = reportsState.activeRange === range;
 
               if (range === 'month') {
                 if (!isActive) {
