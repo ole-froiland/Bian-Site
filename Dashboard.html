@@ -2036,6 +2036,7 @@
       const dateFmtShort = new Intl.DateTimeFormat('nb-NO', { day: 'numeric', month: 'short' });
       const dateFmtLong = new Intl.DateTimeFormat('nb-NO', { weekday: 'short', day: 'numeric', month: 'short' });
       const reportMonthFmt = new Intl.DateTimeFormat('nb-NO', { month: 'long', year: 'numeric' });
+      let tripletexContext = null;
 
       const apiBase = window.DASHBOARD_API_BASE || (
         (window.location && window.location.origin) ? window.location.origin : 'http://localhost:8888'
@@ -2804,6 +2805,15 @@
       const updateReportsRangeLabel = (iso, range = null) => {
         if (!reportsRangeLabelEl) return;
         const resolvedRange = range || document.body.dataset.reportsRange || 'month';
+        if (resolvedRange === 'month' && tripletexContext?.monthKey) {
+          const [y, m] = tripletexContext.monthKey.split('-').map((v) => Number(v));
+          if (Number.isFinite(y) && Number.isFinite(m)) {
+            const parsed = new Date(y, m - 1, 1);
+            const label = reportMonthFmt.format(parsed);
+            reportsRangeLabelEl.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+            return;
+          }
+        }
         reportsRangeLabelEl.textContent = formatReportRangeLabel(iso, resolvedRange);
       };
 
@@ -4719,7 +4729,8 @@
               : makeIsoDate(anchorDate.getFullYear(), anchorDate.getMonth() + 1, anchorDate.getDate()),
           };
         };
-        let tripletexContext = buildTripletexContext();
+        tripletexContext = buildTripletexContext();
+        updateReportsRangeLabel(tripletexContext.anchorIso, 'month');
       if (reportsToolbar) {
         const reportsToolbarEl = reportsToolbar;
         const monthButtons = reportsToolbarEl ? Array.from(reportsToolbarEl.querySelectorAll('.reports-month')) : [];
@@ -4781,6 +4792,14 @@
           const card = tripletexSection.querySelector(`[data-tripletex-product="${productKey}"]`);
           const heading = card?.querySelector('[data-tripletex-label]');
           if (card && heading) heading.textContent = `Tripletex · ${label}`;
+        };
+
+        const formatMonthKeyLabel = (monthKey) => {
+          if (!monthKey) return '';
+          const [y, m] = monthKey.split('-').map((v) => Number(v));
+          if (!Number.isFinite(y) || !Number.isFinite(m)) return '';
+          const parsed = new Date(y, m - 1, 1);
+          return monthLabelFmt.format(parsed);
         };
 
         products.forEach((product) => updateProductHeader(product.key, product.label));
@@ -5321,10 +5340,13 @@
             const rowsSource = dataset.products[product.key]?.rows || [];
             const rows = selectionKey ? rowsSource.filter((row) => row.key === selectionKey) : rowsSource;
             setTable(product.key, rows);
+            const monthLabelFromContext = tripletexContext?.monthKey ? formatMonthKeyLabel(tripletexContext.monthKey) : '';
             let statusText = dataset.summary.label;
             if (selectionKey) {
               const meta = dataset.meta.get(selectionKey);
               statusText = meta?.label || meta?.hint || statusText || selectionKey;
+            } else if (range === 'month' && monthLabelFromContext) {
+              statusText = monthLabelFromContext;
             }
             setStatus(product.key, statusText || '');
           });
@@ -5634,6 +5656,7 @@
             || nextContext.to !== tripletexContext.to;
           tripletexContext = nextContext;
           if (!reportsToolbar) return;
+          updateReportsRangeLabel(nextIso, targetRange);
           if (changed) {
             resetTripletexState();
             setStatusAll('Henter …', 'muted');
