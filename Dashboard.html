@@ -426,6 +426,8 @@
       justify-content:flex-start;
       margin-top:clamp(10px,1.8vw,18px);
     }
+    body[data-active-tab] [data-toolbar-for]{display:none;}
+    body[data-active-tab="kpi"] [data-toolbar-for="kpi"]{display:flex;}
     .tablist{
       display:flex;
       align-items:center;
@@ -1962,6 +1964,7 @@
       const contextualToolbars = Array.from(document.querySelectorAll('[data-toolbar-for]'));
 
       const updateToolbarVisibility = (targetId) => {
+        document.body.dataset.activeTab = targetId || '';
         contextualToolbars.forEach((toolbar) => {
           const matches = (toolbar.dataset.toolbarFor || '') === targetId;
           toolbar.hidden = !matches;
