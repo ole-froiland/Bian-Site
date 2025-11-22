@@ -2425,6 +2425,74 @@
         '2025-08-10': { revenue: 150763, receipts: 429 },
         '2025-08-03': { revenue: 57476, receipts: 388 },
       };
+      const PREVIEW_TRIPLETEX = {
+        month: {
+          from: '2025-01-01',
+          to: '2025-01-31',
+          accounts: [
+            {
+              key: 'beerRevenue',
+              label: 'Øl salg',
+              total: 15808,
+              totalAbsolute: 15808,
+              periods: {
+                '2025-01': {
+                  total: 15808,
+                  totalAbsolute: 15808,
+                  firstDate: '2025-01-22',
+                  lastDate: '2025-01-22',
+                  meta: { start: '2025-01-01', end: '2025-01-31', year: 2025, month: 1 },
+                },
+              },
+            },
+            {
+              key: 'beerCost',
+              label: 'Øl varekost',
+              total: 0,
+              totalAbsolute: 0,
+              periods: {
+                '2025-01': {
+                  total: 0,
+                  totalAbsolute: 0,
+                  firstDate: '2025-01-01',
+                  lastDate: '2025-01-31',
+                  meta: { start: '2025-01-01', end: '2025-01-31', year: 2025, month: 1 },
+                },
+              },
+            },
+            {
+              key: 'wineRevenue',
+              label: 'Vin salg',
+              total: 0,
+              totalAbsolute: 0,
+              periods: {
+                '2025-01': {
+                  total: 0,
+                  totalAbsolute: 0,
+                  firstDate: '2025-01-01',
+                  lastDate: '2025-01-31',
+                  meta: { start: '2025-01-01', end: '2025-01-31', year: 2025, month: 1 },
+                },
+              },
+            },
+            {
+              key: 'wineCost',
+              label: 'Vin varekost',
+              total: 0,
+              totalAbsolute: 0,
+              periods: {
+                '2025-01': {
+                  total: 0,
+                  totalAbsolute: 0,
+                  firstDate: '2025-01-01',
+                  lastDate: '2025-01-31',
+                  meta: { start: '2025-01-01', end: '2025-01-31', year: 2025, month: 1 },
+                },
+              },
+            },
+          ],
+        },
+      };
       const defaultHourlySeriesSeeds = {
         '2025-08-10': [0,0,0,0,0,0,35,60,120,200,320,420,520,480,430,410,430,520,580,420,260,140,60,15],
         '2025-08-03': [0,0,0,0,0,0,20,40,80,120,150,180,210,190,175,160,170,210,240,200,150,90,45,12],
@@ -2657,13 +2725,28 @@
         return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
       };
 
-      const mergePreviewDayTotals = (entry, forcedIso = null, { enabled = true } = {}) => {
-        if (!entry && !forcedIso) return null;
-        const base = entry ? { ...entry } : { date: forcedIso };
-        const iso = sanitizeIso(base.date || forcedIso);
-        if (!iso || !enabled) return base;
-        const preview = PREVIEW_DAY_TOTALS[iso];
-        return preview ? { ...base, ...preview } : base;
+        const mergePreviewDayTotals = (entry, forcedIso = null, { enabled = true } = {}) => {
+          if (!entry && !forcedIso) return null;
+          const base = entry ? { ...entry } : { date: forcedIso };
+          const iso = sanitizeIso(base.date || forcedIso);
+          if (!iso || !enabled) return base;
+          const preview = PREVIEW_DAY_TOTALS[iso];
+          return preview ? { ...base, ...preview } : base;
+        };
+
+      const buildTripletexPreview = (rangeType, { from, to, year }) => {
+        if (rangeType !== 'month') return null;
+        const payload = PREVIEW_TRIPLETEX.month;
+        if (!payload) return null;
+        return normalizeTripletexResponse(
+          {
+            dateFrom: payload.from || from,
+            dateTo: payload.to || to,
+            group: 'month',
+            accounts: payload.accounts || [],
+          },
+          { rangeType: 'month', from, to, year }
+        );
       };
 
       const parseIsoDate = (iso) => {
@@ -5203,6 +5286,17 @@
             }
           } catch (error) {
             reportsState.error[rangeType] = error;
+            if (rangeType === 'month') {
+              const previewDataset = buildTripletexPreview(rangeType, { from: fromISO, to: toISO, year: reportingYear });
+              if (previewDataset) {
+                reportsState.data[rangeType] = previewDataset;
+                setRangeSelection('month', '2025-01');
+                setStatusAll('Forhåndsvisning (Tripletex)', 'muted');
+                renderTripletexTables();
+                reportsState.loading[rangeType] = false;
+                return;
+              }
+            }
             if (reportsState.activeRange === rangeType) {
               products.forEach((product) => setTable(product.key, []));
               setStatusAll(String(error.message || error), 'error');
