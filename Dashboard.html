@@ -1731,8 +1731,8 @@
               <button type="button" class="reports-range__btn" data-range="month" aria-expanded="false">Måned</button>
               <button type="button" class="reports-range__btn" data-range="week" aria-expanded="false">Uke</button>
               <button type="button" class="reports-range__btn" data-range="day" aria-expanded="false">Dag</button>
-              <span class="reports-range__title" aria-hidden="true" data-range-visible="month">Rapport:</span>
-              <span class="reports-range__month" data-reports-month-label aria-live="polite" data-range-visible="month"></span>
+              <span class="reports-range__title" aria-hidden="true" data-range-visible="month,week,day">Rapport:</span>
+              <span class="reports-range__month" data-reports-range-label aria-live="polite" data-range-visible="month,week,day"></span>
             </div>
           </div>
         </div>
@@ -2051,7 +2051,7 @@
       const dayWeekDeltaBadgeEl = document.querySelector('[data-day-week-delta]');
       const dayAverageDeltaBadgeEl = document.querySelector('[data-day-average-delta]');
       const tablistDateEl = document.querySelector('[data-tablist-date]');
-      const reportsMonthLabelEl = document.querySelector('[data-reports-month-label]');
+      const reportsRangeLabelEl = document.querySelector('[data-reports-range-label]');
       const chartBalanceValueEl = document.querySelector('[data-balance-value]');
       const chartBalanceStatusEl = document.querySelector('[data-balance-status]');
       const highlightBankValueEl = document.querySelector('[data-highlight-bank]');
@@ -2337,6 +2337,7 @@
           closeAllSimplePanels();
           clearWeekSelection();
           setSimpleRangeSelection('month');
+          updateReportsRangeLabel(activeDateISO, 'month');
         });
       }
 
@@ -2345,6 +2346,7 @@
           closeAllSimplePanels();
           clearMonthSelection();
           setSimpleRangeSelection('week');
+          updateReportsRangeLabel(activeDateISO, 'week');
         });
       }
 
@@ -2354,6 +2356,7 @@
           clearMonthSelection();
           clearWeekSelection();
           setSimpleRangeSelection('day');
+          updateReportsRangeLabel(activeDateISO, 'day');
         });
       }
 
@@ -2657,33 +2660,6 @@
         const formatted = dateFmtLong.format(parsed);
         return formatted.charAt(0).toUpperCase() + formatted.slice(1);
       };
-      const formatReportMonth = (iso) => {
-        const parsed = parseIsoDate(iso);
-        if (!parsed) return '';
-        const prevMonth = new Date(parsed.getFullYear(), parsed.getMonth() - 1, 1);
-        const formatted = reportMonthFmt.format(prevMonth);
-        return formatted.charAt(0).toUpperCase() + formatted.slice(1);
-      };
-      const updateReportsMonthLabel = (iso) => {
-        if (!reportsMonthLabelEl) return;
-        reportsMonthLabelEl.textContent = formatReportMonth(iso);
-      };
-      const updateSelectedDateUI = (nextIso, source = null) => {
-        const iso = sanitizeIso(nextIso) || todayISO;
-        if (tablistDateEl) {
-          tablistDateEl.textContent = formatFriendlyDate(iso);
-        }
-        if (dayPicker && source !== 'day') {
-          dayPicker.value = iso;
-        }
-        if (aiProductsPicker && source !== 'ai') {
-          aiProductsPicker.value = iso;
-        }
-        updateReportsMonthLabel(iso);
-        return iso;
-      };
-      let activeDateISO = updateSelectedDateUI(dayPicker?.value || aiProductsPicker?.value || todayISO);
-
       const getISOWeekInfo = (iso) => {
         const parsed = parseIsoDate(iso);
         if (!parsed) return null;
@@ -2695,6 +2671,54 @@
         const week = Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
         return { week, year: target.getFullYear() };
       };
+
+      const formatReportMonth = (iso) => {
+        const parsed = parseIsoDate(iso);
+        if (!parsed) return '';
+        const prevMonth = new Date(parsed.getFullYear(), parsed.getMonth() - 1, 1);
+        const formatted = reportMonthFmt.format(prevMonth);
+        return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      };
+
+      const formatReportRangeLabel = (iso, range = 'month') => {
+        const parsed = parseIsoDate(iso);
+        if (!parsed) return '';
+        const safeRange = ['month', 'week', 'day'].includes(range) ? range : 'month';
+        if (safeRange === 'week') {
+          const previousWeek = new Date(parsed);
+          previousWeek.setDate(previousWeek.getDate() - 7);
+          const info = getISOWeekInfo(toISODate(previousWeek));
+          return info ? `Uke ${info.week}` : '';
+        }
+        if (safeRange === 'day') {
+          const previousDay = new Date(parsed);
+          previousDay.setDate(previousDay.getDate() - 1);
+          return dateFmtShort.format(previousDay).replace(/\.$/, '');
+        }
+        return formatReportMonth(iso);
+      };
+
+      const updateReportsRangeLabel = (iso, range = null) => {
+        if (!reportsRangeLabelEl) return;
+        const resolvedRange = range || document.body.dataset.reportsRange || 'month';
+        reportsRangeLabelEl.textContent = formatReportRangeLabel(iso, resolvedRange);
+      };
+
+      const updateSelectedDateUI = (nextIso, source = null) => {
+        const iso = sanitizeIso(nextIso) || todayISO;
+        if (tablistDateEl) {
+          tablistDateEl.textContent = formatFriendlyDate(iso);
+        }
+        if (dayPicker && source !== 'day') {
+          dayPicker.value = iso;
+        }
+        if (aiProductsPicker && source !== 'ai') {
+          aiProductsPicker.value = iso;
+        }
+        updateReportsRangeLabel(iso);
+        return iso;
+      };
+      let activeDateISO = updateSelectedDateUI(dayPicker?.value || aiProductsPicker?.value || todayISO);
 
       const shiftIsoDate = (iso, delta) => {
         const parsed = parseIsoDate(iso);
@@ -5182,6 +5206,7 @@
                 if (!isActive) {
                   reportsState.activeRange = range;
                   applyRangeVisibility(range);
+                  updateReportsRangeLabel(activeDateISO, range);
                   setRangePanelsVisibility('month');
                   if (!reportsState.data[range] && !reportsState.loading[range]) {
                     fetchTripletexRange(range);
@@ -5212,6 +5237,7 @@
                 if (!isActive) {
                   reportsState.activeRange = range;
                   applyRangeVisibility(range);
+                  updateReportsRangeLabel(activeDateISO, range);
                   ensureWeekButtons();
                   setRangePanelsVisibility('week');
                   if (!reportsState.data[range] && !reportsState.loading[range]) {
@@ -5243,6 +5269,7 @@
               if (!isActive) {
                 reportsState.activeRange = range;
                 applyRangeVisibility(range);
+                updateReportsRangeLabel(activeDateISO, range);
                 setRangePanelsVisibility('day');
                 if (!reportsState.data[range] && !reportsState.loading[range]) {
                   fetchTripletexRange(range);
