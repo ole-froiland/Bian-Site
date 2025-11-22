@@ -2126,7 +2126,7 @@
       const hourlyNoteEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-note]') : null;
       const rawReportsToolbar = document.querySelector('[data-reports-toolbar]');
       const isSimpleReportsToolbar = rawReportsToolbar?.dataset.toolbarMode === 'simple';
-      const reportsToolbar = isSimpleReportsToolbar ? null : rawReportsToolbar;
+      const reportsToolbar = rawReportsToolbar;
 
     if (isSimpleReportsToolbar && rawReportsToolbar) {
       const monthButton = rawReportsToolbar.querySelector('[data-range="month"]');
@@ -5420,6 +5420,13 @@
               updateRangeButtonsState();
             });
           });
+
+          if (!reportsState.activeRange) {
+            reportsState.activeRange = 'month';
+            applyRangeVisibility('month');
+            updateRangeButtonsState();
+            fetchTripletexRange('month');
+          }
 
           monthButtons.forEach((button) => {
             button.addEventListener('click', () => {
