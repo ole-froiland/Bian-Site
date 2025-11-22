@@ -5052,6 +5052,23 @@
           return metaKeys;
         };
 
+        const getPreviousMonthKey = (iso) => {
+          const parsed = parseIsoDate(iso);
+          if (!parsed) return null;
+          const prev = new Date(parsed.getFullYear(), parsed.getMonth() - 1, 1);
+          const y = prev.getFullYear();
+          const m = String(prev.getMonth() + 1).padStart(2, '0');
+          return `${y}-${m}`;
+        };
+
+        const getPreviousWeekKey = (iso) => {
+          const prevIso = shiftIsoDate(iso, -7);
+          const info = prevIso ? getISOWeekInfo(prevIso) : null;
+          return info?.key || null;
+        };
+
+        const getPreviousDayKey = (iso) => shiftIsoDate(iso, -1);
+
         const setRangeSelection = (rangeType, key) => {
           reportsState.selection[rangeType] = key || null;
           if (rangeType === 'day') {
@@ -5082,14 +5099,21 @@
         const pickInitialSelection = (rangeType) => {
           const keys = getSortedRangeKeys(rangeType);
           if (!keys.length) return null;
+          const baseIso = sanitizeIso(activeDateISO) || todayISO;
           if (rangeType === 'month') {
-            const currentMonthKey = todayISO.slice(0, 7);
+            const prevKey = getPreviousMonthKey(baseIso);
+            if (prevKey && keys.includes(prevKey)) return prevKey;
+            const currentMonthKey = baseIso.slice(0, 7);
             if (keys.includes(currentMonthKey)) return currentMonthKey;
           } else if (rangeType === 'week') {
-            const info = getISOWeekInfo(todayISO);
+            const info = getISOWeekInfo(baseIso);
+            const prevWeekKey = getPreviousWeekKey(baseIso);
+            if (prevWeekKey && keys.includes(prevWeekKey)) return prevWeekKey;
             if (info?.key && keys.includes(info.key)) return info.key;
           } else if (rangeType === 'day') {
-            if (keys.includes(todayISO)) return todayISO;
+            const prevDay = getPreviousDayKey(baseIso);
+            if (prevDay && keys.includes(prevDay)) return prevDay;
+            if (keys.includes(baseIso)) return baseIso;
           }
           return keys[keys.length - 1];
         };
@@ -5234,7 +5258,17 @@
             }
             setStatus(product.key, statusText || '');
           });
-          if (range === 'month') applyMonthSelectionState();
+          if (range === 'month') {
+            applyMonthSelectionState();
+            if (selectionKey && reportsRangeLabelEl) {
+              const meta = dataset.meta.get(selectionKey);
+              const start = meta?.start ? parseIsoDate(meta.start) : null;
+              if (start) {
+                const label = monthLabelFmt.format(start);
+                reportsRangeLabelEl.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+              }
+            }
+          }
           if (range === 'week') updateWeekButtons();
           if (range === 'day') {
             updateDayButtons();
