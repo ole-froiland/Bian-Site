@@ -715,6 +715,9 @@
       margin:0;
       color:var(--text-muted);
     }
+    [data-range-hidden="1"]{
+      display:none !important;
+    }
     .reports-toolbar{
       display:flex;
       flex-direction:column;
@@ -2083,8 +2086,13 @@
             .map((entry) => entry.trim())
             .filter(Boolean);
           const shouldShow = !allowed.length || allowed.includes(safeRange);
-          if (shouldShow) target.removeAttribute('hidden');
-          else target.setAttribute('hidden', '');
+          if (shouldShow) {
+            target.hidden = false;
+            target.removeAttribute('data-range-hidden');
+          } else {
+            target.hidden = true;
+            target.setAttribute('data-range-hidden', '1');
+          }
         });
       };
       applyRangeVisibility('month');
