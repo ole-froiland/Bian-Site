@@ -5105,6 +5105,34 @@
           }
         };
 
+        const ensureSelectionValid = (rangeType) => {
+          const dataset = reportsState.data[rangeType];
+          if (!dataset) return false;
+          const available = Array.from(dataset.availableKeys || []);
+          const metaKeys = getSortedRangeKeys(rangeType, { includeMeta: true });
+          const current = reportsState.selection[rangeType];
+          const candidates = [];
+          if (rangeType === 'month' && tripletexContext?.monthKey) candidates.push(tripletexContext.monthKey);
+          if (rangeType === 'week') {
+            const info = getISOWeekInfo(tripletexContext?.anchorIso || activeDateISO || todayISO);
+            if (info?.key) candidates.push(info.key);
+          }
+          if (rangeType === 'day') {
+            const anchor = sanitizeIso(tripletexContext?.anchorIso || activeDateISO || todayISO);
+            if (anchor) candidates.push(anchor);
+          }
+          if (current) candidates.push(current);
+          const pick = (pool) => candidates.find((key) => key && pool.includes(key));
+          let next = pick(available);
+          if (!next) next = pick(metaKeys);
+          if (!next && metaKeys.length) next = metaKeys[metaKeys.length - 1];
+          if (next && next !== current) {
+            setRangeSelection(rangeType, next);
+            return true;
+          }
+          return false;
+        };
+
         const cycleRangeSelection = (rangeType, direction = 1) => {
           const keys = getSortedRangeKeys(rangeType);
           if (!keys.length) return;
@@ -5282,6 +5310,9 @@
           const range = reportsState.activeRange;
           const dataset = reportsState.data[range];
           if (!dataset) return;
+          if (ensureSelectionValid(range)) {
+            updateRangeButtonsState();
+          }
           const selectionKey = reportsState.selection[range];
           if (range === 'day' && selectionKey) {
             updateSelectedDateUI(selectionKey, 'day');
@@ -5333,10 +5364,12 @@
             const dataset = normalizeTripletexResponse(data, { rangeType, from, to, year });
             reportsState.data[rangeType] = dataset;
             reportsState.error[rangeType] = null;
-            if (!reportsState.selection[rangeType]) {
+            const shouldPick = !reportsState.selection[rangeType];
+            if (shouldPick) {
               const initialKey = pickInitialSelection(rangeType);
               if (initialKey) setRangeSelection(rangeType, initialKey);
             }
+            ensureSelectionValid(rangeType);
             if (rangeType === 'month') applyMonthSelectionState();
             if (rangeType === 'week') updateWeekButtons();
             if (rangeType === 'day') {
