@@ -696,6 +696,25 @@
       gap:var(--space-3);
       grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
     }
+    .range-placeholder{
+      display:flex;
+      flex-direction:column;
+      gap:var(--space-2);
+      background:var(--surface);
+      border:1px dashed var(--border);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-sm);
+      padding:clamp(1.5rem,2.8vw,2rem);
+    }
+    .range-placeholder h2{
+      margin:0;
+      font-size:1.05rem;
+      color:var(--text-strong);
+    }
+    .range-placeholder p{
+      margin:0;
+      color:var(--text-muted);
+    }
     .reports-toolbar{
       display:flex;
       flex-direction:column;
@@ -1709,8 +1728,8 @@
               <button type="button" class="reports-range__btn" data-range="month" aria-expanded="false">Måned</button>
               <button type="button" class="reports-range__btn" data-range="week" aria-expanded="false">Uke</button>
               <button type="button" class="reports-range__btn" data-range="day" aria-expanded="false">Dag</button>
-              <span class="reports-range__title" aria-hidden="true">Rapport:</span>
-              <span class="reports-range__month" data-reports-month-label aria-live="polite"></span>
+              <span class="reports-range__title" aria-hidden="true" data-range-visible="month">Rapport:</span>
+              <span class="reports-range__month" data-reports-month-label aria-live="polite" data-range-visible="month"></span>
             </div>
           </div>
         </div>
@@ -1719,7 +1738,7 @@
   </nav>
   <main class="shell">
     <section class="tab-panel active" id="kpi" role="tabpanel" aria-labelledby="tab-kpi" tabindex="0" data-tripletex-config='{"beer":{"label":"Øl","accounts":{"revenue":"id-289896744","cost":"id-289896742"}},"wine":{"label":"Vin","accounts":{"revenue":"id-289896745","cost":"id-289896743"}}}'>
-      <div class="tripletex-grid">
+      <div class="tripletex-grid" data-range-visible="month">
         <article class="card tripletex-card" data-tripletex-product="beer">
           <header>
             <h2 data-tripletex-label>Tripletex · Øl</h2>
@@ -1758,6 +1777,14 @@
             </tbody>
           </table>
         </article>
+      </div>
+      <div class="card range-placeholder" data-range-visible="week" hidden>
+        <h2>Ukemeny</h2>
+        <p class="muted">Ukebasert visning. Tripletex-tabellene er tilgjengelige når du velger Måned.</p>
+      </div>
+      <div class="card range-placeholder" data-range-visible="day" hidden>
+        <h2>Dagsmeny</h2>
+        <p class="muted">Dagvisning er aktiv. Bytt til Måned for å se månedsrapporten fra Tripletex.</p>
       </div>
     </section>
     <section class="tab-panel" id="oversikt" role="tabpanel" aria-labelledby="tab-oversikt" tabindex="0" hidden>
@@ -2046,18 +2073,33 @@
       const aiProductsDateEl = document.querySelector('[data-ai-products-date]');
       const aiProductsPicker = document.querySelector('#ai-products-picker');
       const aiTodayBtn = document.querySelector('[data-ai-today]');
-    const hourlyCardEl = document.querySelector('[data-ai-hourly-card]');
-    const hourlyCanvas = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-chart]') : null;
-    const hourlyEmptyEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-empty]') : null;
-    const hourlyTagEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-tag]') : null;
-    const hourlyFocusLabelEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-label]') : null;
-    const hourlyFocusCurrentEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-current]') : null;
-    const hourlyFocusPreviousEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-previous]') : null;
-    const hourlyFocusDeltaEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-delta]') : null;
-    const hourlyNoteEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-note]') : null;
-    const rawReportsToolbar = document.querySelector('[data-reports-toolbar]');
-    const isSimpleReportsToolbar = rawReportsToolbar?.dataset.toolbarMode === 'simple';
-    const reportsToolbar = isSimpleReportsToolbar ? null : rawReportsToolbar;
+      const rangeVisibilityTargets = Array.from(document.querySelectorAll('[data-range-visible]'));
+      const applyRangeVisibility = (range) => {
+        const safeRange = range || 'month';
+        document.body.dataset.reportsRange = safeRange;
+        rangeVisibilityTargets.forEach((target) => {
+          const allowed = (target.dataset.rangeVisible || '')
+            .split(',')
+            .map((entry) => entry.trim())
+            .filter(Boolean);
+          const shouldShow = !allowed.length || allowed.includes(safeRange);
+          if (shouldShow) target.removeAttribute('hidden');
+          else target.setAttribute('hidden', '');
+        });
+      };
+      applyRangeVisibility('month');
+      const hourlyCardEl = document.querySelector('[data-ai-hourly-card]');
+      const hourlyCanvas = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-chart]') : null;
+      const hourlyEmptyEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-empty]') : null;
+      const hourlyTagEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-tag]') : null;
+      const hourlyFocusLabelEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-label]') : null;
+      const hourlyFocusCurrentEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-current]') : null;
+      const hourlyFocusPreviousEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-previous]') : null;
+      const hourlyFocusDeltaEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-focus-delta]') : null;
+      const hourlyNoteEl = hourlyCardEl ? hourlyCardEl.querySelector('[data-hourly-note]') : null;
+      const rawReportsToolbar = document.querySelector('[data-reports-toolbar]');
+      const isSimpleReportsToolbar = rawReportsToolbar?.dataset.toolbarMode === 'simple';
+      const reportsToolbar = isSimpleReportsToolbar ? null : rawReportsToolbar;
 
     if (isSimpleReportsToolbar && rawReportsToolbar) {
       const monthButton = rawReportsToolbar.querySelector('[data-range="month"]');
@@ -2075,6 +2117,7 @@
       let clearWeekSelection = () => {};
 
       const setSimpleRangeSelection = (range) => {
+        applyRangeVisibility(range);
         simpleRangeButtons.forEach((btn) => {
           const isActive = btn.dataset.range === range;
           btn.classList.toggle('active', isActive);
@@ -2324,6 +2367,7 @@
           weekButton?.focus();
         }
       });
+      setSimpleRangeSelection('month');
     }
       const revenueCardEl = document.querySelector('[data-revenue-card]');
       const revenueDateEl = document.querySelector('[data-revenue-date]');
@@ -5129,6 +5173,7 @@
               if (range === 'month') {
                 if (!isActive) {
                   reportsState.activeRange = range;
+                  applyRangeVisibility(range);
                   setRangePanelsVisibility('month');
                   if (!reportsState.data[range] && !reportsState.loading[range]) {
                     fetchTripletexRange(range);
@@ -5158,6 +5203,7 @@
               if (range === 'week') {
                 if (!isActive) {
                   reportsState.activeRange = range;
+                  applyRangeVisibility(range);
                   ensureWeekButtons();
                   setRangePanelsVisibility('week');
                   if (!reportsState.data[range] && !reportsState.loading[range]) {
@@ -5188,6 +5234,7 @@
             if (range === 'day') {
               if (!isActive) {
                 reportsState.activeRange = range;
+                applyRangeVisibility(range);
                 setRangePanelsVisibility('day');
                 if (!reportsState.data[range] && !reportsState.loading[range]) {
                   fetchTripletexRange(range);
@@ -5211,6 +5258,7 @@
             }
 
             reportsState.activeRange = range;
+            applyRangeVisibility(range);
             setRangePanelsVisibility(null);
             if (!reportsState.data[range] && !reportsState.loading[range]) {
               fetchTripletexRange(range);
