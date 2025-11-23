@@ -2248,16 +2248,16 @@
         let selectedWeekLabel = '';
         let weekButtons = [];
 
-        const updateWeekTriggerState = () => {
-          if (selectedWeek) {
-            const suffix = selectedWeekLabel || `Uke ${selectedWeek}`;
-            weekButton.textContent = `${defaultWeekLabel} · ${suffix}`;
-            weekButton.setAttribute('data-selected', 'true');
-          } else {
-            weekButton.textContent = defaultWeekLabel;
-            weekButton.removeAttribute('data-selected');
-          }
-        };
+          const updateWeekTriggerState = () => {
+            if (selectedWeek) {
+              const suffix = selectedWeekLabel || `Uke ${selectedWeek}`;
+              weekButton.textContent = `${defaultWeekLabel} · ${suffix}`;
+              weekButton.setAttribute('data-selected', 'true');
+            } else {
+              weekButton.textContent = defaultWeekLabel;
+              weekButton.removeAttribute('data-selected');
+            }
+          };
 
         const ensureWeekButtons = () => {
           if (!weekGrid) return;
@@ -4723,7 +4723,9 @@
             anchorIso,
             year,
             monthKey,
-            from: makeIsoDate(year, 1, 1),
+            from: effectiveRange === 'month'
+              ? makeIsoDate(monthForReport.getUTCFullYear(), monthForReport.getUTCMonth() + 1, 1)
+              : makeIsoDate(year, 1, 1),
             to: effectiveRange === 'month'
               ? makeIsoDate(endOfMonth.getUTCFullYear(), endOfMonth.getUTCMonth() + 1, endOfMonth.getUTCDate())
               : makeIsoDate(anchorDate.getFullYear(), anchorDate.getMonth() + 1, anchorDate.getDate()),
@@ -4839,9 +4841,9 @@
           const button = getRangeButton('month');
           if (!button) return;
           const defaultLabel = rangeButtonDefaults.get('month') || button.textContent.trim();
-          const selectionKey = reportsState.selection.month;
+          const selectionKey = reportsState.selection.month || tripletexContext?.monthKey || null;
+          const label = selectionKey ? resolveMonthLabelFromKey(selectionKey) : '';
           if (selectionKey) {
-            const label = resolveMonthLabelFromKey(selectionKey);
             button.textContent = label ? `${defaultLabel} · ${label}` : `${defaultLabel} · ${selectionKey}`;
             button.setAttribute('data-selected', 'true');
           } else {
@@ -5390,6 +5392,9 @@
             if (shouldPick) {
               const initialKey = pickInitialSelection(rangeType);
               if (initialKey) setRangeSelection(rangeType, initialKey);
+            }
+            if (rangeType === 'month' && tripletexContext?.monthKey) {
+              setRangeSelection('month', tripletexContext.monthKey);
             }
             ensureSelectionValid(rangeType);
             if (rangeType === 'month') applyMonthSelectionState();
