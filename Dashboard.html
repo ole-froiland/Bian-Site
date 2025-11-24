@@ -4086,7 +4086,6 @@
       }
 
         if (dayPicker) {
-          dayPicker.max = todayISO;
           loadDayTotals(activeDateISO);
           dayPicker.addEventListener('change', () => {
             activeDateISO = updateSelectedDateUI(dayPicker.value || todayISO, 'day');
@@ -4124,7 +4123,6 @@
       }
 
         if (aiProductsPicker) {
-          aiProductsPicker.max = todayISO;
           if (!aiProductsPicker.value) {
             aiProductsPicker.value = activeDateISO;
           }
