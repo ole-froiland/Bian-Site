@@ -2810,8 +2810,7 @@
       const formatReportMonth = (iso) => {
         const parsed = parseIsoDate(iso);
         if (!parsed) return '';
-        const prevMonth = new Date(parsed.getFullYear(), parsed.getMonth() - 1, 1);
-        const formatted = reportMonthFmt.format(prevMonth);
+        const formatted = reportMonthFmt.format(parsed);
         return formatted.charAt(0).toUpperCase() + formatted.slice(1);
       };
 
@@ -4758,9 +4757,7 @@
           const anchorIso = sanitizeIso(baseIso) || todayISO;
           const anchorDate = parseIsoDate(anchorIso) || new Date();
           const effectiveRange = rangeType || 'month';
-          const monthForReport = effectiveRange === 'month'
-            ? new Date(Date.UTC(anchorDate.getFullYear(), anchorDate.getMonth() - 1, 1))
-            : new Date(Date.UTC(anchorDate.getFullYear(), anchorDate.getMonth(), 1));
+          const monthForReport = new Date(Date.UTC(anchorDate.getFullYear(), anchorDate.getMonth(), 1));
           const year = monthForReport.getUTCFullYear();
           const month = monthForReport.getUTCMonth() + 1;
           const monthKey = `${year}-${String(month).padStart(2, '0')}`;
