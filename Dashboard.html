@@ -788,8 +788,15 @@
       gap:clamp(0.4rem,1vw,0.85rem);
       flex-wrap:wrap;
     }
-    .reports-range__title{
+    .reports-range__label{
+      display:inline-flex;
+      align-items:baseline;
+      gap:0.4rem;
+      white-space:nowrap;
       margin-left:clamp(0.8rem,1.6vw,1.25rem);
+      flex:0 0 auto;
+    }
+    .reports-range__title{
       font-size:clamp(1.3rem,3.4vw,1.9rem);
       font-weight:700;
       color:#0f172a;
@@ -1776,8 +1783,10 @@
               <button type="button" class="reports-range__btn" data-range="month" aria-expanded="false">Måned</button>
               <button type="button" class="reports-range__btn" data-range="week" aria-expanded="false">Uke</button>
               <button type="button" class="reports-range__btn" data-range="day" aria-expanded="false">Dag</button>
-              <span class="reports-range__title" aria-hidden="true" data-range-visible="month,week,day">Rapport:</span>
-              <span class="reports-range__month" data-reports-range-label aria-live="polite" data-range-visible="month,week,day"></span>
+              <span class="reports-range__label" data-range-visible="month,week,day">
+                <span class="reports-range__title" aria-hidden="true">Rapport:</span>
+                <span class="reports-range__month" data-reports-range-label aria-live="polite"></span>
+              </span>
             </div>
           </div>
         </div>
