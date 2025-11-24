@@ -5185,9 +5185,10 @@
           return metaKeys;
         };
 
-        const setRangeSelection = (rangeType, key) => {
+        const setRangeSelection = (rangeType, key, { syncDateUI = false } = {}) => {
           reportsState.selection[rangeType] = key || null;
-          if (rangeType === 'day') {
+          const shouldSyncDate = rangeType === 'day' && (syncDateUI || reportsState.activeRange === 'day');
+          if (shouldSyncDate) {
             updateSelectedDateUI(key, 'day');
           }
           if (rangeType === 'day' && dayPanelInput) {
@@ -5463,7 +5464,7 @@
             const shouldPick = !reportsState.selection[rangeType];
             if (shouldPick) {
               const initialKey = pickInitialSelection(rangeType);
-              if (initialKey) setRangeSelection(rangeType, initialKey);
+              if (initialKey) setRangeSelection(rangeType, initialKey, { syncDateUI: rangeType === 'day' });
             }
             if (rangeType === 'month' && tripletexContext?.monthKey) {
               setRangeSelection('month', tripletexContext.monthKey);
@@ -5473,7 +5474,7 @@
             if (rangeType === 'week') updateWeekButtons();
             if (rangeType === 'day') {
               if (!reportsState.selection.day) {
-                setRangeSelection('day', sanitizeIso(tripletexContext.anchorIso));
+                setRangeSelection('day', sanitizeIso(tripletexContext.anchorIso), { syncDateUI: reportsState.activeRange === 'day' });
               }
               updateDayButtons();
               updateDayHint();
@@ -5523,7 +5524,7 @@
                   } else {
                     if (!reportsState.selection[range]) {
                       const initialKey = pickInitialSelection(range);
-                      if (initialKey) setRangeSelection(range, initialKey);
+                    if (initialKey) setRangeSelection(range, initialKey, { syncDateUI: range === 'day' });
                     }
                     applyMonthSelectionState();
                     renderTripletexTables();
@@ -5555,7 +5556,7 @@
                   } else {
                     if (!reportsState.selection[range]) {
                       const initialKey = pickInitialSelection(range);
-                      if (initialKey) setRangeSelection(range, initialKey);
+                    if (initialKey) setRangeSelection(range, initialKey, { syncDateUI: range === 'day' });
                     }
                     updateWeekButtons();
                     renderTripletexTables();
@@ -5586,7 +5587,7 @@
                 } else {
                   if (!reportsState.selection[range]) {
                     const initialKey = pickInitialSelection(range);
-                    if (initialKey) setRangeSelection(range, initialKey);
+                    if (initialKey) setRangeSelection(range, initialKey, { syncDateUI: range === 'day' });
                   }
                   updateDayButtons();
                   renderTripletexTables();
@@ -5655,7 +5656,7 @@
               if (!trigger) return;
               const key = trigger.dataset.dayKey;
               if (!key) return;
-              setRangeSelection('day', key);
+              setRangeSelection('day', key, { syncDateUI: true });
               updateDayButtons();
               renderTripletexTables();
               hideRangePanel('day');
@@ -5666,7 +5667,7 @@
             dayPanelInput.addEventListener('change', () => {
               const value = sanitizeIso(dayPanelInput.value);
               if (!value) return;
-              setRangeSelection('day', value);
+              setRangeSelection('day', value, { syncDateUI: true });
               updateDayButtons();
               renderTripletexTables();
             });
@@ -5674,7 +5675,7 @@
 
           if (dayPanelToday) {
             dayPanelToday.addEventListener('click', () => {
-              setRangeSelection('day', todayISO);
+              setRangeSelection('day', todayISO, { syncDateUI: true });
               updateDayButtons();
               renderTripletexTables();
               hideRangePanel('day');
@@ -5710,7 +5711,7 @@
         if (dayPicker) {
           dayPicker.addEventListener('change', () => {
             const value = sanitizeIso(dayPicker.value);
-            setRangeSelection('day', value);
+            setRangeSelection('day', value, { syncDateUI: true });
             if (!reportsState.data.day && !reportsState.loading.day) {
               fetchTripletexRange('day');
             } else if (reportsState.activeRange === 'day') {
