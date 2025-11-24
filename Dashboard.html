@@ -1808,28 +1808,9 @@
   <main class="shell">
     <section class="tab-panel active" id="kpi" role="tabpanel" aria-labelledby="tab-kpi" tabindex="0" data-tripletex-config='{"beer":{"label":"Øl","accounts":{"revenue":"id-289896744","cost":"id-289896742"}},"wine":{"label":"Vin","accounts":{"revenue":"id-289896745","cost":"id-289896743"}}}'>
       <div class="tripletex-grid" data-range-visible="month">
-        <article class="card tripletex-card" data-tripletex-product="beer">
+        <article class="card tripletex-card" data-tripletex-product="sales">
           <header>
-            <h2 data-tripletex-label>Tripletex · Øl</h2>
-            <p class="tripletex-status" data-tripletex-status>Henter …</p>
-          </header>
-          <table class="tripletex-table">
-            <thead>
-              <tr>
-                <th>Måned</th>
-                <th>Salgsinntekt</th>
-                <th>Varekost</th>
-                <th>Dekningsgrad</th>
-              </tr>
-            </thead>
-            <tbody data-tripletex-table>
-              <tr><td colspan="4" class="muted">Henter …</td></tr>
-            </tbody>
-          </table>
-        </article>
-        <article class="card tripletex-card" data-tripletex-product="wine">
-          <header>
-            <h2 data-tripletex-label>Tripletex · Vin</h2>
+            <h2 data-tripletex-label>Tripletex · Salg</h2>
             <p class="tripletex-status" data-tripletex-status>Henter …</p>
           </header>
           <table class="tripletex-table">
@@ -4751,19 +4732,23 @@
           console.warn('Tripletex-config: kunne ikke tolke JSON');
         }
 
-        const products = Object.entries(sectionConfig).map(([key, value]) => ({
+        const sourceProducts = Object.entries(sectionConfig).map(([key, value]) => ({
           key,
           label: value?.label || key,
           revenueAccount: value?.accounts?.revenue || null,
           costAccount: value?.accounts?.cost || null,
         })).filter((item) => item.revenueAccount || item.costAccount);
 
-        if (!products.length) {
-          products.push({ key: 'beer', label: 'Øl', revenueAccount: 'id-289896744', costAccount: 'id-289896742' });
+        if (!sourceProducts.length) {
+          sourceProducts.push({ key: 'beer', label: 'Øl', revenueAccount: 'id-289896744', costAccount: 'id-289896742' });
+          sourceProducts.push({ key: 'wine', label: 'Vin', revenueAccount: 'id-289896745', costAccount: 'id-289896743' });
         }
 
+        const aggregateProduct = { key: 'sales', label: 'Salg', sources: sourceProducts.map((p) => p.key) };
+        const products = [aggregateProduct];
+
         const accountsParam = [];
-        products.forEach((product) => {
+        sourceProducts.forEach((product) => {
           if (product.revenueAccount) accountsParam.push(`${product.key}Revenue|${product.label} salg:${product.revenueAccount}`);
           if (product.costAccount) accountsParam.push(`${product.key}Cost|${product.label} varekost:${product.costAccount}`);
         });
@@ -5072,7 +5057,7 @@
             return dataset.meta.get(key);
           };
 
-          products.forEach((product) => {
+          sourceProducts.forEach((product) => {
             const revenueEntry = product.revenueAccount ? aggregateMap.get(`${product.key}Revenue`) : null;
             const costEntry = product.costAccount ? aggregateMap.get(`${product.key}Cost`) : null;
             const revenueBuckets = revenueEntry?.periods || revenueEntry?.months || {};
@@ -5115,6 +5100,42 @@
             rows.sort((a, b) => a.key.localeCompare(b.key));
             dataset.products[product.key] = { label: product.label, rows };
           });
+
+          if (aggregateProduct) {
+            const aggregateRowsMap = new Map();
+            const aggregateLabel = aggregateProduct.label || 'Salg';
+            sourceProducts.forEach((product) => {
+              const rows = dataset.products[product.key]?.rows || [];
+              rows.forEach((row) => {
+                const current = aggregateRowsMap.get(row.key) || {
+                  key: row.key,
+                  label: row.label,
+                  hint: row.hint,
+                  revenueValue: 0,
+                  costValue: 0,
+                };
+                current.revenueValue += Number(row.revenueValue || 0);
+                current.costValue += Number(row.costValue || 0);
+                aggregateRowsMap.set(row.key, current);
+              });
+            });
+            const aggregateRows = Array.from(aggregateRowsMap.values()).map((row) => {
+              const revenueValue = Number(row.revenueValue || 0);
+              const costValue = Number(row.costValue || 0);
+              const margin = revenueValue > 0 ? (revenueValue - costValue) / revenueValue : null;
+              return {
+                key: row.key,
+                label: row.label,
+                hint: row.hint || '',
+                revenueValue,
+                costValue,
+                revenue: moneyFmt.format(revenueValue),
+                cost: moneyFmt.format(costValue),
+                margin,
+              };
+            }).sort((a, b) => a.key.localeCompare(b.key));
+            dataset.products[aggregateProduct.key] = { label: aggregateLabel, rows: aggregateRows };
+          }
 
           if (rangeType === 'month') {
             for (let month = 1; month <= 12; month += 1) {
