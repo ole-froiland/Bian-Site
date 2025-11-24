@@ -447,7 +447,33 @@
       align-items:center;
       justify-content:center;
       white-space:nowrap;
+      gap:0.5rem;
     }
+    .tablist-date__today{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:0.35rem 0.85rem;
+      border-radius:var(--radius-pill);
+      border:1px solid var(--border);
+      background:color-mix(in srgb,var(--surface) 88%,transparent);
+      color:var(--text);
+      font-weight:700;
+      font-size:0.88rem;
+      box-shadow:var(--shadow-xs);
+      cursor:pointer;
+      transition:background var(--transition),color var(--transition),border-color var(--transition),box-shadow var(--transition);
+    }
+    body[data-theme="dark"] .tablist-date__today{
+      background:rgba(15,23,42,0.65);
+      color:var(--text);
+      border-color:var(--border-subtle);
+    }
+    .tablist-date__today:hover{color:var(--text-strong);border-color:var(--primary);background:color-mix(in srgb,var(--surface) 84%,var(--primary) 16%);}
+    .tablist-date__today:focus-visible{outline:none;box-shadow:var(--ring);}
+    .tablist-date__today[disabled]{opacity:0.65;cursor:default;color:var(--text-muted);border-color:var(--border);}
+    .tablist-date__today--active{border-color:var(--primary-border);background:color-mix(in srgb,var(--primary) 15%,var(--surface) 85%);color:var(--text-strong);}
+    body[data-theme="dark"] .tablist-date__today--active{background:color-mix(in srgb,var(--primary) 12%,rgba(15,23,42,0.85) 88%);}
     .tablist-date__trigger{
       display:inline-flex;
       align-items:center;
@@ -1735,6 +1761,7 @@
           <button class="tab-button" id="tab-ai" type="button" role="tab" aria-selected="false" aria-controls="ai-tips" data-tab-target="ai-tips" tabindex="-1">AI-tips</button>
         </div>
         <div class="tablist-date">
+          <button type="button" class="tablist-date__today" data-day-today>I dag</button>
           <button type="button" class="tablist-date__trigger" data-day-picker-trigger aria-controls="sales-day-picker" aria-haspopup="dialog">
             <span data-tablist-date>–</span>
             <svg class="tablist-date__icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -2062,6 +2089,7 @@
 
       const dayPicker = document.querySelector('#sales-day-picker');
       const dayPickerTrigger = document.querySelector('[data-day-picker-trigger]');
+      const dayTodayBtn = document.querySelector('[data-day-today]');
       const dayRevenueEl = document.querySelector('[data-day-revenue]');
       const dayAverageEl = document.querySelector('[data-day-average]');
       const dayStatusEl = document.querySelector('[data-day-status]');
@@ -2726,6 +2754,13 @@
         const value = String(iso).trim();
         return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
       };
+      const setTodayButtonState = (iso) => {
+        if (!dayTodayBtn) return;
+        const isToday = sanitizeIso(iso) === todayISO;
+        dayTodayBtn.disabled = isToday;
+        dayTodayBtn.setAttribute('aria-pressed', isToday ? 'true' : 'false');
+        dayTodayBtn.classList.toggle('tablist-date__today--active', isToday);
+      };
 
         const mergePreviewDayTotals = (entry, forcedIso = null, { enabled = true } = {}) => {
           if (!entry && !forcedIso) return null;
@@ -2822,6 +2857,7 @@
         if (tablistDateEl) {
           tablistDateEl.textContent = formatFriendlyDate(iso);
         }
+        setTodayButtonState(iso);
         if (dayPicker && source !== 'day') {
           dayPicker.value = iso;
         }
@@ -4066,6 +4102,16 @@
           });
         } else {
           loadDayTotals(activeDateISO);
+        }
+
+        if (dayTodayBtn) {
+          dayTodayBtn.addEventListener('click', () => {
+            activeDateISO = updateSelectedDateUI(todayISO);
+            loadDayTotals(activeDateISO);
+            if (typeof handleActiveDateChange === 'function') {
+              handleActiveDateChange(activeDateISO);
+            }
+          });
         }
 
       if (dayPickerTrigger && dayPicker) {
