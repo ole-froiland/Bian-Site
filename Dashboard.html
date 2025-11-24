@@ -2223,15 +2223,9 @@
 
         const updateMonthTriggerState = () => {
           const hasSelection = Boolean(selectedMonth);
-          const label = getSelectedMonthLabel();
-          if (hasSelection) {
-            const suffix = label ? label : selectedMonth;
-            monthButton.textContent = `${defaultLabel} · ${suffix}`;
-            monthButton.setAttribute('data-selected', 'true');
-          } else {
-            monthButton.textContent = defaultLabel;
-            monthButton.removeAttribute('data-selected');
-          }
+          monthButton.textContent = defaultLabel;
+          if (hasSelection) monthButton.setAttribute('data-selected', 'true');
+          else monthButton.removeAttribute('data-selected');
         };
 
         const syncMonthButtonStates = () => {
@@ -4909,14 +4903,9 @@
           if (!button) return;
           const defaultLabel = rangeButtonDefaults.get('month') || button.textContent.trim();
           const selectionKey = reportsState.selection.month || tripletexContext?.monthKey || null;
-          const label = selectionKey ? resolveMonthLabelFromKey(selectionKey) : '';
-          if (selectionKey) {
-            button.textContent = label ? `${defaultLabel} · ${label}` : `${defaultLabel} · ${selectionKey}`;
-            button.setAttribute('data-selected', 'true');
-          } else {
-            button.textContent = defaultLabel;
-            button.removeAttribute('data-selected');
-          }
+          button.textContent = defaultLabel;
+          if (selectionKey) button.setAttribute('data-selected', 'true');
+          else button.removeAttribute('data-selected');
         };
 
         const updateRangeButtonsState = () => {
