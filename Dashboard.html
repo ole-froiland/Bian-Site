@@ -5187,8 +5187,7 @@
 
         const setRangeSelection = (rangeType, key, { syncDateUI = false } = {}) => {
           reportsState.selection[rangeType] = key || null;
-          const shouldSyncDate = rangeType === 'day' && (syncDateUI || reportsState.activeRange === 'day');
-          if (shouldSyncDate) {
+          if (rangeType === 'day' && syncDateUI) {
             updateSelectedDateUI(key, 'day');
           }
           if (rangeType === 'day' && dayPanelInput) {
@@ -5599,17 +5598,21 @@
                 updateDayButtons();
                 return;
               }
-              hideRangePanel('day');
-              return;
-            }
+            hideRangePanel('day');
+            return;
+          }
 
-            reportsState.activeRange = range;
-            applyRangeVisibility(range);
-            setRangePanelsVisibility(null);
-            if (!reportsState.data[range] && !reportsState.loading[range]) {
-              fetchTripletexRange(range);
-            } else {
-                if (!reportsState.selection[range]) {
+          reportsState.activeRange = range;
+          applyRangeVisibility(range);
+          if (range === 'day') {
+            const desiredDay = sanitizeIso(reportsState.selection.day || activeDateISO || todayISO);
+            if (desiredDay) setRangeSelection('day', desiredDay, { syncDateUI: true });
+          }
+          setRangePanelsVisibility(null);
+          if (!reportsState.data[range] && !reportsState.loading[range]) {
+            fetchTripletexRange(range);
+          } else {
+              if (!reportsState.selection[range]) {
                   const initialKey = pickInitialSelection(range);
                   if (initialKey) setRangeSelection(range, initialKey);
                 }
