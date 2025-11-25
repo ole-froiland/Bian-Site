@@ -4744,6 +4744,8 @@
 
         // Include explicit account-number mapping for konto 3003 (id 289896744) so postings are fetched correctly
         sourceProducts.push({ key: 'sales3003', label: 'Salg 3003', revenueAccount: '3003' });
+        // Aggregert salg for alle kontoer 3000-3999
+        sourceProducts.push({ key: 'sales3xx', label: 'Salg 3000-3999', accountRange: { min: 3000, max: 3999 } });
 
         const aggregateProduct = { key: 'sales', label: 'Salg', sources: sourceProducts.map((p) => p.key) };
         const products = [aggregateProduct];
@@ -4752,6 +4754,11 @@
         sourceProducts.forEach((product) => {
           if (product.revenueAccount) accountsParam.push(`${product.key}Revenue|${product.label} salg:${product.revenueAccount}`);
           if (product.costAccount) accountsParam.push(`${product.key}Cost|${product.label} varekost:${product.costAccount}`);
+          if (product.accountRange) {
+            const min = Number(product.accountRange.min) || 0;
+            const max = Number(product.accountRange.max) || '';
+            accountsParam.push(`${product.key}Range|${product.label}:range-${min}-${max}`);
+          }
         });
 
         const makeIsoDate = (yearVal, monthVal, dayVal) => `${String(yearVal).padStart(4, '0')}-${String(monthVal).padStart(2, '0')}-${String(dayVal).padStart(2, '0')}`;

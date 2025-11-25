@@ -6,9 +6,9 @@ const err = (status, code, message, extra = {}) =>
 
 // --- config/fallback (behold dine tokens hvis du har env vars) ---
 const FALLBACK = {
-  baseUrl: process.env.TRIPLETEX_BASE_URL || 'https://api-test.tripletex.tech',
-  consumer: process.env.TRIPLETEX_CONSUMER_TOKEN || 'eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ==',
-  employee: process.env.TRIPLETEX_EMPLOYEE_TOKEN || 'eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ==',
+  baseUrl: process.env.TRIPLETEX_BASE_URL || 'https://api.tripletex.no',
+  consumer: process.env.TRIPLETEX_CONSUMER_TOKEN || 'eyJ0b2tlbklkIjo1ODAzLCJ0b2tlbiI6IjU5MjAwNzBlLWU0NDEtNDEwNi05YTRjLWVjODJjZmY2YTRhMSJ9',
+  employee: process.env.TRIPLETEX_EMPLOYEE_TOKEN || 'eyJ0b2tlbklkIjoyNjY2OTMwLCJ0b2tlbiI6ImE0ZDYyNzAzLTI1MWQtNDYwYS1hZDdlLTQzY2NkZDMxMDJhNiJ9',
   companyId: process.env.TRIPLETEX_COMPANY_ID || null
 };
 
@@ -72,8 +72,6 @@ async function createSession() {
       'Authorization': `Basic ${basic}`,
       'Accept':'application/json',
       'Content-Type':'application/json',
-      'consumerToken': FALLBACK.consumer,
-      'employeeToken': FALLBACK.employee,
       ...(FALLBACK.companyId ? { 'companyId': String(FALLBACK.companyId) } : {})
     };
     const r = await fetch(url, { method:'POST', headers, body: JSON.stringify({}) });
@@ -155,7 +153,14 @@ function parseAccountsParams(rawValues) {
       const value = valuePart.trim();
       if (!value) return;
       const descriptor = {};
-      if (value.startsWith('id-')) descriptor.accountId = value.slice(3);
+      if (value.startsWith('range-')) {
+        const [, rangePart] = value.split('range-');
+        const [minStr, maxStr] = (rangePart || '').split('-');
+        const min = Number(minStr);
+        const max = Number(maxStr);
+        if (Number.isFinite(min)) descriptor.accountRangeMin = min;
+        if (Number.isFinite(max)) descriptor.accountRangeMax = max;
+      } else if (value.startsWith('id-')) descriptor.accountId = value.slice(3);
       else if (/^[0-9]{6,}$/.test(value)) descriptor.accountId = value;
       else descriptor.accountNumber = value;
       items.push({ key: key.trim(), label: (label || key).trim(), ...descriptor });
@@ -180,6 +185,14 @@ function aggregatePostings(postings, accountConfigs, { group } = {}) {
     const matched = matchers.filter((cfg) => {
       if (cfg.accountId && cfg.accountId === accountId) return true;
       if (cfg.accountNumber && cfg.accountNumber === accountNumber) return true;
+      if (cfg.accountRangeMin != null || cfg.accountRangeMax != null) {
+        const num = Number(accountNumber);
+        if (Number.isFinite(num)) {
+          const inMin = cfg.accountRangeMin == null || num >= cfg.accountRangeMin;
+          const inMax = cfg.accountRangeMax == null || num <= cfg.accountRangeMax;
+          if (inMin && inMax) return true;
+        }
+      }
       return false;
     });
     if (!matched.length) return;
