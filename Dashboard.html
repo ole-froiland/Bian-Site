@@ -5265,7 +5265,9 @@
             const matchMeta = pickFromList(metaKeys, targets);
             if (matchMeta) return matchMeta;
           } else if (rangeType === 'day') {
-            const targets = [sanitizeIso(tripletexContext?.anchorIso || activeDateISO || todayISO), todayISO];
+            const anchor = sanitizeIso(tripletexContext?.anchorIso || activeDateISO || todayISO);
+            if (anchor) return anchor;
+            const targets = [todayISO];
             const matchAvailable = pickFromList(availableKeys, targets);
             if (matchAvailable) return matchAvailable;
             const matchMeta = pickFromList(metaKeys, targets);
@@ -5543,25 +5545,25 @@
                 return;
               }
 
-              if (range === 'week') {
-                if (!isActive) {
-                  reportsState.activeRange = range;
-                  applyRangeVisibility(range);
-                  updateReportsRangeLabel(activeDateISO, range);
-                  ensureWeekButtons();
-                  setRangePanelsVisibility('week');
-                  if (!reportsState.data[range] && !reportsState.loading[range]) {
-                    fetchTripletexRange(range);
-                  } else {
-                    if (!reportsState.selection[range]) {
-                      const initialKey = pickInitialSelection(range);
+            if (range === 'week') {
+              if (!isActive) {
+                reportsState.activeRange = range;
+                applyRangeVisibility(range);
+                updateReportsRangeLabel(activeDateISO, range);
+                ensureWeekButtons();
+                setRangePanelsVisibility('week');
+                if (!reportsState.data[range] && !reportsState.loading[range]) {
+                  fetchTripletexRange(range);
+                } else {
+                  if (!reportsState.selection[range]) {
+                    const initialKey = pickInitialSelection(range);
                     if (initialKey) setRangeSelection(range, initialKey, { syncDateUI: range === 'day' });
-                    }
-                    updateWeekButtons();
-                    renderTripletexTables();
                   }
-                  return;
+                  updateWeekButtons();
+                  renderTripletexTables();
                 }
+                return;
+              }
                 if (!panelVisible) {
                   setRangePanelsVisibility('week');
                   return;
@@ -5580,6 +5582,8 @@
                 reportsState.activeRange = range;
                 applyRangeVisibility(range);
                 updateReportsRangeLabel(activeDateISO, range);
+                const anchorDay = sanitizeIso(activeDateISO || dayPicker?.value || todayISO);
+                if (anchorDay) setRangeSelection('day', anchorDay, { syncDateUI: true });
                 setRangePanelsVisibility('day');
                 if (!reportsState.data[range] && !reportsState.loading[range]) {
                   fetchTripletexRange(range);
