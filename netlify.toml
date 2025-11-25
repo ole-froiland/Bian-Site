@@ -2,10 +2,6 @@
   command = "npm run build || echo 'no build'"
   publish = "."
 
-[dev]
-  command = "netlify dev"
-  port = 8888
-
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
