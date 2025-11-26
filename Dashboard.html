@@ -4989,6 +4989,40 @@
           });
         };
 
+        const salesApiEndpoint = '/.netlify/functions/tripletex-sales';
+        let salesFetchInFlight = null;
+        const fetchLiveSalesAggregate = async (from, to) => {
+          if (!from || !to) return;
+          if (salesFetchInFlight) salesFetchInFlight.abort?.();
+          setStatus('sales', 'Henter …', 'muted');
+          setTable('sales', [{ key: 'loading', label: 'Laster …', revenue: '—', cost: '—', margin: null }]);
+          const controller = new AbortController();
+          salesFetchInFlight = controller;
+          try {
+            const url = `${salesApiEndpoint}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+            const res = await fetch(url, { signal: controller.signal });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            const monthLabel = data?.monthLabel || '';
+            const total = Number(data?.totalSales || 0);
+            const formatted = Number.isFinite(total) ? moneyFmt.format(total) : '—';
+            setTable('sales', [{
+              key: 'range',
+              label: monthLabel || `${from} – ${to}`,
+              revenue: formatted,
+              cost: '—',
+              margin: null,
+            }]);
+            setStatus('sales', monthLabel || `${from} – ${to}`, 'muted');
+          } catch (error) {
+            if (controller.signal.aborted) return;
+            setStatus('sales', 'Kunne ikke hente Tripletex-data', 'error');
+            setTable('sales', [{ key: 'error', label: '—', revenue: '—', cost: '—', margin: null }]);
+          } finally {
+            if (salesFetchInFlight === controller) salesFetchInFlight = null;
+          }
+        };
+
         const formatPeriodHint = (meta) => {
           const start = meta?.start ? parseIsoDate(meta.start) : null;
           const end = meta?.end ? parseIsoDate(meta.end) : null;
@@ -5439,6 +5473,10 @@
             }
             setStatus(product.key, statusText || '');
           });
+          // Trigger live sales aggregate for Tripletex-card
+          if (range === 'month' && tripletexContext?.from && tripletexContext?.to) {
+            fetchLiveSalesAggregate(tripletexContext.from, tripletexContext.to);
+          }
           if (range === 'month') applyMonthSelectionState();
           if (range === 'week') updateWeekButtons();
           if (range === 'day') {
