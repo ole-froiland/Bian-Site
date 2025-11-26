@@ -6,9 +6,9 @@ const err = (status, code, message, extra = {}) =>
 
 // --- config/fallback (behold dine tokens hvis du har env vars) ---
 const FALLBACK = {
-  baseUrl: process.env.TRIPLETEX_BASE_URL || 'https://api.tripletex.no',
-  consumer: process.env.TRIPLETEX_CONSUMER_TOKEN || 'eyJ0b2tlbklkIjo1ODAzLCJ0b2tlbiI6IjU5MjAwNzBlLWU0NDEtNDEwNi05YTRjLWVjODJjZmY2YTRhMSJ9',
-  employee: process.env.TRIPLETEX_EMPLOYEE_TOKEN || 'eyJ0b2tlbklkIjoyNjY2OTMwLCJ0b2tlbiI6ImE0ZDYyNzAzLTI1MWQtNDYwYS1hZDdlLTQzY2NkZDMxMDJhNiJ9',
+  baseUrl: process.env.TRIPLETEX_BASE_URL || 'https://api-test.tripletex.tech',
+  consumer: process.env.TRIPLETEX_CONSUMER_TOKEN || 'eyJ0b2tlbklkIjo0NDUsInRva2VuIjoidGVzdC0yMmViNmNjMC1lMWMzLTQ4OWItYmMwNi1jM2RlMWJkOGI3NjIifQ==',
+  employee: process.env.TRIPLETEX_EMPLOYEE_TOKEN || 'eyJ0b2tlbklkIjo2MjgsInRva2VuIjoidGVzdC1iMGM0YzY1Zi1kOTY2LTQ2MGEtYTJlZi00NzI4NjcyMjQ2NmIifQ==',
   companyId: process.env.TRIPLETEX_COMPANY_ID || null
 };
 
@@ -66,32 +66,51 @@ async function createSession() {
     if (!tok) throw new Error(`SESSION_FAIL:NO_TOKEN ${txt.slice(0,300)}`);
     return tok;
   } else {
-    const url = `${base}/v2/token/session/:create`;
-    const basic = Buffer.from(`${FALLBACK.consumer}:${FALLBACK.employee}`).toString('base64');
-    const headers = {
-      'Authorization': `Basic ${basic}`,
-      'Accept':'application/json',
-      'Content-Type':'application/json',
-      // noen Tripletex-oppsett krever companyId + eksplisitt tokens i body/headers
-      ...(FALLBACK.companyId ? { 'companyId': String(FALLBACK.companyId) } : {}),
-      'consumerToken': FALLBACK.consumer,
-      'employeeToken': FALLBACK.employee
+    const primary = async () => {
+      const url = `${base}/v2/token/session/:create`;
+      const basic = Buffer.from(`${FALLBACK.consumer}:${FALLBACK.employee}`).toString('base64');
+      const headers = {
+        'Authorization': `Basic ${basic}`,
+        'Accept':'application/json',
+        'Content-Type':'application/json',
+        ...(FALLBACK.companyId ? { 'companyId': String(FALLBACK.companyId) } : {})
+      };
+      const r = await fetch(url, { method:'POST', headers, body: JSON.stringify({}) });
+      const txt = await r.text();
+      if (!r.ok) throw new Error(`SESSION_FAIL:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
+      const j = JSON.parse(txt);
+      const tok = j.value || j.token || j.sessionToken || j?.value?.token;
+      if (!tok) throw new Error(`SESSION_FAIL:NO_TOKEN ${txt.slice(0,300)}`);
+      return tok;
     };
-    const r = await fetch(url, {
-      method:'POST',
-      headers,
-      body: JSON.stringify({
+
+    const fallbackAlt = async () => {
+      // alternative: tokens in query (no Basic) if primary fails
+      const params = new URLSearchParams({
         consumerToken: FALLBACK.consumer,
         employeeToken: FALLBACK.employee,
         expirationDate: new Date(Date.now()+86400e3).toISOString()
-      })
-    });
-    const txt = await r.text();
-    if (!r.ok) throw new Error(`SESSION_FAIL:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
-    const j = JSON.parse(txt);
-    const tok = j.value || j.token || j.sessionToken || j?.value?.token;
-    if (!tok) throw new Error(`SESSION_FAIL:NO_TOKEN ${txt.slice(0,300)}`);
-    return tok;
+      });
+      if (FALLBACK.companyId) params.set('companyId', String(FALLBACK.companyId));
+      const url = `${base}/v2/token/session/:create?${params.toString()}`;
+      const r = await fetch(url, { method:'POST', headers:{ 'Accept':'application/json' } });
+      const txt = await r.text();
+      if (!r.ok) throw new Error(`SESSION_FAIL_ALT:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
+      const j = JSON.parse(txt);
+      const tok = j.value || j.token || j.sessionToken || j?.value?.token;
+      if (!tok) throw new Error(`SESSION_FAIL_ALT:NO_TOKEN ${txt.slice(0,300)}`);
+      return tok;
+    };
+
+    try {
+      return await primary();
+    } catch (errPrimary) {
+      try {
+        return await fallbackAlt();
+      } catch (errAlt) {
+        throw new Error(String(errPrimary?.message || errPrimary) + ' | ' + String(errAlt?.message || errAlt));
+      }
+    }
   }
 }
 
