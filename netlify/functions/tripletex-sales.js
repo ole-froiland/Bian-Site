@@ -14,15 +14,20 @@ const err = (status, message) => ({ statusCode: status, headers: JSON_HEADERS, b
 
 const nbMonthFmt = new Intl.DateTimeFormat('nb-NO', { month: 'long', year: 'numeric' });
 
-// Small fetch helper with timeout (default 5s)
+// Fetch helper with timeout guard (race) so we never hang if abort isn't supported
 async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`fetch timeout after ${timeoutMs}ms`)), timeoutMs);
+  });
   try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
+    const res = await Promise.race([
+      fetch(url, options),
+      timeoutPromise
+    ]);
     return res;
   } finally {
-    clearTimeout(id);
+    clearTimeout(timer);
   }
 }
 
@@ -47,10 +52,16 @@ exports.handler = async (event) => {
     let page = 0;
     let postings = [];
     const maxPages = 500; // safety cap to avoid infinite loops
+    const started = Date.now();
+    const overallTimeoutMs = 25000; // hard stop to avoid 30s lambda timeout
 
     console.log(`[tripletex-sales] Fetching ${from} -> ${to}`);
 
     while (page < maxPages) {
+      if (Date.now() - started > overallTimeoutMs) {
+        console.error('[tripletex-sales] Overall timeout reached');
+        return err(504, 'Timeout while fetching Tripletex postings');
+      }
       const url = new URL(`${BASE_URL.replace(/\/+$/, '')}/ledger/posting`);
       url.searchParams.set('dateFrom', from);
       url.searchParams.set('dateTo', to);
@@ -59,12 +70,16 @@ exports.handler = async (event) => {
 
       console.log(`[tripletex-sales] page=${page} url=${url.toString()}`);
 
-      const res = await fetchWithTimeout(url.toString(), {
-        headers: {
-          Accept: 'application/json',
-          Authorization: auth,
+      const res = await fetchWithTimeout(
+        url.toString(),
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: auth,
+          },
         },
-      });
+        5000
+      );
       if (!res.ok) {
         const text = await res.text();
         console.error(`[tripletex-sales] Tripletex error status=${res.status} body=${text.slice(0, 300)}`);
