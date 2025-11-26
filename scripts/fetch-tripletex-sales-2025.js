@@ -92,7 +92,14 @@ async function fetchMonth(year, month) {
 
 function filterSales(lines) {
   return lines.filter((v) => {
-    const num = Number(v?.account?.number ?? v?.accountNumber ?? null);
+    // Ledger posting structure can expose account number in different fields
+    const candidate =
+      v?.account?.number ??
+      v?.account?.accountNumber ??
+      v?.accountNumber ??
+      v?.accountNo ??
+      null;
+    const num = Number(candidate);
     return Number.isFinite(num) && num >= 3000 && num <= 3999;
   });
 }
