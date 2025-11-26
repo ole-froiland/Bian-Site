@@ -53,10 +53,10 @@ async function fetchMonth(year, month) {
   const all = [];
 
   while (page < maxPages) {
-    const url = new URL(`${BASE_URL.replace(/\/+$/, '')}/voucherline`);
-    url.searchParams.set('fromDate', from);
-    url.searchParams.set('toDate', to);
-    url.searchParams.set('page', String(page));
+    const url = new URL(`${BASE_URL.replace(/\/+$/, '')}/ledger/posting`);
+    url.searchParams.set('dateFrom', from);
+    url.searchParams.set('dateTo', to);
+    url.searchParams.set('from', String(page * pageSize));
     url.searchParams.set('count', String(pageSize));
 
     console.log(`[${from} -> ${to}] page=${page} ${url.toString()}`);
