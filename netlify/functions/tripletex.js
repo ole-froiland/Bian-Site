@@ -72,9 +72,20 @@ async function createSession() {
       'Authorization': `Basic ${basic}`,
       'Accept':'application/json',
       'Content-Type':'application/json',
-      ...(FALLBACK.companyId ? { 'companyId': String(FALLBACK.companyId) } : {})
+      // noen Tripletex-oppsett krever companyId + eksplisitt tokens i body/headers
+      ...(FALLBACK.companyId ? { 'companyId': String(FALLBACK.companyId) } : {}),
+      'consumerToken': FALLBACK.consumer,
+      'employeeToken': FALLBACK.employee
     };
-    const r = await fetch(url, { method:'POST', headers, body: JSON.stringify({}) });
+    const r = await fetch(url, {
+      method:'POST',
+      headers,
+      body: JSON.stringify({
+        consumerToken: FALLBACK.consumer,
+        employeeToken: FALLBACK.employee,
+        expirationDate: new Date(Date.now()+86400e3).toISOString()
+      })
+    });
     const txt = await r.text();
     if (!r.ok) throw new Error(`SESSION_FAIL:HTTP_${r.status} ${r.statusText} ${txt.slice(0,300)}`);
     const j = JSON.parse(txt);
