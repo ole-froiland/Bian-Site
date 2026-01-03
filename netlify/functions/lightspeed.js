@@ -134,6 +134,11 @@ function buildCachedPayload({ from, to, singleDate, limit, metric, includeDaily 
   const toKey = to || '9999-99-99';
   const filtered = entries.filter((entry) => entry?.date && entry.date >= fromKey && entry.date <= toKey);
   if (!filtered.length && !singleDate) return null;
+  const latestEntry = entries.reduce((latest, entry) => {
+    if (!entry?.date) return latest;
+    if (!latest || entry.date > latest.date) return entry;
+    return latest;
+  }, null);
 
   const comparisonDate = singleDate ? shiftIsoDate(singleDate, -7) : null;
   const daily = includeDaily
@@ -149,16 +154,19 @@ function buildCachedPayload({ from, to, singleDate, limit, metric, includeDaily 
   }
 
   const dayEntry = singleDate ? entries.find((entry) => entry?.date === singleDate) : null;
-  const dayReceipts = dayEntry && Array.isArray(dayEntry.timeline) ? dayEntry.timeline.length : 0;
+  const fallbackEntry = singleDate && !dayEntry ? latestEntry : null;
+  const resolvedDate = fallbackEntry ? fallbackEntry.date : null;
+  const daySource = dayEntry || fallbackEntry;
+  const dayReceipts = daySource && Array.isArray(daySource.timeline) ? daySource.timeline.length : 0;
   const dayTotal = singleDate ? {
-    date: singleDate,
-    revenue: Number(dayEntry?.total || 0),
+    date: daySource?.date || singleDate,
+    revenue: Number(daySource?.total || 0),
     guests: 0,
     receipts: dayReceipts,
-    hourly: hourlyByDay ? hourlyByDay[singleDate] : null,
+    hourly: hourlyByDay ? hourlyByDay[daySource?.date || singleDate] : buildHourlySeries(daySource),
   } : undefined;
 
-  const itemsBase = singleDate ? (dayEntry ? itemsFromEntry(dayEntry) : []) : aggregateItemsFromEntries(filtered);
+  const itemsBase = singleDate ? (daySource ? itemsFromEntry(daySource) : []) : aggregateItemsFromEntries(filtered);
   const sortedItems = itemsBase.slice().sort((a, b) => {
     if (metric === 'qty') return b.quantity - a.quantity;
     return b.revenue - a.revenue;
@@ -167,11 +175,11 @@ function buildCachedPayload({ from, to, singleDate, limit, metric, includeDaily 
   const totalRevenue = filtered.reduce((sum, entry) => {
     const value = Number(entry?.total || 0);
     return sum + (Number.isFinite(value) ? value : 0);
-  }, 0);
+  }, 0) || (daySource ? Number(daySource.total || 0) : 0);
   const count = filtered.reduce((sum, entry) => {
     const receipts = Array.isArray(entry?.timeline) ? entry.timeline.length : 0;
     return sum + receipts;
-  }, 0);
+  }, 0) || (daySource ? dayReceipts : 0);
 
   return {
     from,
@@ -184,6 +192,7 @@ function buildCachedPayload({ from, to, singleDate, limit, metric, includeDaily 
     daily,
     hourlyByDay,
     dayTotal,
+    resolvedDate,
     mode: 'cached',
     statusMessage: 'Using cached dataset',
   };

@@ -470,6 +470,10 @@ exports.handler = async (event) => {
     try{
       postings = await client.fetchPostings({ from, to });
     }catch(e){
+      if (wantsBalance) {
+        const cachedBalance = buildCachedBalanceResponse({ from, to, accountConfigs });
+        if (cachedBalance) return ok(cachedBalance);
+      }
       return err(502,'LEDGER_FAIL', String(e.message||e));
     }
 

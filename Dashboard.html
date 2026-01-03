@@ -3958,11 +3958,18 @@
           fetchDayTotals(date, options)
             .then((data) => {
               const isDemo = !!options.demo || data?.mode === 'demo';
+              let effectiveDate = date;
+              if (data?.mode === 'cached' && data?.resolvedDate && sanitizeIso(data.resolvedDate)) {
+                if (data.resolvedDate !== date) {
+                  effectiveDate = data.resolvedDate;
+                  activeDateISO = updateSelectedDateUI(effectiveDate);
+                }
+              }
               const items = Array.isArray(data?.items) ? data.items : Array.isArray(data?.top) ? data.top : [];
               let selected = data?.dayTotal || null;
               const daily = Array.isArray(data?.daily) ? data.daily : [];
               if (!selected && daily.length) {
-                selected = daily.find((d) => d.date === date) || daily[0];
+                selected = daily.find((d) => d.date === effectiveDate) || daily[0];
               }
               if (selected) {
                 selected = mergePreviewDayTotals(selected, null, { enabled: isDemo });
@@ -3974,16 +3981,16 @@
             dayReceiptsStatusEl.dataset.tone = 'warning';
           }
         }
-              renderProductInsights(items, { date, isDemo, message: 'Ingen data for valgt dato.' });
-              revenueAnalysisContext = { date, fallbackDaily: daily, entry: selected };
+              renderProductInsights(items, { date: effectiveDate, isDemo, message: 'Ingen data for valgt dato.' });
+              revenueAnalysisContext = { date: effectiveDate, fallbackDaily: daily, entry: selected };
               renderRevenueAnalysis(revenueAnalysisContext);
               updateDayWeekDeltaBadge();
               updateDayAverageDeltaBadge(selected, daily);
-              productChangeContext = { date, items, options, isDemo };
+              productChangeContext = { date: effectiveDate, items, options, isDemo };
               loadProductChanges(productChangeContext);
               if (selected) {
                 syncHourlyPayload({
-                  iso: sanitizeIso(selected.date) || sanitizeIso(date),
+                  iso: sanitizeIso(selected.date) || sanitizeIso(effectiveDate),
                   revenue: selected.revenue,
                   hourlySeries: selected.hourly,
                   hourlyByDay: data?.hourlyByDay,
@@ -3992,7 +3999,7 @@
               } else if (data?.hourlyByDay) {
                 ingestHourlySeries(data.hourlyByDay);
               }
-              renderHourlyInsights({ date, isDemo });
+              renderHourlyInsights({ date: effectiveDate, isDemo });
             })
             .catch((error) => {
               console.error('Kunne ikke hente dagsomsetning:', error);
