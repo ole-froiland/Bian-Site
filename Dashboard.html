@@ -3975,6 +3975,14 @@
               if (!selected && daily.length) {
                 selected = daily.find((d) => d.date === effectiveDate) || daily[0];
               }
+              const selectedIso = sanitizeIso(selected?.date);
+              if (selectedIso && selectedIso !== effectiveDate) {
+                effectiveDate = selectedIso;
+                activeDateISO = updateSelectedDateUI(effectiveDate);
+              }
+              if (selected && selectedIso && selected.date !== selectedIso) {
+                selected = { ...selected, date: selectedIso };
+              }
               if (selected) {
                 selected = mergePreviewDayTotals(selected, null, { enabled: isDemo });
                 renderDayTotals(selected, { isDemo });
@@ -3993,10 +4001,12 @@
               productChangeContext = { date: effectiveDate, items, options, isDemo };
               loadProductChanges(productChangeContext);
               if (selected) {
+                const hourlyIso = selectedIso || sanitizeIso(effectiveDate);
+                const hourlyFallback = hourlyIso && data?.hourlyByDay ? data.hourlyByDay[hourlyIso] : null;
                 syncHourlyPayload({
-                  iso: sanitizeIso(selected.date) || sanitizeIso(effectiveDate),
+                  iso: hourlyIso,
                   revenue: selected.revenue,
-                  hourlySeries: selected.hourly,
+                  hourlySeries: selected.hourly || hourlyFallback,
                   hourlyByDay: data?.hourlyByDay,
                   comparison: false,
                 });
