@@ -178,7 +178,7 @@ function buildCachedPayload({ from, to, singleDate, limit, metric, includeDaily 
   }, null);
 
   const comparisonDate = singleDate ? shiftIsoDate(singleDate, -7) : null;
-  const daily = includeDaily
+  let daily = includeDaily
     ? filtered.map(normalizeCachedDailyEntry).filter(Boolean)
     : undefined;
 
@@ -194,13 +194,21 @@ function buildCachedPayload({ from, to, singleDate, limit, metric, includeDaily 
   const fallbackEntry = singleDate && !dayEntry ? latestEntry : null;
   const resolvedDate = fallbackEntry ? fallbackEntry.date : null;
   const daySource = dayEntry || fallbackEntry;
+  if (includeDaily && daySource?.date && hourlyByDay && !hourlyByDay[daySource.date]) {
+    const fallbackSeries = buildHourlySeries(daySource);
+    if (fallbackSeries) hourlyByDay[daySource.date] = fallbackSeries;
+  }
+  if (includeDaily && daySource && Array.isArray(daily) && !daily.length) {
+    const fallbackDaily = normalizeCachedDailyEntry(daySource);
+    if (fallbackDaily) daily = [fallbackDaily];
+  }
   const dayReceipts = daySource && Array.isArray(daySource.timeline) ? daySource.timeline.length : 0;
   const dayTotal = singleDate ? {
     date: daySource?.date || singleDate,
     revenue: Number(daySource?.total || 0),
     guests: 0,
     receipts: dayReceipts,
-    hourly: hourlyByDay ? hourlyByDay[daySource?.date || singleDate] : buildHourlySeries(daySource),
+    hourly: (hourlyByDay && daySource?.date) ? hourlyByDay[daySource.date] : buildHourlySeries(daySource),
   } : undefined;
 
   const itemsBase = singleDate ? (daySource ? itemsFromEntry(daySource) : []) : aggregateItemsFromEntries(filtered);

@@ -3885,6 +3885,7 @@
         const url = new URL('/.netlify/functions/lightspeed', apiBase);
         url.searchParams.set('date', date);
         url.searchParams.set('limit', '50');
+        url.searchParams.set('cache', '1');
         if (demo) url.searchParams.set('demo', '1');
         return fetch(url.toString(), { headers: { accept: 'application/json' } })
           .then(async (response) => {
@@ -4472,6 +4473,7 @@
           url.searchParams.set('from', fromISO);
           url.searchParams.set('to', toISO);
           url.searchParams.set('group', 'daily');
+          url.searchParams.set('cache', '1');
           const fromDateParsed = parseIsoDate(fromISO);
           const toDateParsed = parseIsoDate(toISO);
           const spanDays = (fromDateParsed && toDateParsed)
