@@ -3155,8 +3155,12 @@
           .filter((bounds) => bounds.start != null);
         let startHour = boundsList.length ? Math.min(...boundsList.map((b) => b.start)) : 0;
         let endHour = boundsList.length ? Math.max(...boundsList.map((b) => b.end)) : 23;
-        if (!Number.isFinite(startHour)) startHour = 0;
-        if (!Number.isFinite(endHour) || endHour < startHour) endHour = 23;
+        const preferredHourStart = 9;
+        const preferredHourEnd = 19;
+        if (!Number.isFinite(startHour)) startHour = preferredHourStart;
+        if (!Number.isFinite(endHour) || endHour < startHour) endHour = preferredHourEnd;
+        startHour = preferredHourStart;
+        endHour = Math.max(endHour, preferredHourEnd);
         if (endHour - startHour < 2) endHour = Math.min(23, startHour + 2);
         const hourSpan = Math.max(1, endHour - startHour);
         state.startHour = startHour;
