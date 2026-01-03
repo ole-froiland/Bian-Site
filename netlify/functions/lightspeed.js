@@ -81,12 +81,26 @@ function hourFromTimestamp(timestamp){
   return Number.isFinite(hour) ? hour : null;
 }
 
+function hourFromRow(row){
+  if (!row) return null;
+  const hourValue = row.hour ?? row.hr ?? row.h;
+  if (hourValue != null) {
+    if (typeof hourValue === 'number' && Number.isFinite(hourValue)) {
+      return Math.max(0, Math.min(23, Math.floor(hourValue)));
+    }
+    const hourPart = String(hourValue).split('T')[1] || '';
+    const hour = Number(hourPart.slice(0, 2));
+    if (Number.isFinite(hour)) return hour;
+  }
+  return hourFromTimestamp(row.timestamp || row.time || row.ts || null);
+}
+
 function buildHourlySeries(entry){
   const timeline = entry?.timeline;
   if (Array.isArray(timeline) && timeline.length) {
     const series = Array.from({ length: 24 }, () => 0);
     timeline.forEach((row) => {
-      const hour = hourFromTimestamp(row?.timestamp || row?.time || row?.ts || null);
+      const hour = hourFromRow(row);
       if (hour == null) return;
       const numeric = Number(row?.net_total ?? row?.total ?? row?.amount ?? 0);
       if (!Number.isFinite(numeric)) return;
