@@ -5,6 +5,9 @@
  * Robust pagination + timeout to avoid hanging/loops.
  */
 
+const fs = require('fs');
+const path = require('path');
+
 const BASE_URL = process.env.TRIPLETEX_BASE_URL || 'https://tripletex.no/v2';
 const SESSION_TOKEN = process.env.TRIPLETEX_SESSION_TOKEN || '';
 
@@ -13,6 +16,59 @@ const ok = (body) => ({ statusCode: 200, headers: JSON_HEADERS, body: JSON.strin
 const err = (status, message) => ({ statusCode: status, headers: JSON_HEADERS, body: JSON.stringify({ error: message }) });
 
 const nbMonthFmt = new Intl.DateTimeFormat('nb-NO', { month: 'long', year: 'numeric' });
+
+let cachedTripletex = new Map();
+
+function resolveCachedDatasetDir(){
+  const override = process.env.CACHED_DATASET_DIR;
+  if (override && fs.existsSync(override)) return override;
+  const cwdPath = path.join(process.cwd(), '.netlify', 'cached-dataset-all');
+  if (fs.existsSync(cwdPath)) return cwdPath;
+  const localPath = path.resolve(__dirname, '..', '..', '.netlify', 'cached-dataset-all');
+  if (fs.existsSync(localPath)) return localPath;
+  return null;
+}
+
+function monthKeyFromIso(iso){
+  if (!iso) return null;
+  const match = String(iso).match(/^(\d{4})-(\d{2})-/);
+  return match ? `${match[1]}-${match[2]}` : null;
+}
+
+function loadCachedTripletexMonth(monthKey){
+  if (!monthKey) return null;
+  if (cachedTripletex.has(monthKey)) return cachedTripletex.get(monthKey);
+  const dir = resolveCachedDatasetDir();
+  if (!dir) return null;
+  const file = path.join(dir, `tripletex-${monthKey}.json`);
+  if (!fs.existsSync(file)) return null;
+  try {
+    const raw = fs.readFileSync(file, 'utf-8');
+    const parsed = JSON.parse(raw);
+    cachedTripletex.set(monthKey, parsed);
+    return parsed;
+  } catch (_) {
+    return null;
+  }
+}
+
+function buildCachedSalesPayload(from, to){
+  const monthKey = monthKeyFromIso(to) || monthKeyFromIso(from);
+  if (!monthKey) return null;
+  const data = loadCachedTripletexMonth(monthKey);
+  if (!data) return null;
+  const kpi = data?.kpi || {};
+  const salesCandidates = [kpi.sales, kpi.salesCore, kpi.salesRaw];
+  const totalSales = salesCandidates.find((value) => Number.isFinite(Number(value)));
+  const labelDate = new Date(`${monthKey}-01T00:00:00`);
+  const monthLabel = Number.isNaN(labelDate.getTime()) ? `${from} – ${to}` : nbMonthFmt.format(labelDate);
+  return {
+    monthLabel: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1),
+    totalSales: Number(totalSales || 0),
+    count: 0,
+    mode: 'cached',
+  };
+}
 
 // Fetch helper with timeout guard (race) so we never hang if abort isn't supported
 async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
@@ -36,15 +92,21 @@ exports.handler = async (event) => {
     if (event.httpMethod !== 'GET') {
       return err(405, 'Method not allowed');
     }
-    if (!SESSION_TOKEN) {
-      return err(500, 'Missing TRIPLETEX_SESSION_TOKEN');
-    }
 
     const q = event.queryStringParameters || {};
     const from = q.from;
     const to = q.to;
     if (!from || !to) {
       return err(400, 'Missing from/to');
+    }
+
+    const cachedPayload = buildCachedSalesPayload(from, to);
+    if (q.cache === '1' && cachedPayload) {
+      return ok(cachedPayload);
+    }
+    if (!SESSION_TOKEN) {
+      if (cachedPayload) return ok(cachedPayload);
+      return err(500, 'Missing TRIPLETEX_SESSION_TOKEN');
     }
 
     const auth = 'Basic ' + Buffer.from(`0:${SESSION_TOKEN}`).toString('base64');
@@ -116,6 +178,11 @@ exports.handler = async (event) => {
     });
   } catch (e) {
     console.error('[tripletex-sales] Unexpected error:', e);
+    const cachedPayload = buildCachedSalesPayload(
+      event?.queryStringParameters?.from,
+      event?.queryStringParameters?.to
+    );
+    if (cachedPayload) return ok(cachedPayload);
     return err(500, String(e?.message || e));
   }
 };

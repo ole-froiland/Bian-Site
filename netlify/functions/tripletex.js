@@ -1,4 +1,7 @@
 // Netlify Function: Tripletex proxy + debug
+const fs = require('fs');
+const path = require('path');
+
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
 const ok  = (b) => ({ statusCode: 200, headers: JSON_HEADERS, body: JSON.stringify(b) });
 const err = (status, code, message, extra = {}) =>
@@ -22,6 +25,77 @@ function normDate(s){
   m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);    if(m) return `${m[3]}-${m[2]}-${m[1]}`;
   const d = new Date(s); if(!Number.isNaN(d.getTime())) return toYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
   return null;
+}
+
+let cachedTripletex = new Map();
+
+function resolveCachedDatasetDir(){
+  const override = process.env.CACHED_DATASET_DIR;
+  if (override && fs.existsSync(override)) return override;
+  const cwdPath = path.join(process.cwd(), '.netlify', 'cached-dataset-all');
+  if (fs.existsSync(cwdPath)) return cwdPath;
+  const localPath = path.resolve(__dirname, '..', '..', '.netlify', 'cached-dataset-all');
+  if (fs.existsSync(localPath)) return localPath;
+  return null;
+}
+
+function monthKeyFromIso(iso){
+  if (!iso) return null;
+  const match = String(iso).match(/^(\d{4})-(\d{2})-/);
+  return match ? `${match[1]}-${match[2]}` : null;
+}
+
+function loadCachedTripletexMonth(monthKey){
+  if (!monthKey) return null;
+  if (cachedTripletex.has(monthKey)) return cachedTripletex.get(monthKey);
+  const dir = resolveCachedDatasetDir();
+  if (!dir) return null;
+  const file = path.join(dir, `tripletex-${monthKey}.json`);
+  if (!fs.existsSync(file)) return null;
+  try {
+    const raw = fs.readFileSync(file, 'utf-8');
+    const parsed = JSON.parse(raw);
+    cachedTripletex.set(monthKey, parsed);
+    return parsed;
+  } catch (_) {
+    return null;
+  }
+}
+
+function pickCachedBankEntry(banks = []){
+  if (!Array.isArray(banks) || !banks.length) return null;
+  return banks.find((entry) => String(entry.account) === '1920')
+    || banks.find((entry) => /bank/i.test(String(entry.label || '')))
+    || banks[0];
+}
+
+function buildCachedBalanceResponse({ from, to, accountConfigs } = {}){
+  const monthKey = monthKeyFromIso(to) || monthKeyFromIso(from);
+  if (!monthKey) return null;
+  const cached = loadCachedTripletexMonth(monthKey);
+  if (!cached) return null;
+  const bankEntry = pickCachedBankEntry(cached?.banks || []);
+  if (!bankEntry) return null;
+  const balance = Number(bankEntry.balance || 0);
+  const accounts = (accountConfigs || [])
+    .filter((cfg) => cfg.key === 'balanceOperating')
+    .map((cfg) => ({
+      key: cfg.key,
+      label: cfg.label || bankEntry.label || 'Saldo driftskonto',
+      accountId: cfg.accountId || null,
+      accountNumber: bankEntry.account || null,
+      total: balance,
+      totalAbsolute: Math.abs(balance),
+    }));
+  if (!accounts.length) return null;
+  return {
+    dateFrom: from || null,
+    dateTo: to || null,
+    count: 0,
+    accounts,
+    mode: 'cached',
+    cachedAsOf: bankEntry.as_of || cached?.as_of || null,
+  };
 }
 
 function getISOWeekInfo(dateStr) {
@@ -370,6 +444,13 @@ exports.handler = async (event) => {
       to   = toYMD(now.getFullYear(), now.getMonth()+1, now.getDate());
     }
     if(from>to) [from,to]=[to,from];
+
+    const wantsBalance = accountConfigs.some((cfg) => cfg.key === 'balanceOperating');
+    const preferCachedBalance = q.cache === '1' || usedFallback;
+    if (wantsBalance && preferCachedBalance) {
+      const cachedBalance = buildCachedBalanceResponse({ from, to, accountConfigs });
+      if (cachedBalance) return ok(cachedBalance);
+    }
 
     if (!wantsAggregation) {
       let postings;

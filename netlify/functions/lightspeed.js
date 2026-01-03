@@ -5,6 +5,9 @@
 // - LIGHTSPEED_BUSINESS_ID (required)
 // - LIGHTSPEED_OPERATOR (optional; for some endpoints)
 
+const fs = require('fs');
+const path = require('path');
+
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
 const ok  = (b) => ({ statusCode: 200, headers: JSON_HEADERS, body: JSON.stringify(b) });
 const err = (status, code, message, extra = {}) =>
@@ -34,6 +37,156 @@ function normDate(s){
     return `${y}-${M}-${D}`;
   }
   return null;
+}
+
+let cachedDailyDataset = null;
+let cachedDailyDatasetMtime = 0;
+
+function resolveCachedDatasetDir(){
+  const override = process.env.CACHED_DATASET_DIR;
+  if (override && fs.existsSync(override)) return override;
+  const cwdPath = path.join(process.cwd(), '.netlify', 'cached-dataset-all');
+  if (fs.existsSync(cwdPath)) return cwdPath;
+  const localPath = path.resolve(__dirname, '..', '..', '.netlify', 'cached-dataset-all');
+  if (fs.existsSync(localPath)) return localPath;
+  return null;
+}
+
+function loadCachedDailyDataset(){
+  const dir = resolveCachedDatasetDir();
+  if (!dir) return null;
+  const file = path.join(dir, 'daily-2025.json');
+  if (!fs.existsSync(file)) return null;
+  const stat = fs.statSync(file);
+  if (cachedDailyDataset && cachedDailyDatasetMtime === stat.mtimeMs) return cachedDailyDataset;
+  try {
+    const raw = fs.readFileSync(file, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.data)) return null;
+    cachedDailyDataset = parsed;
+    cachedDailyDatasetMtime = stat.mtimeMs;
+    return parsed;
+  } catch (_) {
+    return null;
+  }
+}
+
+function buildHourlySeries(entry){
+  const totals = entry?.hourly_totals;
+  if (!totals || typeof totals !== 'object') return null;
+  const series = Array.from({ length: 24 }, () => 0);
+  Object.entries(totals).forEach(([key, value]) => {
+    const hourPart = String(key).split('T')[1] || '';
+    const hour = Number(hourPart.slice(0, 2));
+    if (!Number.isFinite(hour) || hour < 0 || hour > 23) return;
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return;
+    series[hour] += numeric;
+  });
+  const hasValues = series.some((value) => Number(value) > 0);
+  return hasValues ? series : null;
+}
+
+function normalizeCachedDailyEntry(entry){
+  if (!entry || !entry.date) return null;
+  const receipts = Array.isArray(entry.timeline) ? entry.timeline.length : 0;
+  return {
+    date: entry.date,
+    revenue: Number(entry.total || 0),
+    guests: 0,
+    receipts,
+  };
+}
+
+function itemsFromEntry(entry){
+  const items = entry?.items || {};
+  return Object.entries(items).map(([sku, item]) => ({
+    sku,
+    name: item?.name || String(sku),
+    revenue: Number(item?.revenue || 0),
+    quantity: Number(item?.quantity || 0),
+  }));
+}
+
+function aggregateItemsFromEntries(entries){
+  const map = new Map();
+  entries.forEach((entry) => {
+    const items = entry?.items || {};
+    Object.entries(items).forEach(([sku, item]) => {
+      const revenue = Number(item?.revenue || 0);
+      const quantity = Number(item?.quantity || 0);
+      const existing = map.get(sku) || { sku, name: item?.name || String(sku), revenue: 0, quantity: 0 };
+      existing.revenue += Number.isFinite(revenue) ? revenue : 0;
+      existing.quantity += Number.isFinite(quantity) ? quantity : 0;
+      if (!existing.name && item?.name) existing.name = item.name;
+      map.set(sku, existing);
+    });
+  });
+  return Array.from(map.values());
+}
+
+function buildCachedPayload({ from, to, singleDate, limit, metric, includeDaily }){
+  const dataset = loadCachedDailyDataset();
+  const entries = Array.isArray(dataset?.data) ? dataset.data : [];
+  if (!entries.length) return null;
+
+  const fromKey = from || '0000-00-00';
+  const toKey = to || '9999-99-99';
+  const filtered = entries.filter((entry) => entry?.date && entry.date >= fromKey && entry.date <= toKey);
+  if (!filtered.length && !singleDate) return null;
+
+  const comparisonDate = singleDate ? shiftIsoDate(singleDate, -7) : null;
+  const daily = includeDaily
+    ? filtered.map(normalizeCachedDailyEntry).filter(Boolean)
+    : undefined;
+
+  const hourlyByDay = includeDaily ? {} : undefined;
+  if (includeDaily) {
+    filtered.forEach((entry) => {
+      const hourly = buildHourlySeries(entry);
+      if (hourly) hourlyByDay[entry.date] = hourly;
+    });
+  }
+
+  const dayEntry = singleDate ? entries.find((entry) => entry?.date === singleDate) : null;
+  const dayReceipts = dayEntry && Array.isArray(dayEntry.timeline) ? dayEntry.timeline.length : 0;
+  const dayTotal = singleDate ? {
+    date: singleDate,
+    revenue: Number(dayEntry?.total || 0),
+    guests: 0,
+    receipts: dayReceipts,
+    hourly: hourlyByDay ? hourlyByDay[singleDate] : null,
+  } : undefined;
+
+  const itemsBase = singleDate ? (dayEntry ? itemsFromEntry(dayEntry) : []) : aggregateItemsFromEntries(filtered);
+  const sortedItems = itemsBase.slice().sort((a, b) => {
+    if (metric === 'qty') return b.quantity - a.quantity;
+    return b.revenue - a.revenue;
+  });
+
+  const totalRevenue = filtered.reduce((sum, entry) => {
+    const value = Number(entry?.total || 0);
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+  const count = filtered.reduce((sum, entry) => {
+    const receipts = Array.isArray(entry?.timeline) ? entry.timeline.length : 0;
+    return sum + receipts;
+  }, 0);
+
+  return {
+    from,
+    to,
+    comparisonDate,
+    count,
+    top: sortedItems.slice(0, limit),
+    items: sortedItems,
+    totalRevenue,
+    daily,
+    hourlyByDay,
+    dayTotal,
+    mode: 'cached',
+    statusMessage: 'Using cached dataset',
+  };
 }
 
 function authHeaders(){
@@ -666,6 +819,7 @@ exports.handler = async (event) => {
     });
 
     const metric = (q.metric === 'qty') ? 'qty' : 'revenue';
+    const limit = Math.max(1, Math.min(50, Number(q.limit || 3) | 0));
     // Allow operator override via query for troubleshooting
     if (q.operator) CFG.operator = String(q.operator);
 
@@ -757,6 +911,11 @@ exports.handler = async (event) => {
       return ok({ from, to, comparisonDate, endpoint: BUSINESS_PERIODS_ENDPOINT, count: demoReceipts.length, top: items.slice(0,limit), items, daily, hourlyByDay, dayTotal, mode: 'demo' });
     }
 
+    const includeDaily = Boolean(singleDate || q.group === 'daily' || q.daily === '1');
+    const cachedPayload = buildCachedPayload({ from, to, singleDate, limit, metric, includeDaily });
+    if (cachedPayload && (!CFG.xToken || !CFG.businessId || q.cache === '1')) {
+      return ok(cachedPayload);
+    }
     if(!CFG.xToken || !CFG.businessId){
       return err(400,'CONFIG_MISSING','Missing Lightspeed env vars (X_TOKEN or BUSINESS_ID)');
     }
@@ -777,6 +936,8 @@ exports.handler = async (event) => {
       const maxPeriods = Math.max(14, Math.min(90, requestedWindow || daySpan));
       transactions = await fetchTransactionsRange({ from, to, maxPeriods });
     }catch(e){
+      const cachedFallback = buildCachedPayload({ from, to, singleDate, limit, metric, includeDaily });
+      if (cachedFallback) return ok(cachedFallback);
       const status = e?.status || 502;
       return err(status, 'TRANSACTIONS_FAIL', String(e.message||e), {
         details: e?.body,
@@ -791,13 +952,11 @@ exports.handler = async (event) => {
       revenue: Number(entry.revenue || 0),
       quantity: Number(entry.quantity || 0),
     }));
-    const limit = Math.max(1, Math.min(50, Number(q.limit||3)|0));
     itemsArray.sort(metric === 'qty'
       ? (a, b) => b.quantity - a.quantity
       : (a, b) => b.revenue - a.revenue
     );
 
-    const includeDaily = singleDate || q.group === 'daily' || q.daily === '1';
     const daily = includeDaily ? (summary.daily || []) : undefined;
     let dayTotal = null;
     if (singleDate) {

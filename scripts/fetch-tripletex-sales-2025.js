@@ -90,16 +90,65 @@ async function fetchMonth(year, month) {
   return all;
 }
 
-function filterSales(lines) {
+async function buildAccountMap(lines) {
+  const ids = new Set();
+  lines.forEach((v) => {
+    const id = v?.account?.id ?? v?.accountId ?? null;
+    if (id != null) ids.add(id);
+  });
+
+  const map = new Map();
+  let firstLogged = false;
+
+  for (const id of ids) {
+    try {
+      const url = new URL(`${BASE_URL.replace(/\/+$/, '')}/ledger/account/${id}`);
+      const res = await fetchWithTimeout(url.toString(), {
+        headers: {
+          Accept: 'application/json',
+          Authorization: authHeader,
+        },
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        console.error(`[accountMap] account ${id} error ${res.status}: ${text.slice(0, 200)}`);
+        continue;
+      }
+      const data = await res.json();
+      const acc = data?.value || data;
+      console.log('[accountMap] sample account response:', JSON.stringify(acc, null, 2));
+      const candidate =
+        acc?.number ??
+        acc?.accountNumber ??
+        acc?.accountNo ??
+        acc?.nr ??
+        acc?.nummer ??
+        acc?.id ??
+        null;
+      const num = Number(candidate);
+      if (Number.isFinite(num)) {
+        map.set(Number(id), num);
+        if (!firstLogged) {
+          console.log('[filterSales] mapped account', id, num);
+          firstLogged = true;
+        }
+      }
+    } catch (e) {
+      console.error(`[accountMap] failed for ${id}:`, e?.message || e);
+    }
+  }
+  return map;
+}
+
+function filterSales(lines, accountMap) {
+  if (lines.length) {
+    const firstAccount = lines[0]?.account || {};
+    console.log('[filterSales] first account object:', firstAccount);
+  }
   return lines.filter((v) => {
-    // Ledger posting structure can expose account number in different fields
-    const candidate =
-      v?.account?.number ??
-      v?.account?.accountNumber ??
-      v?.accountNumber ??
-      v?.accountNo ??
-      null;
-    const num = Number(candidate);
+    const a = v?.account || {};
+    const accountId = a.id ?? v?.accountId ?? null;
+    const num = accountId != null ? accountMap.get(Number(accountId)) : undefined;
     return Number.isFinite(num) && num >= 3000 && num <= 3999;
   });
 }
@@ -109,7 +158,8 @@ async function run() {
     const label = `2025-${String(month).padStart(2, '0')}`;
     try {
       const lines = await fetchMonth(2025, month); // fetch only this month
-      const sales = filterSales(lines); // keep only account 3000–3999
+      const accountMap = await buildAccountMap(lines);
+      const sales = filterSales(lines, accountMap); // keep only account 3000–3999
       const outPath = path.join(DATA_DIR, `${label}-sales.json`);
       const payload = {
         month: label,
