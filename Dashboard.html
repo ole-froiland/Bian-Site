@@ -1857,7 +1857,7 @@
           <span class="overview-highlight__badge" data-day-average-delta></span>
         </article>
       </div>
-      <article class="card ai-hourly-card overview-hourly" data-ai-hourly-card hidden>
+      <article class="card ai-hourly-card overview-hourly" data-ai-hourly-card>
         <header class="ai-hourly-card__header">
           <div>
             <span class="ai-hourly-card__eyebrow">Info</span>
@@ -3375,12 +3375,8 @@
           syncHourlyPayload({ iso: comparisonIso, comparison: true });
         }
         const comparisonSeries = comparisonIso ? hourlySeriesCache.get(comparisonIso) : null;
-        if (!currentSeries) {
-          hourlyCardEl.hidden = true;
-          hourlyChartState = null;
-          return;
-        }
         hourlyCardEl.hidden = false;
+        const safeSeries = Array.isArray(currentSeries) ? currentSeries : Array.from({ length: 24 }, () => 0);
         const hasCurrentData = Array.isArray(currentSeries) && currentSeries.some((value) => Number(value || 0) > 0);
         if (hourlyEmptyEl) {
           if (hasCurrentData) {
@@ -3391,11 +3387,11 @@
             hourlyEmptyEl.style.display = 'flex';
           }
         }
-        const defaultFocusHour = pickSeriesFocusHour(currentSeries);
+        const defaultFocusHour = pickSeriesFocusHour(safeSeries);
         const demoFlag = isDemo || hourlySeedDates.has(iso);
         hourlyChartState = {
           date: iso,
-          current: currentSeries,
+          current: safeSeries,
           comparison: comparisonSeries,
           compareIso: comparisonIso,
           focusHour: defaultFocusHour,
@@ -3922,12 +3918,9 @@
         }
         hourlyChartState = null;
         if (hourlyCardEl) {
-          if (hourlySeriesCache.has(date)) {
-            renderHourlyInsights({ date, isDemo: hourlySeedDates.has(date) });
-          } else {
-            hourlyCardEl.hidden = true;
-            hourlyCardEl.removeAttribute('data-tone');
-          }
+          hourlyCardEl.hidden = false;
+          hourlyCardEl.removeAttribute('data-tone');
+          renderHourlyInsights({ date, isDemo: hourlySeedDates.has(date) });
         }
         renderProductInsights(null, { date, state: 'loading' });
         renderRevenueAnalysisState('loading', { date });
