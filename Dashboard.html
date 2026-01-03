@@ -3054,24 +3054,47 @@
       const parseHourlySeries = (raw) => {
         if (raw == null) return null;
         const series = Array.from({ length: 24 }, () => 0);
-        const assign = (hourCandidate, valueCandidate) => {
-          if (hourCandidate == null) return;
-          const hour = Number(hourCandidate);
-          if (!Number.isFinite(hour) || hour < 0 || hour > 23) return;
+        const parseHour = (hourCandidate, fallbackIndex = null) => {
+          if (hourCandidate == null) return fallbackIndex;
+          if (typeof hourCandidate === 'number' && Number.isFinite(hourCandidate)) {
+            const rounded = Math.floor(hourCandidate);
+            return rounded >= 0 && rounded <= 23 ? rounded : fallbackIndex;
+          }
+          const str = String(hourCandidate).trim();
+          if (!str) return fallbackIndex;
+          if (/^\d{1,2}$/.test(str)) {
+            const num = Number(str);
+            return num >= 0 && num <= 23 ? num : fallbackIndex;
+          }
+          const tIndex = str.indexOf('T');
+          if (tIndex !== -1 && str.length >= tIndex + 3) {
+            const maybe = Number(str.slice(tIndex + 1, tIndex + 3));
+            if (Number.isFinite(maybe) && maybe >= 0 && maybe <= 23) return maybe;
+          }
+          const colonMatch = str.match(/\b(\d{1,2}):\d{2}\b/);
+          if (colonMatch) {
+            const maybe = Number(colonMatch[1]);
+            if (Number.isFinite(maybe) && maybe >= 0 && maybe <= 23) return maybe;
+          }
+          return fallbackIndex;
+        };
+        const assign = (hourCandidate, valueCandidate, fallbackIndex = null) => {
+          const hour = parseHour(hourCandidate, fallbackIndex);
+          if (hour == null) return;
           const numericValue = Number(valueCandidate);
           if (!Number.isFinite(numericValue) || numericValue < 0) return;
           series[hour] = numericValue;
         };
         if (Array.isArray(raw)) {
           raw.forEach((entry, index) => {
-            if (typeof entry === 'number') assign(index, entry);
+            if (typeof entry === 'number' || typeof entry === 'string') assign(index, entry, index);
             else if (entry && typeof entry === 'object') {
-              assign(entry.hour ?? entry.h ?? entry.time ?? index, entry.value ?? entry.revenue ?? entry.amount ?? entry.total ?? entry.qty ?? 0);
+              assign(entry.hour ?? entry.h ?? entry.time ?? entry.timestamp ?? index, entry.value ?? entry.revenue ?? entry.amount ?? entry.total ?? entry.qty ?? 0, index);
             }
           });
         } else if (typeof raw === 'object') {
           Object.entries(raw).forEach(([key, value]) => assign(key, value));
-        } else if (typeof raw === 'number') {
+        } else if (typeof raw === 'number' || typeof raw === 'string') {
           assign(0, raw);
         }
         const hasValues = series.some((value) => Number(value || 0) > 0);
