@@ -9,6 +9,8 @@ const fs = require('fs');
 const path = require('path');
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
+const CACHE_TIMEZONE = process.env.CACHED_TIMEZONE || 'Europe/Oslo';
+const osloHourFmt = new Intl.DateTimeFormat('en-GB', { timeZone: CACHE_TIMEZONE, hour: '2-digit', hour12: false });
 const ok  = (b) => ({ statusCode: 200, headers: JSON_HEADERS, body: JSON.stringify(b) });
 const err = (status, code, message, extra = {}) =>
   ({ statusCode: status, headers: JSON_HEADERS, body: JSON.stringify({ error: code, message, ...extra }) });
@@ -71,7 +73,28 @@ function loadCachedDailyDataset(){
   }
 }
 
+function hourFromTimestamp(timestamp){
+  if (!timestamp) return null;
+  const parsed = new Date(timestamp);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const hour = Number(osloHourFmt.format(parsed));
+  return Number.isFinite(hour) ? hour : null;
+}
+
 function buildHourlySeries(entry){
+  const timeline = entry?.timeline;
+  if (Array.isArray(timeline) && timeline.length) {
+    const series = Array.from({ length: 24 }, () => 0);
+    timeline.forEach((row) => {
+      const hour = hourFromTimestamp(row?.timestamp || row?.time || row?.ts || null);
+      if (hour == null) return;
+      const numeric = Number(row?.net_total ?? row?.total ?? row?.amount ?? 0);
+      if (!Number.isFinite(numeric)) return;
+      series[hour] += numeric;
+    });
+    const hasValues = series.some((value) => Number(value) > 0);
+    if (hasValues) return series;
+  }
   const totals = entry?.hourly_totals;
   if (!totals || typeof totals !== 'object') return null;
   const series = Array.from({ length: 24 }, () => 0);
