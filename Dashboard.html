@@ -4003,10 +4003,16 @@
               if (selected) {
                 const hourlyIso = selectedIso || sanitizeIso(effectiveDate);
                 const hourlyFallback = hourlyIso && data?.hourlyByDay ? data.hourlyByDay[hourlyIso] : null;
+                const rawHourly = Array.isArray(selected.hourly) ? selected.hourly : hourlyFallback;
+                const parsedHourly = rawHourly ? parseHourlySeries(rawHourly) : null;
+                if (hourlyIso && parsedHourly) {
+                  hourlySeriesCache.set(hourlyIso, parsedHourly);
+                  hourlySeedDates.delete(hourlyIso);
+                }
                 syncHourlyPayload({
                   iso: hourlyIso,
                   revenue: selected.revenue,
-                  hourlySeries: selected.hourly || hourlyFallback,
+                  hourlySeries: rawHourly,
                   hourlyByDay: data?.hourlyByDay,
                   comparison: false,
                 });

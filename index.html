@@ -94,32 +94,92 @@
       box-shadow:none;
     }
     .nav-actions [data-lang-toggle]:hover{background:#eef0ff;border-color:#b9c3f2;}
-    .nav-actions [data-lang-toggle],.theme-switch{height:34px}
-    .theme-switch{
-      min-width:60px;
+    .theme-float{
+      position:fixed;
+      right:max(18px, env(safe-area-inset-right));
+      bottom:max(18px, env(safe-area-inset-bottom));
+      z-index:90;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
-    .theme-switch .slider{
-      padding:3px;
-      background:#f6f7ff;
-      border:1.2px solid #cdd4f5;
-      box-shadow:inset 0 1px 3px rgba(0,0,0,0.06);
+    .theme-toggle{
+      --toggle-width:150px;
+      --toggle-height:46px;
+      --toggle-pad:4px;
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+      touch-action:manipulation;
     }
-    .theme-switch input:checked + .slider{background:#ecebff;border-color:#b5bdf5;}
-    .theme-switch .thumb{
-      width:26px;
-      height:26px;
-      border:1px solid #cdd4f5;
-      box-shadow:0 6px 16px rgba(86,95,170,0.18);
+    .theme-toggle input{
+      position:absolute;
+      opacity:0;
+      width:1px;
+      height:1px;
+      pointer-events:none;
     }
-    .theme-switch .thumb svg{display:none;}
-    .theme-switch .thumb::after{
+    .theme-toggle-track{
+      position:relative;
+      width:var(--toggle-width);
+      height:var(--toggle-height);
+      padding:var(--toggle-pad);
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      align-items:center;
+      border-radius:999px;
+      background:linear-gradient(160deg,#2c3348,#1f2937);
+      border:1px solid rgba(148,163,184,0.45);
+      box-shadow:0 18px 32px rgba(15,23,42,0.28), inset 0 1px 0 rgba(255,255,255,0.08);
+      transition:box-shadow .18s ease, background .18s ease, border-color .18s ease;
+    }
+    .theme-toggle-track::before{
       content:"";
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      background:#0b1220;
-      box-shadow:0 0 0 4px rgba(93,99,255,0.12);
-      display:block;
+      position:absolute;
+      top:var(--toggle-pad);
+      left:var(--toggle-pad);
+      width:calc(50% - var(--toggle-pad));
+      height:calc(100% - (var(--toggle-pad) + var(--toggle-pad)));
+      border-radius:999px;
+      background:linear-gradient(140deg,#8ed2ff,#53a7ff);
+      box-shadow:0 10px 22px rgba(56,132,255,0.4), inset 0 0 0 1px rgba(255,255,255,0.3);
+      transition:transform .22s ease;
+    }
+    .theme-toggle input:checked + .theme-toggle-track::before{transform:translateX(100%);}
+    .theme-toggle input:focus-visible + .theme-toggle-track{box-shadow:0 0 0 3px rgba(99,102,241,0.35),0 18px 32px rgba(15,23,42,0.28);}
+    .theme-toggle .icon{
+      position:relative;
+      z-index:1;
+      width:18px;
+      height:18px;
+      justify-self:center;
+      color:rgba(203,213,225,0.7);
+      opacity:.7;
+      transition:opacity .2s ease, color .2s ease, transform .2s ease;
+    }
+    .theme-toggle .icon.sun{stroke:currentColor;fill:none;stroke-width:2;}
+    .theme-toggle .icon.moon{fill:currentColor;stroke:none;}
+    .theme-toggle input:not(:checked) + .theme-toggle-track .icon.sun{
+      opacity:1;
+      color:#fef3c7;
+      transform:translateY(-1px);
+    }
+    .theme-toggle input:checked + .theme-toggle-track .icon.moon{
+      opacity:1;
+      color:#f8fafc;
+      transform:translateY(-1px);
+    }
+    body[data-theme="dark"] .theme-toggle-track{
+      background:linear-gradient(160deg,#1b2436,#0f172a);
+      border-color:rgba(148,163,184,0.35);
+    }
+    @media (prefers-reduced-motion: reduce){
+      .theme-toggle-track,
+      .theme-toggle-track::before,
+      .theme-toggle .icon{transition:none;}
     }
     .dropdown{position:relative}
     .dropdown>button{display:flex;align-items:center;gap:6px;background:none;border:0;color:inherit;cursor:pointer}
@@ -143,53 +203,10 @@
     body:not([data-theme="dark"]) .chip{color:#0b1220}
     body[data-theme="dark"] .chip{background:var(--surface);border-color:var(--brand-outline);color:#f3f5fa}
 
-    .theme-switch{position:relative;display:inline-flex;width:60px;height:34px}
-    .theme-switch input{opacity:0;width:0;height:0}
-    .theme-switch .slider{
-      position:relative;
-      cursor:pointer;
-      display:block;
-      width:100%;
-      height:100%;
-      background:#f6f7ff;
-      transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;
-      border-radius:9999px;
-      box-shadow:inset 0 1px 3px rgba(0,0,0,.06);
-      border:1.2px solid #cdd4f5;
-      padding:3px;
-      backface-visibility:hidden;
-      transform:translateZ(0)
-    }
-    .theme-switch input:focus-visible + .slider{box-shadow:var(--ring)}
-    body[data-theme="dark"] .theme-switch .slider{background:#252a3a;box-shadow:inset 0 1px 3px rgba(255,255,255,.18);}
-    .theme-switch .thumb{
-      position:absolute;
-      top:50%;
-      left:2px;
-      width:26px;
-      height:26px;
-      background:#fff;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      transition:background-color .20s ease,border-color .20s ease,left .20s ease,transform .20s ease;
-      border:1px solid #cdd4f5;
-      box-shadow:0 6px 16px rgba(86,95,170,0.18);
-      transform:translateY(-50%) translateZ(0);
-      backface-visibility:hidden
-    }
-    .theme-switch input:checked + .slider{background:#ecebff}
-    .theme-switch input:checked + .slider .thumb{left:calc(100% - 2px);transform:translate(-100%,-50%) translateZ(0)}
-    .theme-switch .icon{width:16px;height:16px;stroke-width:2}
-    .theme-switch .icon.sun{stroke:#FDB813;fill:none}
-    .theme-switch .icon.moon{fill:#20354a;stroke:none;display:none}
-    .theme-switch input:checked + .slider .icon.sun{display:none}
-    .theme-switch input:checked + .slider .icon.moon{display:block}
-
     .theme-changing .chip,
-    .theme-changing .theme-switch .slider,
-    .theme-changing .theme-switch .thumb{transition-duration:.10s}
+    .theme-changing .theme-toggle-track,
+    .theme-changing .theme-toggle-track::before,
+    .theme-changing .theme-toggle .icon{transition-duration:.10s}
 
     body[data-theme="dark"]{--ink-900:#f9fafb;--ink-800:#e5e7eb;--ink-700:#d1d5db;--ink-600:#9ca3af;--ink-500:#6b7280;--surface:#111827;--muted:#1f2937;--border:#374151;background:#0b1220;color:var(--ink-900)}
 body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var(--border)}
@@ -300,30 +317,6 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
     .mobile-toggle .dots span{width:14px;height:2px;border-radius:999px;background:currentColor;display:block;}
     .mobile-toggle:focus-visible{outline:none;box-shadow:var(--ring)}
     body[data-theme="dark"] .mobile-toggle{background:var(--surface);color:var(--ink-900)}
-
-    .theme-icon-toggle{
-      display:none;
-      border:none;
-      background:rgba(15,23,42,0.06);
-      color:var(--ink-900);
-      border-radius:999px;
-      width:42px;
-      height:42px;
-      align-items:center;
-      justify-content:center;
-      font-size:1.1rem;
-      cursor:pointer;
-      box-shadow:0 8px 20px rgba(15,23,42,0.08);
-      transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
-    }
-    .theme-icon-toggle:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(99,102,241,0.28);}
-    .theme-icon-toggle:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(15,23,42,0.14);}
-    body[data-theme="dark"] .theme-icon-toggle{background:rgba(148,163,184,0.14);color:#f9fafb;box-shadow:0 10px 24px rgba(8,24,48,0.25);}
-    .theme-icon-toggle .icon{display:grid;place-items:center;}
-    .theme-icon-toggle .icon span{grid-area:1/1;font-size:1.15rem;opacity:0;transform:translateY(6px);transition:opacity .18s ease, transform .18s ease;}
-    .theme-icon-toggle .icon span.sun{opacity:1;transform:translateY(0);}
-    body[data-theme="dark"] .theme-icon-toggle .icon span.sun{opacity:0;transform:translateY(-6px);}
-    body[data-theme="dark"] .theme-icon-toggle .icon span.moon{opacity:1;transform:translateY(0);}
 
     .mobile-menu-backdrop{
       position:fixed;
@@ -470,7 +463,7 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
       .mobile-toggle{display:inline-flex;order:2;height:36px;font-size:0.88rem;padding:0 14px;border-radius:18px;box-shadow:0 12px 24px rgba(45,55,72,0.16);background:#fff;color:#0b1220;} 
       body[data-theme="dark"] .mobile-toggle{background:#0f172a;color:#f8fafc;border-color:rgba(148,163,184,0.45);} 
       .mobile-toggle .dots span{width:16px;} 
-      .theme-icon-toggle{display:inline-flex;position:static;order:3;margin-left:12px;} 
+      .theme-toggle{--toggle-width:132px;--toggle-height:40px;--toggle-pad:3px;} 
       .nav-right{display:none;} 
       nav{display:none;} 
       nav ul{display:none;} 
@@ -508,10 +501,6 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
         <span data-i18n="mobile.menu_button">Meny</span>
       </button>
 
-      <button class="theme-icon-toggle" type="button" aria-label="Bytt tema" data-i18n-attr="aria-label:header.theme_toggle">
-        <span class="icon" aria-hidden="true"><span class="sun">🌞</span><span class="moon">🌙</span></span>
-      </button>
-
       <nav aria-label="Hovedmeny" data-i18n-attr="aria-label:header.mainmenu_label">
         <ul id="mainmenu">
           <li class="dropdown" aria-expanded="false">
@@ -544,21 +533,8 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
       <div class="nav-right" id="desktop-actions">
         <a href="login.html" class="chip" data-i18n="right.login">Logg inn</a>
         <div class="nav-actions">
-        <button class="chip" type="button" data-lang-toggle data-i18n-attr="title:nav.language_toggle,aria-label:nav.language_toggle" title="Språk">EN</button>
-        <label class="theme-switch">
-          <input type="checkbox" id="theme-toggle" aria-label="Tema">
-          <span class="slider">
-            <span class="thumb">
-              <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="5"/>
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
-              </svg>
-            </span>
-          </span>
-        </label>
+          <button class="chip" type="button" data-lang-toggle data-i18n-attr="title:nav.language_toggle,aria-label:nav.language_toggle" title="Språk">EN</button>
+        </div>
       </div>
     </div>
   </div>
@@ -608,6 +584,21 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
     </div>
   </div>
 </header>
+
+  <div class="theme-float">
+    <label class="theme-toggle">
+      <input type="checkbox" id="theme-toggle" aria-label="Bytt tema" data-i18n-attr="aria-label:header.theme_toggle">
+      <span class="theme-toggle-track" aria-hidden="true">
+        <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>
+        </svg>
+      </span>
+    </label>
+  </div>
 
   <main id="main">
     <section class="hero container" id="top">
@@ -707,7 +698,6 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
   <script>
     const $=(s,c=document)=>c.querySelector(s);
     const $$=(s,c=document)=>Array.from(c.querySelectorAll(s));
-    const themeFab=$('.theme-icon-toggle');
     const headerEl = document.querySelector('header');
 
     function applyTheme(theme){
@@ -715,7 +705,6 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
       // stop changing meta[name="color-scheme"] here to avoid full repaint flicker
       const toggle=document.querySelector('#theme-toggle');
       if(toggle) toggle.checked = (theme === 'dark');
-      if(themeFab) themeFab.setAttribute('aria-pressed', theme==='dark' ? 'true' : 'false');
       // brief easing class to normalize transitions (prevents blink)
       document.body.classList.add('theme-changing');
       requestAnimationFrame(()=> setTimeout(()=> {
@@ -729,13 +718,6 @@ body[data-theme="dark"] header{background:var(--surface);border-bottom-color:var
       const t=e.target.checked?'dark':'light';
       localStorage.setItem('scope.theme',t);
       applyTheme(t);
-    });
-
-    themeFab?.addEventListener('click',()=>{
-      const isDark=document.body.getAttribute('data-theme')==='dark';
-      const next=isDark?'light':'dark';
-      localStorage.setItem('scope.theme', next);
-      applyTheme(next);
     });
 
     // i18n-ordbok (NO & EN)
