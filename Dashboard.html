@@ -348,55 +348,74 @@
     .segmented-control__option:hover{color:var(--text-strong);}
     .segmented-control__option:focus-visible{box-shadow:var(--ring);}
     .theme-switch{
+      --toggle-width:104px;
+      --toggle-height:34px;
+      --toggle-pad:3px;
       position:relative;
       display:inline-flex;
-      width:54px;
-      height:30px;
-      border-radius:var(--radius-pill);
-      border:1px solid var(--border);
-      background:var(--surface);
-      box-shadow:var(--shadow-xs);
-    }
-    .theme-switch input{opacity:0;width:0;height:0;position:absolute;}
-    .theme-switch .slider{
-      position:absolute;
-      inset:0;
-      border-radius:inherit;
-      background:linear-gradient(120deg,rgba(108,99,255,0.16),rgba(108,99,255,0.05));
-      transition:background var(--transition),border-color var(--transition);
-      padding:4px;
-      display:block;
-    }
-    .theme-switch .thumb{
-      position:absolute;
-      top:50%;
-      left:4px;
-      width:22px;
-      height:22px;
-      border-radius:50%;
-      background:var(--surface);
-      border:1px solid var(--border);
-      display:flex;
       align-items:center;
       justify-content:center;
-      transform:translateY(-50%);
-      transition:transform var(--transition),background var(--transition),border-color var(--transition),color var(--transition);
+      cursor:pointer;
+      user-select:none;
+      touch-action:manipulation;
+    }
+    .theme-switch input{
+      position:absolute;
+      opacity:0;
+      width:1px;
+      height:1px;
+      pointer-events:none;
+    }
+    .theme-switch .slider{
+      position:relative;
+      width:var(--toggle-width);
+      height:var(--toggle-height);
+      padding:var(--toggle-pad);
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      align-items:center;
+      border-radius:999px;
+      background:var(--surface);
+      border:1px solid var(--border-subtle);
       box-shadow:var(--shadow-xs);
-      color:#FDB813;
+      transition:background var(--transition),border-color var(--transition),box-shadow var(--transition);
     }
-    .theme-switch .icon{width:16px;height:16px;}
-    .theme-switch .icon.moon{display:none;color:#f8fafc;}
-    .theme-switch input:checked + .slider .thumb{
-      left:calc(100% - 26px);
-      color:#f1f5f9;
-      border-color:var(--primary-border);
-      background:var(--primary);
+    .theme-switch .slider::before{
+      content:"";
+      position:absolute;
+      top:var(--toggle-pad);
+      left:var(--toggle-pad);
+      width:calc(50% - var(--toggle-pad));
+      height:calc(100% - (var(--toggle-pad) + var(--toggle-pad)));
+      border-radius:999px;
+      background:linear-gradient(140deg,#7c85ff,#5d63ff);
+      box-shadow:0 10px 20px rgba(93,99,255,0.35);
+      transition:transform var(--transition);
     }
-    .theme-switch input:checked + .slider{background:linear-gradient(120deg,rgba(93,84,230,0.32),rgba(76,71,204,0.18));}
-    .theme-switch input:checked + .slider .icon.sun{display:none;}
-    .theme-switch input:checked + .slider .icon.moon{display:block;}
-    .theme-switch input:focus-visible + .slider,
-    .theme-switch .thumb:focus-visible{box-shadow:var(--ring);}
+    .theme-switch input:checked + .slider::before{transform:translateX(100%);}
+    .theme-switch .icon{
+      position:relative;
+      z-index:1;
+      width:16px;
+      height:16px;
+      justify-self:center;
+      color:var(--text-soft);
+      opacity:0.7;
+      transition:opacity var(--transition),color var(--transition),transform var(--transition);
+    }
+    .theme-switch .icon.sun{stroke:currentColor;fill:none;stroke-width:2;}
+    .theme-switch .icon.moon{fill:currentColor;stroke:none;}
+    .theme-switch input:not(:checked) + .slider .icon.sun{
+      opacity:1;
+      color:#fbbf24;
+      transform:translateY(-1px);
+    }
+    .theme-switch input:checked + .slider .icon.moon{
+      opacity:1;
+      color:#f8fafc;
+      transform:translateY(-1px);
+    }
+    .theme-switch input:focus-visible + .slider{box-shadow:var(--ring),var(--shadow-xs);}
     nav.sub-nav{
       padding-block-start:clamp(12px,2.4vw,20px);
       padding-block-end:clamp(6px,1.6vw,12px);
@@ -1756,15 +1775,13 @@
           <label class="theme-switch mobile-theme-switch" aria-label="Bytt tema">
             <input type="checkbox" id="dash-theme-toggle" aria-label="Tema" />
             <span class="slider">
-              <span class="thumb">
-                <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="5" />
-                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
-                </svg>
-              </span>
+              <svg class="icon sun" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="5" />
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <svg class="icon moon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+              </svg>
             </span>
           </label>
         </div>
