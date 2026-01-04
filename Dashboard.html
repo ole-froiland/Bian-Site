@@ -305,8 +305,24 @@
       transition:background var(--transition),border-color var(--transition),color var(--transition);
     }
     .mobile-toggle .dots{display:flex;flex-direction:column;gap:3px;}
-    .mobile-toggle .dots span{width:16px;height:2px;border-radius:999px;background:currentColor;}
+    .mobile-toggle .dots span{
+      width:16px;
+      height:2px;
+      border-radius:999px;
+      background:currentColor;
+      transform-origin:center;
+      transition:transform var(--transition),opacity var(--transition),filter var(--transition);
+      filter:blur(0);
+    }
     .mobile-toggle:hover{background:color-mix(in srgb,var(--surface) 86%,var(--primary) 14%);color:var(--text-strong);border-color:var(--primary);}
+    .mobile-toggle[aria-expanded="true"] .dots span{animation:menu-toggle-blur 220ms ease;}
+    .mobile-toggle[aria-expanded="true"] .dots span:nth-child(1){transform:translateY(5px) rotate(45deg);}
+    .mobile-toggle[aria-expanded="true"] .dots span:nth-child(2){opacity:0;transform:scaleX(0.4);}
+    .mobile-toggle[aria-expanded="true"] .dots span:nth-child(3){transform:translateY(-5px) rotate(-45deg);}
+    @keyframes menu-toggle-blur{
+      0%{filter:blur(1.6px);}
+      100%{filter:blur(0);}
+    }
     .nav-controls{
       display:inline-flex;
       align-items:center;
